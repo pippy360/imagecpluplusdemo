@@ -12,3 +12,5 @@ target_link_libraries(hello gtest gtest_main)
 
 add_dependencies(hello gtest_main)
 
+target_compile_options(hello PUBLIC "-g")
+

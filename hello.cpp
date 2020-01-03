@@ -8,6 +8,8 @@
 
 #include <boost/foreach.hpp>
 
+#include <gtest/gtest.h>
+
 #define CHECK_SHAPES_VALID 1
 
 
@@ -28,38 +30,6 @@ double getQuadrantArea(ring_t wholeShape, box_t intersectBox) {
 	assert(output.size() == 1);
 #endif
 	return bg::area(output[0]);
-}
-
-//+x, +y
-double getTopRightQuadrantArea(ring_t wholeShape, box_t wholeShapeEnvelope) {
-	double max_x = wholeShapeEnvelope.max_corner().get<0>();
-	double max_y = wholeShapeEnvelope.max_corner().get<1>();
-	bg::model::box<point_t> ibox{ {0, 0}, {max_x,max_y} };
-	return getQuadrantArea(wholeShape, ibox);
-}
-
-//-x, +y
-double getTopLeftQuadrantArea(ring_t wholeShape, box_t wholeShapeEnvelope) {
-	double min_x = wholeShapeEnvelope.min_corner().get<0>();
-	double max_y = wholeShapeEnvelope.max_corner().get<1>();
-	bg::model::box<point_t> ibox{ {min_x, 0}, {0, max_y} };
-	return getQuadrantArea(wholeShape, ibox);
-}
-
-//+x, -y
-double getBottomRightQuadrantArea(ring_t wholeShape, box_t wholeShapeEnvelope) {
-	double max_x = wholeShapeEnvelope.max_corner().get<0>();
-	double min_y = wholeShapeEnvelope.min_corner().get<1>();
-	bg::model::box<point_t> ibox{ {0, min_y}, {max_x, 0} };
-	return getQuadrantArea(wholeShape, ibox);
-}
-
-//-x, -y
-double getBottomLeftQuadrantArea(ring_t wholeShape, box_t wholeShapeEnvelope) {
-	double min_x = wholeShapeEnvelope.min_corner().get<0>();
-	double min_y = wholeShapeEnvelope.min_corner().get<1>();
-	bg::model::box<point_t> ibox{ {min_x, min_y}, {0, 0} };
-	return getQuadrantArea(wholeShape, ibox);
 }
 
 ring_t getQuadrant(ring_t wholeShape, box_t intersectBox) {
@@ -83,7 +53,6 @@ double getAreaUnderTwoPoints(point_t p1, point_t p2) {
 
 	//make sure the polygon we are about to create is going to be clockwise
 	//otherwise boost will fail
-	std::cout << "p1: " << p1.get<0>() << ", " << p1.get<1>() << " p2: " << p2.get<0>() << ", " << p2.get<1>() << std::endl;
 	ring_t ring{
 		{std::min(p1.get<0>(), p2.get<0>()), std::min(p1.get<1>(), 0.0)}, 
 		{std::min(p1.get<0>(), p2.get<0>()), std::max(p1.get<1>(), 0.0)},
@@ -92,7 +61,6 @@ double getAreaUnderTwoPoints(point_t p1, point_t p2) {
 		{std::min(p1.get<0>(), p2.get<0>()), std::min(p1.get<1>(), 0.0)}, 
 	};
 
-	std::cout << "here: " << boost::geometry::dsv(ring) << std::endl;
 #ifdef CHECK_SHAPES_VALID
 	assert(bg::is_valid(ring));
 #endif
@@ -139,7 +107,7 @@ double getConstantOfLine(point_t p1, point_t p2) {
 // (m x (-6 c^2 + 3 c m x + 4 m^2 x^2) + 6 c^3 log(c + m x))/(36 m^3)
 //
 double xyFromZeroToX(double m, double c, double x) {
-	if (m == 0)
+	if (abs(m) < 0.0000001)
 		return pow(x, 3)/6.0;
 
 	return (
@@ -167,8 +135,8 @@ double xyFromX1ToX2Wrapper(point_t p1, point_t p2) {
 // now int_(0 to x) (mx+c)^2/3.0
 //
 double ySquaredFromZeroToX(double m, double c, double x) {
-	if (m == 0)
-		return pow(c, 2)*x/3.0;
+    if (abs(m) < 0.0000001)
+            return pow(c, 2)*x/3.0;
 
 	return pow(c + m*x, 3)/(9.0*m);
 }
@@ -205,13 +173,9 @@ double customGetAverageVal(ring_t poly, double (*func)(point_t p1, point_t p2)) 
 
 		//check direction
 		if ( x1 < x2 ) {
-			printf("func val %lf\n", func(p, np));
-			printf("area %lf\n", area);
 			result += func(p, np)*area;
 			totalArea += area;
 		} else {
-			printf("func - %lf\n", func(p, np));
-			printf("area %lf\n", area);
 			result -= func(p, np)*area;
 			totalArea -= area;
 		}
@@ -219,8 +183,7 @@ double customGetAverageVal(ring_t poly, double (*func)(point_t p1, point_t p2)) 
 	return result/totalArea;
 }
 
-double getAandB(ring_t poly) {
-
+double applyFuncForEachQuadrant(ring_t poly, double rotation, double (*func)(point_t p1, point_t p2)) {
 	bg::model::box<point_t> boundingBox;
 	bg::envelope(poly, boundingBox);
 
@@ -233,6 +196,15 @@ double getAandB(ring_t poly) {
 	bg::model::box<point_t> br_box{ {0, min_y}, {max_x, 0} };
 	bg::model::box<point_t> tl_box{ {min_x, 0}, {0, max_y} };
 	bg::model::box<point_t> tr_box{ {0, 0}, {max_x,max_y} };
+	ring_t rotatedPoly;
+
+	if (rotation != 0) {
+		bg::strategy::transform::rotate_transformer<bg::degree, double, 2, 2> rotate(rotation);
+		bg::transform(rotatedPoly, poly, rotate);
+	} else {
+		rotatedPoly = poly;
+	}
+
 	ring_t bl = getQuadrant(poly, bl_box);
 	ring_t br = getQuadrant(poly, br_box);
 	ring_t tl = getQuadrant(poly, tl_box);
@@ -243,35 +215,172 @@ double getAandB(ring_t poly) {
 	double tl_area = bg::area(tl); 
 	double tr_area = bg::area(tr); 
 
-	double poly_ys = (
-			(customGetAverageVal(bl, ySquaredFromX1ToX2Wrapper)*bl_area)
-			*(customGetAverageVal(br, ySquaredFromX1ToX2Wrapper)*br_area)
-			*(customGetAverageVal(tl, ySquaredFromX1ToX2Wrapper)*tl_area)
-			*(customGetAverageVal(tr, ySquaredFromX1ToX2Wrapper)*tr_area)
+	return (
+			 (customGetAverageVal(bl, func)*bl_area)
+			*(customGetAverageVal(br, func)*br_area)
+			*(customGetAverageVal(tl, func)*tl_area)
+			*(customGetAverageVal(tr, func)*tr_area)
 		)/bg::area(poly);
+}
 
-	ring_t rotatedPoly;
-	boost::geometry::strategy::transform::rotate_transformer<bg::degree, double, 2, 2> rotate(90.0);
-	bg::transform(rotatedPoly, poly, rotate);
-	//TODO: ....actually use the rotated value
-	double poly_xs = (
-			(customGetAverageVal(bl, ySquaredFromX1ToX2Wrapper)*bl_area)
-			*(customGetAverageVal(br, ySquaredFromX1ToX2Wrapper)*br_area)
-			*(customGetAverageVal(tl, ySquaredFromX1ToX2Wrapper)*tl_area)
-			*(customGetAverageVal(tr, ySquaredFromX1ToX2Wrapper)*tr_area)
-		)/bg::area(poly);
+double getAandB(ring_t poly) {
 
-	double poly_xy = (
-			(customGetAverageVal(bl, xyFromX1ToX2Wrapper)*bl_area)
-			*(customGetAverageVal(br, xyFromX1ToX2Wrapper)*br_area)
-			*(customGetAverageVal(tl, xyFromX1ToX2Wrapper)*tl_area)
-			*(customGetAverageVal(tr, xyFromX1ToX2Wrapper)*tr_area)
-		)/bg::area(poly);
+	double poly_ys = applyFuncForEachQuadrant(poly, 0, ySquaredFromX1ToX2Wrapper);
+	double poly_xs = applyFuncForEachQuadrant(poly, 90, ySquaredFromX1ToX2Wrapper);
+	double poly_xy = applyFuncForEachQuadrant(poly, 0, xyFromX1ToX2Wrapper);
 
+	//std::cout << poly_ys << " : " << poly_xs << " : " << poly_xy << " : " << std::endl;
 	return poly_xy + poly_xs + poly_ys;
 }
 
-int main()
+TEST(testbasic, testbasic) {
+	ring_t red{
+		{-1.0, -1.0}, {-1.0, 1.0}, {1.0, 1.0}, {1.0, -1.0}, {-1.0, -1.0}
+	};
+	ring_t poly = red;
+	bg::model::box<point_t> boundingBox;
+	bg::envelope(poly, boundingBox);
+
+	double min_x = boundingBox.min_corner().get<0>();
+	double min_y = boundingBox.min_corner().get<1>();
+	double max_x = boundingBox.max_corner().get<0>();
+	double max_y = boundingBox.max_corner().get<1>();
+	
+	bg::model::box<point_t> bl_box{ {min_x, min_y}, {0, 0} };
+	bg::model::box<point_t> br_box{ {0, min_y}, {max_x, 0} };
+	bg::model::box<point_t> tl_box{ {min_x, 0}, {0, max_y} };
+	bg::model::box<point_t> tr_box{ {0, 0}, {max_x,max_y} };
+
+	ring_t bl = getQuadrant(poly, bl_box);
+	ring_t br = getQuadrant(poly, br_box);
+	ring_t tl = getQuadrant(poly, tl_box);
+	ring_t tr = getQuadrant(poly, tr_box);
+
+	double blVal = customGetAverageVal(bl, ySquaredFromX1ToX2Wrapper);
+	EXPECT_DOUBLE_EQ(blVal, 0.33333333333333331);
+}
+
+TEST(testbasic, testbasic2) {
+	ring_t red{
+		{-1.0, -2.0}, {-1.0, 2.0}, {1.0, 2.0}, {1.0, -2.0}, {-1.0, -2.0}
+	};
+	ring_t poly = red;
+	bg::model::box<point_t> boundingBox;
+	bg::envelope(poly, boundingBox);
+
+	double min_x = boundingBox.min_corner().get<0>();
+	double min_y = boundingBox.min_corner().get<1>();
+	double max_x = boundingBox.max_corner().get<0>();
+	double max_y = boundingBox.max_corner().get<1>();
+	
+	bg::model::box<point_t> bl_box{ {min_x, min_y}, {0, 0} };
+	bg::model::box<point_t> br_box{ {0, min_y}, {max_x, 0} };
+	bg::model::box<point_t> tl_box{ {min_x, 0}, {0, max_y} };
+	bg::model::box<point_t> tr_box{ {0, 0}, {max_x,max_y} };
+
+	ring_t bl = getQuadrant(poly, bl_box);
+	ring_t br = getQuadrant(poly, br_box);
+	ring_t tl = getQuadrant(poly, tl_box);
+	ring_t tr = getQuadrant(poly, tr_box);
+
+	double blVal;
+	blVal = customGetAverageVal(bl, ySquaredFromX1ToX2Wrapper);
+	EXPECT_DOUBLE_EQ(blVal, 1.33333333333333331);
+	blVal = customGetAverageVal(br, ySquaredFromX1ToX2Wrapper);
+	EXPECT_DOUBLE_EQ(blVal, 1.33333333333333331);
+	blVal = customGetAverageVal(tl, ySquaredFromX1ToX2Wrapper);
+	EXPECT_DOUBLE_EQ(blVal, 1.33333333333333331);
+	blVal = customGetAverageVal(tr, ySquaredFromX1ToX2Wrapper);
+	EXPECT_DOUBLE_EQ(blVal, 1.33333333333333331);
+}
+
+TEST(testbasic, testbasicZeroRotation) {
+	ring_t red{
+		{-2.0, -1.0}, {-2.0, 1.0}, {2.0, 1.0}, {2.0, -1.0}, {-2.0, -1.0}
+	};
+	ring_t poly = red;
+
+#ifdef CHECK_SHAPES_VALID
+	ASSERT_TRUE(bg::is_valid(red));
+#endif
+	bg::model::box<point_t> boundingBox;
+	bg::envelope(poly, boundingBox);
+
+	double min_x = boundingBox.min_corner().get<0>();
+	double min_y = boundingBox.min_corner().get<1>();
+	double max_x = boundingBox.max_corner().get<0>();
+	double max_y = boundingBox.max_corner().get<1>();
+
+	bg::model::box<point_t> bl_box{ {min_x, min_y}, {0, 0} };
+	bg::model::box<point_t> br_box{ {0, min_y}, {max_x, 0} };
+	bg::model::box<point_t> tl_box{ {min_x, 0}, {0, max_y} };
+	bg::model::box<point_t> tr_box{ {0, 0}, {max_x,max_y} };
+
+	ring_t bl = getQuadrant(poly, bl_box);
+	ring_t br = getQuadrant(poly, br_box);
+	ring_t tl = getQuadrant(poly, tl_box);
+	ring_t tr = getQuadrant(poly, tr_box);
+
+	double blVal;
+	blVal = customGetAverageVal(bl, ySquaredFromX1ToX2Wrapper);
+	EXPECT_DOUBLE_EQ(blVal, 0.33333333333333331);
+	blVal = customGetAverageVal(br, ySquaredFromX1ToX2Wrapper);
+	EXPECT_DOUBLE_EQ(blVal, 0.33333333333333331);
+	blVal = customGetAverageVal(tl, ySquaredFromX1ToX2Wrapper);
+	EXPECT_DOUBLE_EQ(blVal, 0.33333333333333331);
+	blVal = customGetAverageVal(tr, ySquaredFromX1ToX2Wrapper);
+	EXPECT_DOUBLE_EQ(blVal, 0.33333333333333331);
+}
+
+
+TEST(testbasic, testbasicRotation) {
+	ring_t red{
+		{-1.0, -2.0}, {-1.0, 2.0}, {1.0, 2.0}, {1.0, -2.0}, {-1.0, -2.0}
+	};
+	ring_t poly;
+
+#ifdef CHECK_SHAPES_VALID
+	ASSERT_TRUE(bg::is_valid(red));
+#endif
+
+	bg::strategy::transform::rotate_transformer<bg::degree, double, 2, 2> rotate(90);
+	bg::transform(red, poly, rotate);
+
+#ifdef CHECK_SHAPES_VALID
+	ASSERT_TRUE(bg::is_valid(poly));
+	ASSERT_TRUE(bg::is_valid(red));
+#endif
+
+	bg::model::box<point_t> boundingBox;
+	bg::envelope(poly, boundingBox);
+
+	double min_x = boundingBox.min_corner().get<0>();
+	double min_y = boundingBox.min_corner().get<1>();
+	double max_x = boundingBox.max_corner().get<0>();
+	double max_y = boundingBox.max_corner().get<1>();
+	
+	bg::model::box<point_t> bl_box{ {min_x, min_y}, {0, 0} };
+	bg::model::box<point_t> br_box{ {0, min_y}, {max_x, 0} };
+	bg::model::box<point_t> tl_box{ {min_x, 0}, {0, max_y} };
+	bg::model::box<point_t> tr_box{ {0, 0}, {max_x,max_y} };
+
+	ring_t bl = getQuadrant(poly, bl_box);
+	ring_t br = getQuadrant(poly, br_box);
+	ring_t tl = getQuadrant(poly, tl_box);
+	ring_t tr = getQuadrant(poly, tr_box);
+
+	double blVal;
+	blVal = customGetAverageVal(bl, ySquaredFromX1ToX2Wrapper);
+	EXPECT_DOUBLE_EQ(blVal, 0.33333333333333331);
+	blVal = customGetAverageVal(br, ySquaredFromX1ToX2Wrapper);
+	EXPECT_DOUBLE_EQ(blVal, 0.33333333333333331);
+	blVal = customGetAverageVal(tl, ySquaredFromX1ToX2Wrapper);
+	EXPECT_DOUBLE_EQ(blVal, 0.33333333333333331);
+	blVal = customGetAverageVal(tr, ySquaredFromX1ToX2Wrapper);
+	EXPECT_DOUBLE_EQ(blVal, 0.33333333333333331);
+}
+
+int main2()
 {
 	ring_t green{
 		{-2.0, -2.0}, {-2.0, 5.0}, {5.0, 5.0}, {5.0, -2.0}, {-2.0, -2.0}
@@ -289,72 +398,12 @@ int main()
 		{0.0, 0.0}, {0.0, 1.0}, {2.0, 1.0}, {2.0, 0.0}, {0.0, 0.0}
 	};
 	
-	int i = 0;
-	//std::cout << loopPolyAndApplyFunc(green, calcYAverage)/bg::area(green) << std::endl;
-
-	std::list<ring_t> output;
-	bg::model::box<point_t> box1;
-	bg::intersection(blue, green, output);
-
-	bg::envelope(green, box1);
-	double max_x = box1.max_corner().get<0>();
-	double max_y = box1.max_corner().get<1>();
-	double min_x = box1.min_corner().get<0>();
-	double min_y = box1.min_corner().get<1>();
-
-	bg::model::box<point_t> tr{ {0, 0}, {max_x,max_y} };
-	bg::model::box<point_t> tl{ {min_x, 0}, {0,max_y} };
-	bg::model::box<point_t> br{ {0, min_y}, {max_x,0} };
-	bg::model::box<point_t> bl{ {0, 0}, {min_x,min_y} };
-	
-	output.clear();
-	if(!bg::is_valid(green))
-		std::cout << "invalid";
-
-	if(!bg::is_valid(br))
-		std::cout << "invalid";
-
-	bg::intersection(tr, green, output);
-
-	std::cout << "green && blue:" << std::endl;
-	BOOST_FOREACH(auto& p, output)
-	{
-		std::cout << i++ << ": " << boost::geometry::dsv(p) << std::endl;
-		std::cout << i++ << ": " << boost::geometry::area(p) << std::endl;
-	}
-	output.clear();
-	bg::intersection(tl, green, output);
-
-	std::cout << "green && blue:" << std::endl;
-	BOOST_FOREACH(auto& p, output)
-	{
-		std::cout << i++ << ": " << boost::geometry::dsv(tl) << std::endl;
-		std::cout << i++ << ": " << boost::geometry::dsv(p) << std::endl;
-		std::cout << i++ << ": " << boost::geometry::area(p) << std::endl;
-	}
-	output.clear();
-	bg::intersection(br, green, output);
-
-	std::cout << "green && blue:" << std::endl;
-	BOOST_FOREACH(auto& p, output)
-	{
-		std::cout << i++ << ": " << boost::geometry::dsv(br) << std::endl;
-		std::cout << i++ << ": " << boost::geometry::dsv(p) << std::endl;
-		std::cout << i++ << ": " << boost::geometry::area(p) << std::endl;
-	}
-	output.clear();
-	bg::intersection(bl, green, output);
-
-	std::cout << "green && blue:" << std::endl;
-	BOOST_FOREACH(auto& p, output)
-	{
-		std::cout << i++ << ": " << boost::geometry::dsv(p) << std::endl;
-		std::cout << i++ << ": " << boost::geometry::area(p) << std::endl;
-	}
 
 	std::cout << customGetAverageVal(red, ySquaredFromX1ToX2Wrapper) << std::endl;
 	std::cout << customGetAverageVal(red2, ySquaredFromX1ToX2Wrapper) << std::endl;
 	std::cout << customGetAverageVal(red, xyFromX1ToX2Wrapper) << std::endl;
 	std::cout << customGetAverageVal(red2, xyFromX1ToX2Wrapper) << std::endl;
+	getAandB(green);
+
 	return 0;
 }

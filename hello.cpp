@@ -16,9 +16,12 @@
 #include <gtest/gtest.h>
 
 #define CHECK_SHAPES_VALID 1
+
+//The brute force approach will only approximate the correct value
+//so we just check if it's close
 #define ALLOWED_ERROR 0.001
 #define MIN_SLOPE_VAL 0.0000001
-#define BRUTE_FORCE_TESTING 0
+#define BRUTE_FORCE_TESTING 1
 
 
 namespace bg = boost::geometry;
@@ -161,10 +164,7 @@ double getConstantOfLine(point_t p1, point_t p2) {
 // 
 //
 double xyFromZeroToX(double m, double c, double x) {
-	if (abs(m) < MIN_SLOPE_VAL)
-		return c*pow(x, 2)/4.0;
-
-	return ((c*pow(x, 2)/4.0) + 1.0/6.0*(m*pow(x,3)));
+	return ((c*pow(x, 2)/4.0) + (1.0/6.0)*(m*pow(x,3)));
 }
 
 double xyFromX1ToX2(double m, double c, double x1, double x2) {
@@ -187,6 +187,7 @@ double xyFromX1ToX2Wrapper(point_t p1, point_t p2) {
 // now int_(0 to x) (mx+c)^2/3.0
 //
 double ySquaredFromZeroToX(double m, double c, double x) {
+	//We don't want to divide by a value VERY close to 0 or we get too much error
     if (abs(m) < MIN_SLOPE_VAL)
             return pow(c, 2)*x/3.0;
 

@@ -101,20 +101,18 @@ double getConstantOfLine(point_t p1, point_t p2) {
 	return y2 - (getSlopeOfLine(p1, p2) * x2);
 }
 
-//[int_from 0 to (mx+c) (mx+c)*x]/(mx+c)
-// = (mx^3/3.0 + cx^2/2.0)/(mx+c)
+//[int_from p = 0 to (mx+c), x=k1 ... (p)*k1]/(mx+c)
+// = (p)^2*k1/2(mx+c) = (mx+c)*x/2.0
 //
-// [int_from x1 to x2 ((c x^2)/2 + (m x^3)/3)/(mx+c) dx ] / (x2-x1)
+// [int_from x1 to x2 (mx+c)*x/2.0 dx ] / (x2-x1)
 //
-// (m x (-6 c^2 + 3 c m x + 4 m^2 x^2) + 6 c^3 log(c + m x))/(36 m^3)
+// 
 //
 double xyFromZeroToX(double m, double c, double x) {
 	if (abs(m) < MIN_SLOPE_VAL)
-		return pow(x, 3)/6.0;
+		return c*pow(x, 2)/4.0;
 
-	return (
-		(m*x*(-6.0*pow(c, 2) + 3.0*c*m*x + 4.0*pow(m, 2)*pow(x, 2)) + 6.0*pow(c, 3)*log(c+m*x))/(36.0*pow(m, 3))
-		);
+	return ((c*pow(x, 2)/4.0) + 1.0/6.0*(m*pow(x,3)));
 }
 
 double xyFromX1ToX2(double m, double c, double x1, double x2) {
@@ -131,7 +129,7 @@ double xyFromX1ToX2Wrapper(point_t p1, point_t p2) {
 	return xyFromX1ToX2(m, c, x1, x2);
 }
 
-//[int_(0 to mx+c) (mx+c)^2 d(mx+c)]/(mx+c)
+//[int_(0 to mx+c)=p (p)^2 d(mx+c)]/(mx+c)
 // = ((mx+c)^3/3.0 - zero)/(mx+c)
 // 
 // now int_(0 to x) (mx+c)^2/3.0
@@ -473,13 +471,13 @@ TEST(testbasic, testbasicXY) {
 
     double blVal;
     blVal = customGetAverageVal(bl, xyFromX1ToX2Wrapper);
-    EXPECT_LT(abs(blVal - 0.33333333333333331), ALLOWED_ERROR);
+    EXPECT_LT(abs(abs(blVal) - 0.5), ALLOWED_ERROR);
     blVal = customGetAverageVal(br, xyFromX1ToX2Wrapper);
-    EXPECT_LT(abs(blVal - 0.33333333333333331), ALLOWED_ERROR);
+    EXPECT_LT(abs(abs(blVal) - 0.5), ALLOWED_ERROR);
     blVal = customGetAverageVal(tl, xyFromX1ToX2Wrapper);
-    EXPECT_LT(abs(blVal - 0.33333333333333331), ALLOWED_ERROR);
+    EXPECT_LT(abs(abs(blVal) - 0.5), ALLOWED_ERROR);
     blVal = customGetAverageVal(tr, xyFromX1ToX2Wrapper);
-    EXPECT_LT(abs(blVal - 0.33333333333333331), ALLOWED_ERROR);
+    EXPECT_LT(abs(abs(blVal) - 0.5), ALLOWED_ERROR);
 }
 
 TEST(testbasic, testbasicBruteForceYSquared) {
@@ -568,13 +566,13 @@ TEST(testbasic, testbasicBruteForceXY) {
     double blVal;
     //FIXME: why do we only need abs here? shouldn't the sign of the other one also be negative?
     blVal = customGetAverageVal(bl, xyFromX1ToX2Wrapper_bruteForce);
-    EXPECT_LT(abs(abs(blVal) - 0.33333333333333331), ALLOWED_ERROR);
+    EXPECT_LT(abs(abs(blVal) - 0.5), ALLOWED_ERROR);
     blVal = customGetAverageVal(br, xyFromX1ToX2Wrapper_bruteForce);
-    EXPECT_LT(abs(abs(blVal) - 0.33333333333333331), ALLOWED_ERROR);
+    EXPECT_LT(abs(abs(blVal) - 0.5), ALLOWED_ERROR);
     blVal = customGetAverageVal(tl, xyFromX1ToX2Wrapper_bruteForce);
-    EXPECT_LT(abs(abs(blVal) - 0.33333333333333331), ALLOWED_ERROR);
+    EXPECT_LT(abs(abs(blVal) - 0.5), ALLOWED_ERROR);
     blVal = customGetAverageVal(tr, xyFromX1ToX2Wrapper_bruteForce);
-    EXPECT_LT(abs(abs(blVal) - 0.33333333333333331), ALLOWED_ERROR);
+    EXPECT_LT(abs(abs(blVal) - 0.5), ALLOWED_ERROR);
 }
 
 int main2()

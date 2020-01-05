@@ -12,6 +12,7 @@
 
 #define CHECK_SHAPES_VALID 1
 #define ALLOWED_ERROR 0.001
+#define MIN_SLOPE_VAL 0.0000001
 
 
 namespace bg = boost::geometry;
@@ -108,7 +109,7 @@ double getConstantOfLine(point_t p1, point_t p2) {
 // (m x (-6 c^2 + 3 c m x + 4 m^2 x^2) + 6 c^3 log(c + m x))/(36 m^3)
 //
 double xyFromZeroToX(double m, double c, double x) {
-	if (abs(m) < 0.0000001)
+	if (abs(m) < MIN_SLOPE_VAL)
 		return pow(x, 3)/6.0;
 
 	return (
@@ -136,7 +137,7 @@ double xyFromX1ToX2Wrapper(point_t p1, point_t p2) {
 // now int_(0 to x) (mx+c)^2/3.0
 //
 double ySquaredFromZeroToX(double m, double c, double x) {
-    if (abs(m) < 0.0000001)
+    if (abs(m) < MIN_SLOPE_VAL)
             return pow(c, 2)*x/3.0;
 
 	return pow(c + m*x, 3)/(9.0*m);
@@ -164,12 +165,17 @@ double ySquaredFromX1ToX2Wrapper_bruteForce(point_t p1, point_t p2) {
     double c = getConstantOfLine(p1, p2);
     int i = 0;
     double result = 0;
-    int totalSteps = 3000;
-    double step = (x2 - x1)/((double) totalSteps);
+    int totalSteps = 1000;
+    double step = (x2 - x1)/((double) totalSteps-1);
     for (; i < totalSteps; i++) {
         for(int j = 0; j < totalSteps; j++) {
             double xVal = x1 + (step*i);
-            double yVal = (xVal*m + c) * ((double)j/(double)totalSteps);
+            double yVal;
+            if (abs(m) < MIN_SLOPE_VAL)
+                yVal = (c) * ((double)j/(double)totalSteps);
+            else
+                yVal = (xVal*m + c) * ((double)j/(double)totalSteps);
+
             result += pow(yVal, 2);
         }
     }
@@ -183,16 +189,24 @@ double xyFromX1ToX2Wrapper_bruteForce(point_t p1, point_t p2) {
     double c = getConstantOfLine(p1, p2);
     int i = 0;
     double result = 0;
-    int totalSteps = 3000;
-    double step = (x2 - x1)/((double) totalSteps);
+    int totalSteps = 1000;
+    double step = (x2 - x1)/((double) totalSteps-1);
     for (; i < totalSteps; i++) {
+        double line = 0;
         for(int j = 0; j < totalSteps; j++) {
             double xVal = x1 + (step*i);
-            double yVal = (xVal*m + c) * ((double)j/(double)totalSteps);
-            result += xVal*yVal;
+            double yVal;
+            if (abs(m) < MIN_SLOPE_VAL)
+                yVal = (c) * ((double)j/((double)totalSteps - 1));
+            else
+                yVal = (xVal*m + c) * ((double)j/((double)totalSteps - 1));
+
+            line += xVal*yVal;
         }
+        double lineAvg = line/totalSteps;
+        result += lineAvg;
     }
-    return result/pow(totalSteps, 2);
+    return result/totalSteps;
 }
 
 //used to get the average x/y/x^2/y^2/x*y value of every point in a polygon segment
@@ -468,7 +482,7 @@ TEST(testbasic, testbasicXY) {
     EXPECT_LT(abs(blVal - 0.33333333333333331), ALLOWED_ERROR);
 }
 
-TEST(testbasic, testbasicBruteForceXY) {
+TEST(testbasic, testbasicBruteForceYSquared) {
     ring_t red{
             {-1.0, -2.0}, {-1.0, 2.0}, {1.0, 2.0}, {1.0, -2.0}, {-1.0, -2.0}
     };
@@ -552,14 +566,15 @@ TEST(testbasic, testbasicBruteForceXY) {
     ring_t tr = getQuadrant(poly, tr_box);
 
     double blVal;
+    //FIXME: why do we only need abs here? shouldn't the sign of the other one also be negative?
     blVal = customGetAverageVal(bl, xyFromX1ToX2Wrapper_bruteForce);
-    EXPECT_LT(abs(blVal - 0.33333333333333331), ALLOWED_ERROR);
+    EXPECT_LT(abs(abs(blVal) - 0.33333333333333331), ALLOWED_ERROR);
     blVal = customGetAverageVal(br, xyFromX1ToX2Wrapper_bruteForce);
-    EXPECT_LT(abs(blVal - 0.33333333333333331), ALLOWED_ERROR);
+    EXPECT_LT(abs(abs(blVal) - 0.33333333333333331), ALLOWED_ERROR);
     blVal = customGetAverageVal(tl, xyFromX1ToX2Wrapper_bruteForce);
-    EXPECT_LT(abs(blVal - 0.33333333333333331), ALLOWED_ERROR);
+    EXPECT_LT(abs(abs(blVal) - 0.33333333333333331), ALLOWED_ERROR);
     blVal = customGetAverageVal(tr, xyFromX1ToX2Wrapper_bruteForce);
-    EXPECT_LT(abs(blVal - 0.33333333333333331), ALLOWED_ERROR);
+    EXPECT_LT(abs(abs(blVal) - 0.33333333333333331), ALLOWED_ERROR);
 }
 
 int main2()

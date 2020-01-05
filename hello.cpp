@@ -18,7 +18,7 @@
 #define CHECK_SHAPES_VALID 1
 #define ALLOWED_ERROR 0.001
 #define MIN_SLOPE_VAL 0.0000001
-#define SKIP_BRUTE_FORCE_TESTING 0
+#define BRUTE_FORCE_TESTING 0
 
 
 namespace bg = boost::geometry;
@@ -337,7 +337,7 @@ TEST(EquationTest, testYSquared_1x2square_rotated90) {
 	splitIntoQuadsAndTest(red, correctVals, ySquaredFromX1ToX2Wrapper, rotation);
 }
 
-#if SKIP_BRUTE_FORCE_TESTING
+#if BRUTE_FORCE_TESTING
 TEST(EquationTest, testYSquared_2x1square_bruteForce) {
 	ring_t red{
 		{-2.0, -1.0}, {-2.0, 1.0}, {2.0, 1.0}, {2.0, -1.0}, {-2.0, -1.0}
@@ -379,7 +379,7 @@ TEST(EquationTest, testXY_1x2square_rotated90) {
 	splitIntoQuadsAndTest(red, correctVals, xyFromX1ToX2Wrapper, rotation);
 }
 
-#if SKIP_BRUTE_FORCE_TESTING
+#if BRUTE_FORCE_TESTING
 TEST(EquationTest, testXY_1x2square_rotated90_bruteForce) {
     ring_t red{
             {-1.0, -2.0}, {-1.0, 2.0}, {1.0, 2.0}, {1.0, -2.0}, {-1.0, -2.0}
@@ -401,7 +401,7 @@ TEST(EquationTest, testXY_diamond_rotated90) {
 	splitIntoQuadsAndTest(red, correctVals, xyFromX1ToX2Wrapper, rotation);
 }
 
-#if SKIP_BRUTE_FORCE_TESTING
+#if BRUTE_FORCE_TESTING
 TEST(EquationTest, testXY_diamond_rotated90_bruteForce) {
     ring_t red{
             {-1.0, 0.0}, {0.0, 2.0}, {1.0, 0.0}, {0.0, -2.0}, {-1.0, 0.0}
@@ -423,7 +423,7 @@ TEST(EquationTest, testXY_complexShape) {
 	splitIntoQuadsAndTest(red, correctVals, xyFromX1ToX2Wrapper, rotation);
 }
 
-#if SKIP_BRUTE_FORCE_TESTING
+#if BRUTE_FORCE_TESTING
 TEST(EquationTest, testXY_complexShape_bruteForce) {
     ring_t red{
             {-1.0, 0.0}, {-1.0, 4}, {-0.5, 0}, {0.0, 2.0}, {1.0, 2.0}, {1.0, 1.0}, {0.5, 1.0}, {0.5, 0.0}, {0.0, -2.0}, {-1.0, 0.0}

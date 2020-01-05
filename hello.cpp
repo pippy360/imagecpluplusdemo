@@ -208,47 +208,41 @@ double ySquaredFromX1ToX2Wrapper(point_t p1, point_t p2) {
 	return ySquaredFromX1ToX2(m, c, x1, x2);
 }
 
-double ySquaredFromX1ToX2Wrapper_bruteForce(point_t p1, point_t p2) {
+double bruteForcePointEquationCommon(point_t p1, point_t p2, double (*func)(double x, double y)) {
     double x1 = p1.get<0>();
     double x2 = p2.get<0>();
     double m = getSlopeOfLine(p1, p2);
     double c = getConstantOfLine(p1, p2);
-    int i = 0;
     double result = 0;
     int totalSteps = 2000;
     double step = (x2 - x1)/((double) totalSteps-1);
-    for (; i < totalSteps; i++) {
+    for (int i = 0; i < totalSteps; i++) {
+        double line = 0;
         for(int j = 0; j < totalSteps; j++) {
             double xVal = x1 + (step*i);
             double yVal = (xVal*m + c) * ((double)j/(double)totalSteps);
 
-            result += pow(yVal, 2);
+            line += func(xVal, yVal);
         }
+        result += line/totalSteps;
     }
-    return result/pow(totalSteps, 2);
+    return result/totalSteps;
+}
+
+double ySquared(double x, double y) {
+	return pow(y, 2);
+}
+
+double ySquaredFromX1ToX2Wrapper_bruteForce(point_t p1, point_t p2) {
+	return bruteForcePointEquationCommon(p1, p2, ySquared);
+}
+
+double xMulty(double x, double y) {
+	return x*y;
 }
 
 double xyFromX1ToX2Wrapper_bruteForce(point_t p1, point_t p2) {
-    double x1 = p1.get<0>();
-    double x2 = p2.get<0>();
-    double m = getSlopeOfLine(p1, p2);
-    double c = getConstantOfLine(p1, p2);
-    int i = 0;
-    double result = 0;
-    int totalSteps = 1000;
-    double step = (x2 - x1)/((double) totalSteps-1);
-    for (; i < totalSteps; i++) {
-        double line = 0;
-        for(int j = 0; j < totalSteps; j++) {
-            double xVal = x1 + (step*i);
-            double yVal = (xVal*m + c) * ((double)j/((double)totalSteps - 1));
-
-            line += xVal*yVal;
-        }
-        double lineAvg = line/totalSteps;
-        result += lineAvg;
-    }
-    return result/totalSteps;
+	return bruteForcePointEquationCommon(p1, p2, xMulty);
 }
 
 //used to get the average x/y/x^2/y^2/x*y value of every point in a polygon segment

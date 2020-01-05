@@ -50,7 +50,9 @@ ring_t getQuadrant(ring_t wholeShape, box_t intersectBox) {
 double getAreaUnderTwoPoints(point_t p1, point_t p2) {
 
 	//catch some zero area polys
-	if (p1.get<0>() == p2.get<0>() || (p1.get<1>() == 0 && p2.get<1>() == 0))
+	if (abs(p1.get<0>() - p2.get<0>()) < MIN_SLOPE_VAL
+			|| (abs(p1.get<1>() - 0) < MIN_SLOPE_VAL
+				&& abs(p2.get<1>() - 0) < MIN_SLOPE_VAL))
 		return 0;
 
 	//make sure the polygon we are about to create is going to be clockwise
@@ -573,6 +575,101 @@ TEST(testbasic, testbasicBruteForceXY) {
     EXPECT_LT(abs(abs(blVal) - 0.5), ALLOWED_ERROR);
     blVal = customGetAverageVal(tr, xyFromX1ToX2Wrapper_bruteForce);
     EXPECT_LT(abs(abs(blVal) - 0.5), ALLOWED_ERROR);
+}
+
+TEST(testbasic, testbasicBruteForceXY2) {
+    ring_t red{
+            {-1.0, 0.0}, {0.0, 2.0}, {1.0, 0.0}, {0.0, -2.0}, {-1.0, 0.0}
+    };
+    ring_t poly;
+
+#ifdef CHECK_SHAPES_VALID
+    ASSERT_TRUE(bg::is_valid(red));
+#endif
+
+    bg::strategy::transform::rotate_transformer<bg::degree, double, 2, 2> rotate(90);
+    bg::transform(red, poly, rotate);
+
+#ifdef CHECK_SHAPES_VALID
+    ASSERT_TRUE(bg::is_valid(poly));
+    ASSERT_TRUE(bg::is_valid(red));
+#endif
+
+    bg::model::box<point_t> boundingBox;
+    bg::envelope(poly, boundingBox);
+
+    double min_x = boundingBox.min_corner().get<0>();
+    double min_y = boundingBox.min_corner().get<1>();
+    double max_x = boundingBox.max_corner().get<0>();
+    double max_y = boundingBox.max_corner().get<1>();
+
+    bg::model::box<point_t> bl_box{ {min_x, min_y}, {0, 0} };
+    bg::model::box<point_t> br_box{ {0, min_y}, {max_x, 0} };
+    bg::model::box<point_t> tl_box{ {min_x, 0}, {0, max_y} };
+    bg::model::box<point_t> tr_box{ {0, 0}, {max_x,max_y} };
+
+    ring_t bl = getQuadrant(poly, bl_box);
+    ring_t br = getQuadrant(poly, br_box);
+    ring_t tl = getQuadrant(poly, tl_box);
+    ring_t tr = getQuadrant(poly, tr_box);
+
+    double blVal;
+    //FIXME: why do we only need abs here? shouldn't the sign of the other one also be negative?
+    blVal = customGetAverageVal(bl, xyFromX1ToX2Wrapper_bruteForce);
+    EXPECT_LT(abs(abs(blVal) - 0.166667), ALLOWED_ERROR);
+    blVal = customGetAverageVal(br, xyFromX1ToX2Wrapper_bruteForce);
+    EXPECT_LT(abs(abs(blVal) - 0.166667), ALLOWED_ERROR);
+    blVal = customGetAverageVal(tl, xyFromX1ToX2Wrapper_bruteForce);
+    EXPECT_LT(abs(abs(blVal) - 0.166667), ALLOWED_ERROR);
+    blVal = customGetAverageVal(tr, xyFromX1ToX2Wrapper_bruteForce);
+    EXPECT_LT(abs(abs(blVal) - 0.166667), ALLOWED_ERROR);
+}
+
+TEST(testbasic, testbasicXY2) {
+    ring_t red{
+            {-1.0, 0.0}, {0.0, 2.0}, {1.0, 0.0}, {0.0, -2.0}, {-1.0, 0.0}
+    };
+    ring_t poly;
+
+#ifdef CHECK_SHAPES_VALID
+    ASSERT_TRUE(bg::is_valid(red));
+#endif
+
+    bg::strategy::transform::rotate_transformer<bg::degree, double, 2, 2> rotate(90);
+    bg::transform(red, poly, rotate);
+
+#ifdef CHECK_SHAPES_VALID
+    ASSERT_TRUE(bg::is_valid(poly));
+    ASSERT_TRUE(bg::is_valid(red));
+#endif
+
+    bg::model::box<point_t> boundingBox;
+    bg::envelope(poly, boundingBox);
+
+    double min_x = boundingBox.min_corner().get<0>();
+    double min_y = boundingBox.min_corner().get<1>();
+    double max_x = boundingBox.max_corner().get<0>();
+    double max_y = boundingBox.max_corner().get<1>();
+
+    bg::model::box<point_t> bl_box{ {min_x, min_y}, {0, 0} };
+    bg::model::box<point_t> br_box{ {0, min_y}, {max_x, 0} };
+    bg::model::box<point_t> tl_box{ {min_x, 0}, {0, max_y} };
+    bg::model::box<point_t> tr_box{ {0, 0}, {max_x,max_y} };
+
+    ring_t bl = getQuadrant(poly, bl_box);
+    ring_t br = getQuadrant(poly, br_box);
+    ring_t tl = getQuadrant(poly, tl_box);
+    ring_t tr = getQuadrant(poly, tr_box);
+
+    double blVal;
+    blVal = customGetAverageVal(bl, xyFromX1ToX2Wrapper);
+    EXPECT_LT(abs(abs(blVal) - 0.166667), ALLOWED_ERROR);
+    blVal = customGetAverageVal(br, xyFromX1ToX2Wrapper);
+    EXPECT_LT(abs(abs(blVal) - 0.166667), ALLOWED_ERROR);
+    blVal = customGetAverageVal(tl, xyFromX1ToX2Wrapper);
+    EXPECT_LT(abs(abs(blVal) - 0.166667), ALLOWED_ERROR);
+    blVal = customGetAverageVal(tr, xyFromX1ToX2Wrapper);
+    EXPECT_LT(abs(abs(blVal) - 0.166667), ALLOWED_ERROR);
 }
 
 int main2()

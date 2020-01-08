@@ -1,16 +1,18 @@
 cmake_minimum_required(VERSION 2.6.4)
 
-project (demo)
+set(CMAKE_CXX_STANDARD 17)
+
+project (imagecppdemo)
 
 add_subdirectory("googletest/googletest/")
 
-add_executable(hello hello.cpp)
+add_executable(runtests shapeNormalise.cpp testIntegrationValues.cpp)
 
-target_include_directories(hello PUBLIC "." "googletest/googletest/include/")
+target_include_directories(runtests PUBLIC "." "googletest/googletest/include/")
 
-target_link_libraries(hello gtest gtest_main)
+target_link_libraries(runtests gtest gtest_main)
 
-add_dependencies(hello gtest_main)
+add_dependencies(runtests gtest_main)
 
-target_compile_options(hello PUBLIC "-g")
+target_compile_options(runtests PUBLIC "-g")
 

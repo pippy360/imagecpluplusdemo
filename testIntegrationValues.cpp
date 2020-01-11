@@ -8,7 +8,7 @@
 
 //The brute force approach will only approximate the correct value
 //so we just check if it's close
-#define ALLOWED_ERROR 0.0019
+#define ALLOWED_ERROR 0.002
 #define BRUTE_FORCE_TESTING 1
 
 
@@ -260,6 +260,64 @@ TEST(EquationTest, testXY_diamond_rotated90_bruteForce_insideCheck) {
     splitIntoQuadsAndTest_bruteForce_insideCheck(red, correctVals, xMulty, rotation);
 }
 #endif
+
+double getXYAvgVal(std::vector<ring_t> polylist) {
+    return customGetAverageVal(polylist, xyFromX1ToX2Wrapper);
+}
+
+double getXYAvgVal_bruteForce(std::vector<ring_t> polylist) {
+    return customGetAverageVal(polylist, xyFromX1ToX2Wrapper_bruteForce);
+}
+
+double getXYAvgVal_bruteForce_insideCheck(std::vector<ring_t> polylist) {
+    return customGetAverageVal_insideCheck(polylist, xMulty);
+}
+
+void combiningTestCommon(double (*func)(std::vector<ring_t>)) {
+    ring_t top{
+            {0.0, 0.5}, {0.0, 1.0}, {1.0, 1.0}, {1.0, 0.5}, {0.0, 0.5},
+    };
+    ring_t bottom{
+            {0.0, 0.0}, {0.0, 0.5}, {1.0, 0.5}, {1.0, 0.0}, {0.0, 0.0},
+    };
+    ring_t full{
+            {0.0, 0.0}, {0.0, 1.0}, {1.0, 1.0}, {1.0, 0.0}, {0.0, 0.0},
+    };
+
+    ASSERT_TRUE(bg::is_valid(top));
+    ASSERT_TRUE(bg::is_valid(bottom));
+
+    box_t boundingBoxTop = bg::return_envelope<box_t>(top);
+    std::vector<ring_t> trTop = getTopRightQuadrant(top, boundingBoxTop);
+
+    box_t boundingBoxBottom = bg::return_envelope<box_t>(top);
+    std::vector<ring_t> trBottom = getTopRightQuadrant(bottom, boundingBoxBottom);
+
+    double result;
+    result = func(trTop);
+    EXPECT_NEAR(result, 0.375, ALLOWED_ERROR);
+
+    result = func(trBottom);
+    EXPECT_NEAR(result, 0.125, ALLOWED_ERROR);
+
+    box_t boundingBoxFull = bg::return_envelope<box_t>(full);
+    std::vector<ring_t> trFull = getTopRightQuadrant(full, boundingBoxBottom);
+
+    result = func(trFull);
+    EXPECT_NEAR(result, 0.25, ALLOWED_ERROR);
+}
+
+TEST(EquationTest, testXY_combiningAreas) {
+    combiningTestCommon(getXYAvgVal);
+}
+
+TEST(EquationTest, testXY_combiningAreas_bruteForce) {
+    combiningTestCommon(getXYAvgVal_bruteForce);
+}
+
+TEST(EquationTest, testXY_combiningAreas_bruteForce_insideCheck) {
+    combiningTestCommon(getXYAvgVal_bruteForce_insideCheck);
+}
 
 TEST(EquationTest, testXY_complexShape) {
     ring_t red{

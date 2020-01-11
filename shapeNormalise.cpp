@@ -54,7 +54,8 @@ double ySquaredFromX1ToX2Wrapper(point_t p1, point_t p2) {
     double x2 = p2.get<0>();
     double m = getSlopeOfLine(p1, p2);
     double c = getConstantOfLine(p1, p2);
-    return ySquaredFromX1ToX2(m, c, x1, x2);
+    double result = ySquaredFromX1ToX2(m, c, x1, x2);
+    return result;
 }
 
 static double getArea(std::vector<ring_t> shape) {
@@ -86,6 +87,8 @@ double getAverageValForEveryQuadrant(ring_t inPoly, double (*func)(point_t p1, p
     double areaTl = getArea(tl);
     result += customGetAverageVal(tl, func)*areaTl;
 
+//    std::cout << bg::dsv(tr[0]) << std::endl;
+
     double areaTr = getArea(tr);
     result += customGetAverageVal(tr, func)*areaTr;
 
@@ -111,7 +114,8 @@ static double getA(ring_t inPoly) {
     double ys = getYSquaredAverage(inPoly);
     double xs = getXSquaredAverage(inPoly);
     double xy = getXYAverage(inPoly);
-    return sqrt(sqrt( pow(ys, 2) / (xs*ys - pow(xy, 2)) ));
+    double val = pow(ys, 2) / (xs*ys - pow(xy, 2));
+    return sqrt(sqrt( val ));
 }
 
 static double getB(ring_t inPoly) {
@@ -133,6 +137,8 @@ std::tuple<double, double> getAandB(ring_t inPoly) {
     std::cout << getA(inPoly) << std::endl;
     std::cout << getB(inPoly) << std::endl;
     */
-    return  {getA(inPoly), getB(inPoly)};
+    double a = getA(inPoly);
+    double b = getB(inPoly);
+    return  {a, b};
 }
 

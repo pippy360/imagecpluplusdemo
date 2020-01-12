@@ -301,7 +301,41 @@ void combiningTestCommon(double (*func)(std::vector<ring_t>)) {
     EXPECT_NEAR(result, 0.125, ALLOWED_ERROR);
 
     box_t boundingBoxFull = bg::return_envelope<box_t>(full);
-    std::vector<ring_t> trFull = getTopRightQuadrant(full, boundingBoxBottom);
+    std::vector<ring_t> trFull = getTopRightQuadrant(full, boundingBoxFull);
+
+    result = func(trFull);
+    EXPECT_NEAR(result, 0.25, ALLOWED_ERROR);
+}
+
+void combiningTestCommonSquare(double (*func)(std::vector<ring_t>)) {
+    ring_t top{
+            {0.0, 0.5}, {0.0, 1.0}, {1.0, 1.0}, {1.0, 0.5}, {0.0, 0.5},
+    };
+    ring_t bottom{
+            {0.0, 0.0}, {0.0, 0.5}, {1.0, 0.5}, {1.0, 0.0}, {0.0, 0.0},
+    };
+    ring_t full{
+            {0.0, 0.0}, {0.0, 1.0}, {1.0, 1.0}, {1.0, 0.0}, {0.0, 0.0},
+    };
+
+    ASSERT_TRUE(bg::is_valid(top));
+    ASSERT_TRUE(bg::is_valid(bottom));
+
+    box_t boundingBoxTop = bg::return_envelope<box_t>(top);
+    std::vector<ring_t> trTop = getTopRightQuadrant(top, boundingBoxTop);
+
+    box_t boundingBoxBottom = bg::return_envelope<box_t>(top);
+    std::vector<ring_t> trBottom = getTopRightQuadrant(bottom, boundingBoxBottom);
+
+    double result;
+    result = func(trTop);
+    EXPECT_NEAR(result, 0.375, ALLOWED_ERROR);
+
+    result = func(trBottom);
+    EXPECT_NEAR(result, 0.125, ALLOWED_ERROR);
+
+    box_t boundingBoxFull = bg::return_envelope<box_t>(full);
+    std::vector<ring_t> trFull = getTopRightQuadrant(full, boundingBoxFull);
 
     result = func(trFull);
     EXPECT_NEAR(result, 0.25, ALLOWED_ERROR);
@@ -311,6 +345,7 @@ TEST(EquationTest, testXY_combiningAreas) {
     combiningTestCommon(getXYAvgVal);
 }
 
+#if BRUTE_FORCE_TESTING
 TEST(EquationTest, testXY_combiningAreas_bruteForce) {
     combiningTestCommon(getXYAvgVal_bruteForce);
 }
@@ -318,6 +353,140 @@ TEST(EquationTest, testXY_combiningAreas_bruteForce) {
 TEST(EquationTest, testXY_combiningAreas_bruteForce_insideCheck) {
     combiningTestCommon(getXYAvgVal_bruteForce_insideCheck);
 }
+#endif
+
+void combiningTestCommonTriangle1x1(double (*func)(std::vector<ring_t>)) {
+    ring_t top{
+            {0.0, 1.0}, {1.0, 1.0}, {1.0, 0.0}, {0.0, 1.0},
+    };
+    ring_t bottom{
+            {0.0, 1.0}, {1.0, 0.0}, {0.0, 0.0}, {0.0, 1.0},
+    };
+    ring_t full{
+            {0.0, 0.0}, {0.0, 1.0}, {1.0, 1.0}, {1.0, 0.0}, {0.0, 0.0},
+    };
+
+    ASSERT_TRUE(bg::is_valid(top));
+    ASSERT_TRUE(bg::is_valid(bottom));
+
+    box_t boundingBoxTop = bg::return_envelope<box_t>(top);
+    std::vector<ring_t> trTop = getTopRightQuadrant(top, boundingBoxTop);
+
+    box_t boundingBoxBottom = bg::return_envelope<box_t>(top);
+    std::vector<ring_t> trBottom = getTopRightQuadrant(bottom, boundingBoxBottom);
+
+    double result;
+    result = func(trTop);
+    EXPECT_NEAR(result, 0.41666666666666663, ALLOWED_ERROR);
+
+    result = func(trBottom);
+    EXPECT_NEAR(result, 0.083333333333333343, ALLOWED_ERROR);
+
+    box_t boundingBoxFull = bg::return_envelope<box_t>(full);
+    std::vector<ring_t> trFull = getTopRightQuadrant(full, boundingBoxFull);
+
+    result = func(trFull);
+    EXPECT_NEAR(result, 0.25, ALLOWED_ERROR);
+}
+
+TEST(EquationTest, testXY_combiningAreasTriangle) {
+    combiningTestCommonTriangle1x1(getXYAvgVal);
+}
+
+#if BRUTE_FORCE_TESTING
+TEST(EquationTest, testXY_combiningAreasTriangle_bruteForce) {
+    combiningTestCommonTriangle1x1(getXYAvgVal_bruteForce);
+}
+
+TEST(EquationTest, testXY_combiningAreasTriangle_bruteForce_insideCheck) {
+    combiningTestCommonTriangle1x1(getXYAvgVal_bruteForce_insideCheck);
+}
+#endif
+
+void combiningTestCommonTriangle2x1(double (*func)(std::vector<ring_t>)) {
+    ring_t top{
+            {0.0, 1.0}, {2.0, 1.0}, {2.0, 0.0}, {0.0, 1.0},
+    };
+    ring_t bottom{
+            {0.0, 1.0}, {2.0, 0.0}, {0.0, 0.0}, {0.0, 1.0},
+    };
+    ring_t full{
+            {0.0, 0.0}, {0.0, 1.0}, {2.0, 1.0}, {2.0, 0.0}, {0.0, 0.0},
+    };
+
+    ASSERT_TRUE(bg::is_valid(top));
+    ASSERT_TRUE(bg::is_valid(bottom));
+
+    box_t boundingBoxTop = bg::return_envelope<box_t>(top);
+    std::vector<ring_t> trTop = getTopRightQuadrant(top, boundingBoxTop);
+
+    box_t boundingBoxBottom = bg::return_envelope<box_t>(top);
+    std::vector<ring_t> trBottom = getTopRightQuadrant(bottom, boundingBoxBottom);
+
+    double result;
+    result = func(trTop);
+    EXPECT_NEAR(result, 0.83333333333333326, ALLOWED_ERROR);
+
+    result = func(trBottom);
+    EXPECT_NEAR(result, 0.16666666666666669, ALLOWED_ERROR);
+
+    box_t boundingBoxFull = bg::return_envelope<box_t>(full);
+    std::vector<ring_t> trFull = getTopRightQuadrant(full, boundingBoxFull);
+
+    result = func(trFull);
+    EXPECT_NEAR(result, 0.5, ALLOWED_ERROR);
+}
+
+TEST(EquationTest, testXY_combiningAreasTriangle2x1) {
+    combiningTestCommonTriangle2x1(getXYAvgVal);
+}
+
+#if BRUTE_FORCE_TESTING
+TEST(EquationTest, testXY_combiningAreasTriangle2x1_bruteForce) {
+    combiningTestCommonTriangle2x1(getXYAvgVal_bruteForce);
+}
+
+TEST(EquationTest, testXY_combiningAreasTriangle2x1_bruteForce_insideCheck) {
+    combiningTestCommonTriangle2x1(getXYAvgVal_bruteForce_insideCheck);
+}
+#endif
+
+void combiningTestCommonTriangle1x1Rotated10(double (*func)(std::vector<ring_t>)) {
+    ring_t top{
+            {0.0, 1.0}, {2.0, 1.0}, {2.0, 0.0}, {0.0, 1.0},
+    };
+    ring_t bottom{
+            {0.0, 1.0}, {2.0, 0.0}, {0.0, 0.0}, {0.0, 1.0},
+    };
+    ring_t full{
+            {-1.0, -1.0}, {-1.0, 1.0}, {1.0, 1.0}, {1.0, -1.0}, {-1.0, -1.0}
+    };
+
+    ring_t transformedPoly;
+    bg::strategy::transform::rotate_transformer<bg::degree, double, 2, 2> rotate(10);
+    bg::transform(full, transformedPoly, rotate);
+
+    box_t boundingBoxFull = bg::return_envelope<box_t>(transformedPoly);
+    std::vector<ring_t> trFull = getTopRightQuadrant(transformedPoly, boundingBoxFull);
+
+    double result;
+    result = func(trFull);
+    EXPECT_NEAR(result, 0.25, ALLOWED_ERROR);
+}
+
+TEST(EquationTest, testXY_combiningAreasTriangle1x1Rotated10) {
+    combiningTestCommonTriangle1x1Rotated10(getXYAvgVal);
+}
+
+#if BRUTE_FORCE_TESTING
+TEST(EquationTest, testXY_combiningAreasTriangle1x1Rotated10_bruteForce) {
+    combiningTestCommonTriangle1x1Rotated10(getXYAvgVal_bruteForce);
+}
+
+TEST(EquationTest, testXY_combiningAreasTriangle1x1Rotated10_bruteForce_insideCheck) {
+    combiningTestCommonTriangle1x1Rotated10(getXYAvgVal_bruteForce_insideCheck);
+}
+#endif
 
 TEST(EquationTest, testXY_complexShape) {
     ring_t red{
@@ -351,7 +520,6 @@ TEST(EquationTest, testXY_complexShape_bruteForce_insideCheck) {
 }
 
 #endif
-/*
 
 TEST(EquationTest, testYSquared_1x1square_rotated10_bruteForce) {
     ring_t red{

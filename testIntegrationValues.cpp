@@ -1,3 +1,5 @@
+//FIXME: STATIC WHY AREN'T LOCAL FUNCTIONS STATIC
+#include <numeric>
 
 #include <gtest/gtest.h>
 
@@ -9,7 +11,7 @@
 //The brute force approach will only approximate the correct value
 //so we just check if it's close
 #define ALLOWED_ERROR 0.002
-#define BRUTE_FORCE_TESTING 1
+#define BRUTE_FORCE_TESTING 0
 
 
 double bruteForcePointEquationCommon(point_t p1, point_t p2, double (*func)(double x, double y)) {
@@ -20,17 +22,20 @@ double bruteForcePointEquationCommon(point_t p1, point_t p2, double (*func)(doub
     double result = 0;
     int totalSteps = 2000;
     double step = (x2 - x1)/((double) totalSteps-1);
+    double yValsTotal = 0;
     for (int i = 0; i < totalSteps; i++) {
         double line = 0;
+        double xVal = x1 + (step*i);
+        double yValFinal = xVal*m + c;
         for(int j = 0; j < totalSteps; j++) {
-            double xVal = x1 + (step*i);
-            double yVal = (xVal*m + c) * ((double)j/(double)totalSteps);
+            double yVal = yValFinal * ((double)j/(double)totalSteps);
 
             line += func(xVal, yVal);
         }
-        result += line/totalSteps;
+        result += (line/totalSteps)*yValFinal;
+        yValsTotal += yValFinal;
     }
-    return result/totalSteps;
+    return result/yValsTotal;
 }
 
 double ySquared(double x, double y) {
@@ -49,6 +54,70 @@ double xyFromX1ToX2Wrapper_bruteForce(point_t p1, point_t p2) {
     return bruteForcePointEquationCommon(p1, p2, xMulty);
 }
 
+static double customGetAverageVal_insideCheck(std::vector<ring_t> polyList, double (*func)(double x, double y)) {
+    std::vector<double> avgvec;
+    double totalAreaFix = 0;
+    for (auto &poly : polyList) {
+        double result = 0;
+        long pointCount = 0;
+        box_t boundingBox = bg::return_envelope<box_t>(poly);
+        double min_x = boundingBox.min_corner().get<0>();
+        double min_y = boundingBox.min_corner().get<1>();
+        double max_x = boundingBox.max_corner().get<0>();
+        double max_y = boundingBox.max_corner().get<1>();
+
+        int totalSteps = 2000;
+        double stepx = (max_x - min_x)/((double) totalSteps-1);
+        double stepy = (max_y - min_y)/((double) totalSteps-1);
+
+        for (double i = min_x; i <= max_x; i += stepx) {
+            for(double j = min_y; j <= max_y; j += stepy) {
+                point_t p(i, j);
+                if (bg::within(p, poly)) {
+                    result += func(i, j);
+                    pointCount++;
+                }
+            }
+        }
+        double area = bg::area(poly);
+        totalAreaFix += area;
+        double avg = (result / pointCount);
+        avgvec.push_back(avg*area);
+    }
+    double avgres = std::accumulate( avgvec.begin(), avgvec.end(), 0.0);
+    return avgres/totalAreaFix;
+}
+
+double getXYAvgVal(std::vector<ring_t> polylist) {
+    return customGetAverageVal(polylist, xyFromX1ToX2Wrapper);
+}
+
+double getXYAvgVal_bruteForce(std::vector<ring_t> polylist) {
+    return customGetAverageVal(polylist, xyFromX1ToX2Wrapper_bruteForce);
+}
+
+double getXYAvgVal_bruteForce_insideCheck(std::vector<ring_t> polylist) {
+    return customGetAverageVal_insideCheck(polylist, xMulty);
+}
+
+double getXYAvgVal_bruteForce_insideCheck_twoPoints(point_t p1, point_t p2) {
+    ring_t ring{
+            {std::min(p1.get<0>(), p2.get<0>()), std::min(p1.get<1>(), 0.0)},
+            {std::min(p1.get<0>(), p2.get<0>()), std::max(p1.get<1>(), 0.0)},
+            {std::max(p1.get<0>(), p2.get<0>()), std::max(p2.get<1>(), 0.0)},
+            {std::max(p1.get<0>(), p2.get<0>()), std::min(p2.get<1>(), 0.0)},
+            {std::min(p1.get<0>(), p2.get<0>()), std::min(p1.get<1>(), 0.0)},
+    };
+
+    std::vector<ring_t> v = {ring};
+    return customGetAverageVal_insideCheck(v, xMulty);
+}
+
+//FIXME: explain
+double getXYAvgVal_insideCheck_withSamePath(std::vector<ring_t> polylist) {
+    return customGetAverageVal(polylist, getXYAvgVal_bruteForce_insideCheck_twoPoints);
+}
+
 void splitIntoQuadsAndTest(ring_t inPoly, std::vector<double> quadrantCorrectVals, double (*func)(point_t p1, point_t p2), double rotation=0) {
 
     assert(quadrantCorrectVals.size() == 4);
@@ -63,52 +132,24 @@ void splitIntoQuadsAndTest(ring_t inPoly, std::vector<double> quadrantCorrectVal
 #endif
 
     box_t boundingBox = bg::return_envelope<box_t>(transformedPoly);
-    std::vector<ring_t> bl = getTopRightQuadrant(transformedPoly, boundingBox);
-    std::vector<ring_t> br = getTopLeftQuadrant(transformedPoly, boundingBox);
-    std::vector<ring_t> tl = getBottomRightQuadrant(transformedPoly, boundingBox);
-    std::vector<ring_t> tr = getBottomLeftQuadrant(transformedPoly, boundingBox);
+    std::vector<ring_t> tr = getTopRightQuadrant(transformedPoly, boundingBox);
+    std::vector<ring_t> tl = getTopLeftQuadrant(transformedPoly, boundingBox);
+    std::vector<ring_t> br = getBottomRightQuadrant(transformedPoly, boundingBox);
+    std::vector<ring_t> bl = getBottomLeftQuadrant(transformedPoly, boundingBox);
 
     double result;
 
-    result = customGetAverageVal(bl, func);
+    result = customGetAverageVal(tr, func);
     EXPECT_NEAR(result, quadrantCorrectVals[0], ALLOWED_ERROR);
 
-    result = customGetAverageVal(br, func);
+    result = customGetAverageVal(tl, func);
     EXPECT_NEAR(result, quadrantCorrectVals[1], ALLOWED_ERROR);
 
-    result = customGetAverageVal(tl, func);
+    result = customGetAverageVal(br, func);
     EXPECT_NEAR(result, quadrantCorrectVals[2], ALLOWED_ERROR);
 
-    result = customGetAverageVal(tr, func);
+    result = customGetAverageVal(bl, func);
     EXPECT_NEAR(result, quadrantCorrectVals[3], ALLOWED_ERROR);
-}
-
-static double customGetAverageVal_insideCheck(std::vector<ring_t> polyList, double (*func)(double x, double y)) {
-
-    double result = 0;
-    long pointCount = 0;
-    for (auto &poly : polyList) {
-        box_t boundingBox = bg::return_envelope<box_t>(poly);
-        double min_x = boundingBox.min_corner().get<0>();
-        double min_y = boundingBox.min_corner().get<1>();
-        double max_x = boundingBox.max_corner().get<0>();
-        double max_y = boundingBox.max_corner().get<1>();
-
-        int totalSteps = 1000;
-        double stepx = (max_x - min_x)/((double) totalSteps-1);
-        double stepy = (max_y - min_y)/((double) totalSteps-1);
-
-        for (double i = min_x; i <= max_x; i += stepx) {
-            for(double j = min_y; j <= max_y; j += stepy) {
-                point_t p(i, j);
-                if (bg::within(p, poly)) {
-                    result += func(i, j);
-                    pointCount++;
-                }
-            }
-        }
-    }
-    return result / pointCount;
 }
 
 void splitIntoQuadsAndTest_bruteForce_insideCheck(ring_t inPoly, std::vector<double> quadrantCorrectVals, double (*func)(double x, double y), double rotation=0) {
@@ -260,18 +301,6 @@ TEST(EquationTest, testXY_diamond_rotated90_bruteForce_insideCheck) {
     splitIntoQuadsAndTest_bruteForce_insideCheck(red, correctVals, xMulty, rotation);
 }
 #endif
-
-double getXYAvgVal(std::vector<ring_t> polylist) {
-    return customGetAverageVal(polylist, xyFromX1ToX2Wrapper);
-}
-
-double getXYAvgVal_bruteForce(std::vector<ring_t> polylist) {
-    return customGetAverageVal(polylist, xyFromX1ToX2Wrapper_bruteForce);
-}
-
-double getXYAvgVal_bruteForce_insideCheck(std::vector<ring_t> polylist) {
-    return customGetAverageVal_insideCheck(polylist, xMulty);
-}
 
 void combiningTestCommon(double (*func)(std::vector<ring_t>)) {
     ring_t top{
@@ -450,27 +479,29 @@ TEST(EquationTest, testXY_combiningAreasTriangle2x1_bruteForce_insideCheck) {
     combiningTestCommonTriangle2x1(getXYAvgVal_bruteForce_insideCheck);
 }
 #endif
-
 void combiningTestCommonTriangle1x1Rotated10(double (*func)(std::vector<ring_t>)) {
-    ring_t top{
-            {0.0, 1.0}, {2.0, 1.0}, {2.0, 0.0}, {0.0, 1.0},
-    };
-    ring_t bottom{
-            {0.0, 1.0}, {2.0, 0.0}, {0.0, 0.0}, {0.0, 1.0},
-    };
     ring_t full{
             {-1.0, -1.0}, {-1.0, 1.0}, {1.0, 1.0}, {1.0, -1.0}, {-1.0, -1.0}
     };
 
     ring_t transformedPoly;
-    bg::strategy::transform::rotate_transformer<bg::degree, double, 2, 2> rotate(10);
+    bg::strategy::transform::rotate_transformer<bg::degree, double, 2, 2> rotate(0);
     bg::transform(full, transformedPoly, rotate);
 
     box_t boundingBoxFull = bg::return_envelope<box_t>(transformedPoly);
     std::vector<ring_t> trFull = getTopRightQuadrant(transformedPoly, boundingBoxFull);
+    std::vector<ring_t> tlFull = getTopLeftQuadrant(transformedPoly, boundingBoxFull);
+    std::vector<ring_t> brFull = getBottomRightQuadrant(transformedPoly, boundingBoxFull);
+    std::vector<ring_t> blFull = getBottomLeftQuadrant(transformedPoly, boundingBoxFull);
 
     double result;
     result = func(trFull);
+    EXPECT_NEAR(result, 0.25, ALLOWED_ERROR);
+    result = func(tlFull);
+    EXPECT_NEAR(result, -0.25, ALLOWED_ERROR);
+    result = func(brFull);
+    EXPECT_NEAR(result, -0.25, ALLOWED_ERROR);
+    result = func(blFull);
     EXPECT_NEAR(result, 0.25, ALLOWED_ERROR);
 }
 
@@ -488,15 +519,109 @@ TEST(EquationTest, testXY_combiningAreasTriangle1x1Rotated10_bruteForce_insideCh
 }
 #endif
 
+TEST(EquationTest, testXY_combiningAreasTriangle1x1Rotated10_segment) {
+    ring_t full{
+            {-1.0, -1.0}, {-1.0, 1.0}, {1.0, 1.0}, {1.0, -1.0}, {-1.0, -1.0}
+    };
+    ring_t tr{
+            {0,1.0154266118857449}, {1.1584559306791384,0.81115957534527772}, {1.0154266118857449,0}, {0,0}, {0,1.0154266118857449}
+    };
+    ring_t tl{
+            {-0.81115957534527772, 1.1584559306791387}, {0, 1.0154266118857449}, {0, 0}, {-1.0154266118857449, 0}, {-0.81115957534527772, 1.1584559306791387}
+    };
+
+    ring_t tr_seg1{
+            {0,1.0154266118857449}, {1.1584559306791384,0.81115957534527772}, {1.1584559306791384,0}, {0,0}, {0,1.0154266118857449}
+    };
+    ring_t tr_seg2{
+            {1.0154266118857449,0}, {1.1584559306791384,0.81115957534527772}, {1.1584559306791384,0}, {1.0154266118857449,0}
+    };
+
+
+    ASSERT_TRUE(bg::is_valid(tr));
+    ASSERT_TRUE(bg::is_valid(tl));
+    ASSERT_TRUE(bg::is_valid(tr_seg1));
+    ASSERT_TRUE(bg::is_valid(tr_seg2));
+
+    std::vector<ring_t> v1 = {tr};
+    std::vector<ring_t> v2 = {tr_seg1};
+    std::vector<ring_t> v3 = {tr_seg2};
+
+    double result;
+
+    // 0.25634746735956537
+    result = getXYAvgVal(v1);
+    EXPECT_NEAR(result, 0.24267351385912578, ALLOWED_ERROR);
+
+#if BRUTE_FORCE_TESTING
+    // 0.25620858146980419
+    result = getXYAvgVal_bruteForce(v1);
+    EXPECT_NEAR(result, 0.24267351385912578, ALLOWED_ERROR);
+
+    //
+    result = getXYAvgVal_bruteForce_insideCheck(v1);
+    EXPECT_NEAR(result, 0.24267351385912578, ALLOWED_ERROR);
+#endif
+
+    // 0.25450550408243183
+    result = getXYAvgVal(v2);
+    EXPECT_NEAR(result, 0.24607205238233901, ALLOWED_ERROR);
+
+#if BRUTE_FORCE_TESTING
+    // 0.25450550408243183
+    result = getXYAvgVal_bruteForce(v2);
+    EXPECT_NEAR(result, 0.24607205238233901, ALLOWED_ERROR);
+
+    //
+    result = getXYAvgVal_bruteForce_insideCheck(v2);
+    EXPECT_NEAR(result, 0.24607205238233901, ALLOWED_ERROR);
+#endif
+
+    // 0.22525485507194642
+    result = getXYAvgVal(v3);
+    EXPECT_NEAR(result, 0.30370581149783565, ALLOWED_ERROR);
+
+#if BRUTE_FORCE_TESTING
+    // ~0.30370581149783565
+    result = getXYAvgVal_bruteForce(v3);
+    EXPECT_NEAR(result, 0.30370581149783565, ALLOWED_ERROR);
+
+    //
+    result = getXYAvgVal_bruteForce_insideCheck(v3);
+    EXPECT_NEAR(result, 0.30370581149783565, ALLOWED_ERROR);
+
+    //
+    result = getXYAvgVal_insideCheck_withSamePath(v3);
+    EXPECT_NEAR(result, 0.30370581149783565, ALLOWED_ERROR);
+#endif
+}
+
+//FIXME: remote this, it's copy pasted below
+TEST(EquationTest, testab4) {
+    ring_t red{
+            {-1.0, -1.0}, {-1.0, 1.0}, {1.0, 1.0}, {1.0, -1.0}, {-1.0, -1.0}
+    };
+    ring_t transformedPoly;
+    bg::strategy::transform::rotate_transformer<bg::degree, double, 2, 2> rotate(45);
+    bg::transform(red, transformedPoly, rotate);
+
+    double a = getA(transformedPoly);
+    double b = getB(transformedPoly);
+    EXPECT_NEAR(1, a, ALLOWED_ERROR);
+    EXPECT_NEAR(0, b, ALLOWED_ERROR);
+}
+
+
 TEST(EquationTest, testXY_complexShape) {
     ring_t red{
             {-1.0, 0.0}, {-1.0, 4}, {-0.5, 0}, {0.0, 2.0}, {1.0, 2.0}, {1.0, 1.0}, {0.5, 1.0}, {0.5, 0.0}, {0.0, -2.0}, {-1.0, 0.0}
     };
 
     double rotation = 0;
-    std::vector<double> correctVals{0.54166666666666663, -0.58333333333333326, -0.083333333333333343, 0.16666666666666669};
+    std::vector<double> correctVals{0.54166666666666663, -0.80555555555555591, -0.083333333333333343, 0.16666666666666669};
     splitIntoQuadsAndTest(red, correctVals, xyFromX1ToX2Wrapper, rotation);
 }
+
 
 #if BRUTE_FORCE_TESTING
 TEST(EquationTest, testXY_complexShape_bruteForce) {
@@ -505,7 +630,7 @@ TEST(EquationTest, testXY_complexShape_bruteForce) {
     };
 
     double rotation = 0;
-    std::vector<double> correctVals{0.54166666666666663, -0.58333333333333326, -0.083333333333333343, 0.16666666666666669};
+    std::vector<double> correctVals{0.54166666666666663, -0.80555555555555591, -0.083333333333333343, 0.16666666666666669};
     splitIntoQuadsAndTest(red, correctVals, xyFromX1ToX2Wrapper_bruteForce, rotation);
 }
 
@@ -515,21 +640,32 @@ TEST(EquationTest, testXY_complexShape_bruteForce_insideCheck) {
     };
 
     double rotation = 0;
-    std::vector<double> correctVals{0.54166666666666663, -0.58333333333333326, -0.083333333333333343, 0.16666666666666669};
+    std::vector<double> correctVals{0.54166666666666663, -0.80555555555555591, -0.083333333333333343, 0.16666666666666669};
     splitIntoQuadsAndTest_bruteForce_insideCheck(red, correctVals, xMulty, rotation);
 }
-
 #endif
 
+TEST(EquationTest, testYSquared_1x1square_rotated10) {
+    ring_t red{
+            {-1.0, -1.0}, {-1.0, 1.0}, {1.0, 1.0}, {1.0, -1.0}, {-1.0, -1.0}
+    };
+
+    double rotation = 90;
+    std::vector<double> correctVals{0.24239391403659419, -0.24239391403659419, -0.24239391403659419, 0.24239391403659419};
+    splitIntoQuadsAndTest(red, correctVals, xyFromX1ToX2Wrapper, 10);
+}
+
+#if BRUTE_FORCE_TESTING
 TEST(EquationTest, testYSquared_1x1square_rotated10_bruteForce) {
     ring_t red{
             {-1.0, -1.0}, {-1.0, 1.0}, {1.0, 1.0}, {1.0, -1.0}, {-1.0, -1.0}
     };
 
     double rotation = 90;
-    std::vector<double> correctVals(4, 0);
+    std::vector<double> correctVals{0.24239391403659419, -0.24239391403659419, -0.24239391403659419, 0.24239391403659419};
     splitIntoQuadsAndTest(red, correctVals, xyFromX1ToX2Wrapper_bruteForce, 10);
 }
+#endif
 
 TEST(EquationTest, testab) {
     ring_t red{
@@ -569,7 +705,7 @@ TEST(EquationTest, testab3) {
     EXPECT_NEAR(0, b, ALLOWED_ERROR);
 }
 
-TEST(EquationTest, testab4) {
+TEST(EquationTest, testab4_) {
     ring_t red{
             {-1.0, -1.0}, {-1.0, 1.0}, {1.0, 1.0}, {1.0, -1.0}, {-1.0, -1.0}
     };
@@ -581,4 +717,77 @@ TEST(EquationTest, testab4) {
     EXPECT_NEAR(1, a, ALLOWED_ERROR);
     EXPECT_NEAR(0, b, ALLOWED_ERROR);
 }
-*/
+
+TEST(EquationTest, testab7) {
+    ring_t red{
+            {-1.0, -1.0}, {-1.0, 1.0}, {1.0, 1.0}, {1.0, -1.0}, {-1.0, -1.0}
+    };
+    ring_t transformedPoly;
+    std::vector<std::vector<double> > mat = {{2.0,  0.0,        0},
+                                             {0,    1.0/2.0,        0},
+                                             {0,    0,          1.0}};
+    bg::strategy::transform::matrix_transformer<double, 2, 2> rotation(mat[0][0], mat[0][1],mat[0][2],
+                                                                       mat[1][0], mat[1][1], mat[1][2],
+                                                                       mat[2][0], mat[2][1], mat[2][2]);
+    bg::transform(red, transformedPoly, rotation);
+    ASSERT_TRUE(bg::is_valid(transformedPoly));
+    auto[a, b] = getAandB(transformedPoly);
+    EXPECT_NEAR(1.0/2.0, a, ALLOWED_ERROR);
+    EXPECT_NEAR(0.0, b, ALLOWED_ERROR);
+}
+
+TEST(EquationTest, testab6) {
+    ring_t red{
+            {-1.0, -1.0}, {-1.0, 1.0}, {1.0, 1.0}, {1.0, -1.0}, {-1.0, -1.0}
+    };
+    ring_t transformedPoly;
+    std::vector<std::vector<double> > mat = {{1.0,  1.0,        0},
+                                             {0,    1.0,        0},
+                                             {0,    0,          1.0}};
+    bg::strategy::transform::matrix_transformer<double, 2, 2> rotation(mat[0][0], mat[0][1],mat[0][2],
+                                                                       mat[1][0], mat[1][1], mat[1][2],
+                                                                       mat[2][0], mat[2][1], mat[2][2]);
+    bg::transform(red, transformedPoly, rotation);
+    ASSERT_TRUE(bg::is_valid(transformedPoly));
+    auto[a, b] = getAandB(transformedPoly);
+    EXPECT_NEAR(1.0, a, ALLOWED_ERROR);
+    EXPECT_NEAR(-1.0, b, ALLOWED_ERROR);
+}
+
+TEST(EquationTest, testab5) {
+    ring_t red{
+            {-1.0, -1.0}, {-1.0, 1.0}, {1.0, 1.0}, {1.0, -1.0}, {-1.0, -1.0}
+    };
+    ring_t transformedPoly;
+    std::vector<std::vector<double> > mat = {{2.0,  1.0,        0},
+                                             {0,    1.0/2.0,    0},
+                                             {0,    0,          1.0}};
+    bg::strategy::transform::matrix_transformer<double, 2, 2> rotation(mat[0][0], mat[0][1],mat[0][2],
+                                                                       mat[1][0], mat[1][1], mat[1][2],
+                                                                       mat[2][0], mat[2][1], mat[2][2]);
+    bg::transform(red, transformedPoly, rotation);
+    ASSERT_TRUE(bg::is_valid(transformedPoly));
+    auto[a, b] = getAandB(transformedPoly);
+    EXPECT_NEAR(1.0/2.0, a, ALLOWED_ERROR);
+    EXPECT_NEAR(-1, b, ALLOWED_ERROR);
+}
+
+
+TEST(EquationTest, testab77) {
+    ring_t red{
+            {-1.0, -1.0}, {-1.0, 1.0}, {1.0, 1.0}, {1.0, -1.0}, {-1.0, -1.0}
+    };
+    ring_t transformedPoly;
+    std::vector<std::vector<double> > mat = {{200.0,  400.0,        0},
+                                             {0,    1.0/200.0,    0},
+                                             {0,    0,          1.0}};
+    bg::strategy::transform::matrix_transformer<double, 2, 2> rotation(mat[0][0], mat[0][1],mat[0][2],
+                                                                       mat[1][0], mat[1][1], mat[1][2],
+                                                                       mat[2][0], mat[2][1], mat[2][2]);
+    bg::transform(red, transformedPoly, rotation);
+    ASSERT_TRUE(bg::is_valid(transformedPoly));
+    auto[a, b] = getAandB(transformedPoly);
+    EXPECT_NEAR(1.0/200.0, a, ALLOWED_ERROR);
+    EXPECT_NEAR(-400, b, ALLOWED_ERROR);
+}
+

@@ -1,6 +1,8 @@
 #ifndef MISCUTILS_H
 #define MISCUTILS_H
 
+#include <iostream>
+
 #include "boostGeometryTypes.hpp"
 
 #define CHECK_SHAPES_VALID 1
@@ -81,9 +83,10 @@ static double customGetAverageVal(std::vector<ring_t> polyList, double (*func)(p
     double totalArea = 0;
 
     for (auto &poly : polyList) {
-        for (int i = 0; i < poly.size(); i++) {
+        //the first point is always repeated at the end so poly.size() - 1 is enough loops
+        for (int i = 0; i < poly.size() - 1; i++) {
             point_t p = poly[i];
-            point_t np = (i == poly.size() - 1) ? poly[0] : poly[i + 1];
+            point_t np = poly[i + 1];
             double x1 = p.get<0>();
             double x2 = np.get<0>();
             double area = getAreaUnderTwoPoints(p, np);
@@ -93,14 +96,20 @@ static double customGetAverageVal(std::vector<ring_t> polyList, double (*func)(p
 
             //check direction
             if (x1 < x2) {
-                result += func(p, np) * area;
+                double funcVal = func(p, np);
+//                std::cout << " func: " << funcVal << " area: " << area << std::endl;
+                result += funcVal * area;
                 totalArea += area;
             } else {
-                result -= func(p, np) * area;
+                double funcVal = func(p, np);
+//                std::cout << "-func: " << funcVal << " area: " << area << std::endl;
+                result -= funcVal * area;
                 totalArea -= area;
             }
         }
     }
+
+//    std::cout << "final value: " << result / totalArea << std::endl;
 
     return result / totalArea;
 }

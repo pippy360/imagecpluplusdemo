@@ -15,4 +15,9 @@ double getXSquaredAverage(ring_t inPoly);
 
 std::tuple<double, double> getAandB(ring_t inPoly);
 
+//FIMXE: remove these two below, only here for testing
+double getA(ring_t inPoly);
+
+double getB(ring_t inPoly);
+
 #endif /* SHAPENORMALISE_H */

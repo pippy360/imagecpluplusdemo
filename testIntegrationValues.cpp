@@ -13,6 +13,8 @@
 #define ALLOWED_ERROR 0.002
 #define BRUTE_FORCE_TESTING 0
 
+//FIXME: explain
+#define ALLOWED_ERROR_MORE_ACCURATE 0.0000001
 
 double bruteForcePointEquationCommon(point_t p1, point_t p2, double (*func)(double x, double y)) {
     double x1 = p1.get<0>();
@@ -672,8 +674,8 @@ TEST(EquationTest, testab) {
         {-1.0, -1.0}, {-1.0, 1.0}, {1.0, 1.0}, {1.0, -1.0}, {-1.0, -1.0}
     };
     auto[a, b] = getAandB(red);
-    EXPECT_NEAR(1.0, a, ALLOWED_ERROR);
-    EXPECT_NEAR(0, b, ALLOWED_ERROR);
+    EXPECT_NEAR(1.0, a, ALLOWED_ERROR_MORE_ACCURATE);
+    EXPECT_NEAR(0, b, ALLOWED_ERROR_MORE_ACCURATE);
 }
 
 TEST(EquationTest, testab2) {
@@ -688,8 +690,8 @@ TEST(EquationTest, testab2) {
     bg::transform(red, transformedPoly, rotation);
 
     auto[a, b] = getAandB(transformedPoly);
-    EXPECT_NEAR(1, a, ALLOWED_ERROR);
-    EXPECT_NEAR(0, b, ALLOWED_ERROR);
+    EXPECT_NEAR(1, a, ALLOWED_ERROR_MORE_ACCURATE);
+    EXPECT_NEAR(0, b, ALLOWED_ERROR_MORE_ACCURATE);
 }
 
 TEST(EquationTest, testab3) {
@@ -701,8 +703,8 @@ TEST(EquationTest, testab3) {
     bg::transform(red, transformedPoly, rotate);
 
     auto[a, b] = getAandB(transformedPoly);
-    EXPECT_NEAR(1, a, ALLOWED_ERROR);
-    EXPECT_NEAR(0, b, ALLOWED_ERROR);
+    EXPECT_NEAR(1, a, ALLOWED_ERROR_MORE_ACCURATE);
+    EXPECT_NEAR(0, b, ALLOWED_ERROR_MORE_ACCURATE);
 }
 
 TEST(EquationTest, testab4_) {
@@ -714,8 +716,8 @@ TEST(EquationTest, testab4_) {
     bg::transform(red, transformedPoly, rotate);
 
     auto[a, b] = getAandB(transformedPoly);
-    EXPECT_NEAR(1, a, ALLOWED_ERROR);
-    EXPECT_NEAR(0, b, ALLOWED_ERROR);
+    EXPECT_NEAR(1, a, ALLOWED_ERROR_MORE_ACCURATE);
+    EXPECT_NEAR(0, b, ALLOWED_ERROR_MORE_ACCURATE);
 }
 
 TEST(EquationTest, testab7) {
@@ -732,8 +734,8 @@ TEST(EquationTest, testab7) {
     bg::transform(red, transformedPoly, rotation);
     ASSERT_TRUE(bg::is_valid(transformedPoly));
     auto[a, b] = getAandB(transformedPoly);
-    EXPECT_NEAR(1.0/2.0, a, ALLOWED_ERROR);
-    EXPECT_NEAR(0.0, b, ALLOWED_ERROR);
+    EXPECT_NEAR(1.0/2.0, a, ALLOWED_ERROR_MORE_ACCURATE);
+    EXPECT_NEAR(0.0, b, ALLOWED_ERROR_MORE_ACCURATE);
 }
 
 TEST(EquationTest, testab6) {
@@ -750,8 +752,8 @@ TEST(EquationTest, testab6) {
     bg::transform(red, transformedPoly, rotation);
     ASSERT_TRUE(bg::is_valid(transformedPoly));
     auto[a, b] = getAandB(transformedPoly);
-    EXPECT_NEAR(1.0, a, ALLOWED_ERROR);
-    EXPECT_NEAR(-1.0, b, ALLOWED_ERROR);
+    EXPECT_NEAR(1.0, a, ALLOWED_ERROR_MORE_ACCURATE);
+    EXPECT_NEAR(-1.0, b, ALLOWED_ERROR_MORE_ACCURATE);
 }
 
 TEST(EquationTest, testab5) {
@@ -768,8 +770,8 @@ TEST(EquationTest, testab5) {
     bg::transform(red, transformedPoly, rotation);
     ASSERT_TRUE(bg::is_valid(transformedPoly));
     auto[a, b] = getAandB(transformedPoly);
-    EXPECT_NEAR(1.0/2.0, a, ALLOWED_ERROR);
-    EXPECT_NEAR(-1, b, ALLOWED_ERROR);
+    EXPECT_NEAR(1.0/2.0, a, ALLOWED_ERROR_MORE_ACCURATE);
+    EXPECT_NEAR(-1, b, ALLOWED_ERROR_MORE_ACCURATE);
 }
 
 
@@ -787,7 +789,7 @@ TEST(EquationTest, testab77) {
     bg::transform(red, transformedPoly, rotation);
     ASSERT_TRUE(bg::is_valid(transformedPoly));
     auto[a, b] = getAandB(transformedPoly);
-    EXPECT_NEAR(1.0/200.0, a, ALLOWED_ERROR);
-    EXPECT_NEAR(-400, b, ALLOWED_ERROR);
+    EXPECT_NEAR(1.0/200.0, a, ALLOWED_ERROR_MORE_ACCURATE);
+    EXPECT_NEAR(-400, b, ALLOWED_ERROR_MORE_ACCURATE);
 }
 

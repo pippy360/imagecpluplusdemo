@@ -128,18 +128,23 @@ void splitIntoQuadsAndTest(ring_t inPoly, std::vector<double> quadrantCorrectVal
     bg::strategy::transform::rotate_transformer<bg::degree, double, 2, 2> rotate(rotation);
     bg::transform(inPoly, transformedPoly, rotate);
 
-#ifdef CHECK_SHAPES_VALID
+#if ASSERT_SHAPES_VALID
     ASSERT_TRUE(bg::is_valid(inPoly));
     ASSERT_TRUE(bg::is_valid(transformedPoly));
 #endif
 
     box_t boundingBox = bg::return_envelope<box_t>(transformedPoly);
-    std::vector<ring_t> tr = getTopRightQuadrant(transformedPoly, boundingBox);
-    std::vector<ring_t> tl = getTopLeftQuadrant(transformedPoly, boundingBox);
-    std::vector<ring_t> br = getBottomRightQuadrant(transformedPoly, boundingBox);
-    std::vector<ring_t> bl = getBottomLeftQuadrant(transformedPoly, boundingBox);
+    std::vector<ring_t> tr;
+    getTopRightQuadrant(transformedPoly, boundingBox, tr);
+    std::vector<ring_t> tl;
+    getTopLeftQuadrant(transformedPoly, boundingBox, tl);
+    std::vector<ring_t> br;
+    getBottomRightQuadrant(transformedPoly, boundingBox, br);
+    std::vector<ring_t> bl;
+    getBottomLeftQuadrant(transformedPoly, boundingBox, bl);
 
     double result;
+    ring_t something;
 
     result = customGetAverageVal(tr, func);
     EXPECT_NEAR(result, quadrantCorrectVals[0], ALLOWED_ERROR);
@@ -162,16 +167,20 @@ void splitIntoQuadsAndTest_bruteForce_insideCheck(ring_t inPoly, std::vector<dou
     bg::strategy::transform::rotate_transformer<bg::degree, double, 2, 2> rotate(rotation);
     bg::transform(inPoly, transformedPoly, rotate);
 
-#ifdef CHECK_SHAPES_VALID
+#if ASSERT_SHAPES_VALID
     ASSERT_TRUE(bg::is_valid(inPoly));
     ASSERT_TRUE(bg::is_valid(transformedPoly));
 #endif
 
     box_t boundingBox = bg::return_envelope<box_t>(transformedPoly);
-    std::vector<ring_t> bl = getTopRightQuadrant(transformedPoly, boundingBox);
-    std::vector<ring_t> br = getTopLeftQuadrant(transformedPoly, boundingBox);
-    std::vector<ring_t> tl = getBottomRightQuadrant(transformedPoly, boundingBox);
-    std::vector<ring_t> tr = getBottomLeftQuadrant(transformedPoly, boundingBox);
+    std::vector<ring_t> tr;
+    getTopRightQuadrant(transformedPoly, boundingBox, tr);
+    std::vector<ring_t> tl;
+    getTopLeftQuadrant(transformedPoly, boundingBox, tl);
+    std::vector<ring_t> br;
+    getBottomRightQuadrant(transformedPoly, boundingBox, br);
+    std::vector<ring_t> bl;
+    getBottomLeftQuadrant(transformedPoly, boundingBox, bl);
 
     double result;
 
@@ -319,10 +328,12 @@ void combiningTestCommon(double (*func)(std::vector<ring_t>)) {
     ASSERT_TRUE(bg::is_valid(bottom));
 
     box_t boundingBoxTop = bg::return_envelope<box_t>(top);
-    std::vector<ring_t> trTop = getTopRightQuadrant(top, boundingBoxTop);
+    std::vector<ring_t> trTop;
+    getTopRightQuadrant(top, boundingBoxTop, trTop);
 
     box_t boundingBoxBottom = bg::return_envelope<box_t>(top);
-    std::vector<ring_t> trBottom = getTopRightQuadrant(bottom, boundingBoxBottom);
+    std::vector<ring_t> trBottom;
+    getTopRightQuadrant(bottom, boundingBoxBottom, trBottom);
 
     double result;
     result = func(trTop);
@@ -332,7 +343,8 @@ void combiningTestCommon(double (*func)(std::vector<ring_t>)) {
     EXPECT_NEAR(result, 0.125, ALLOWED_ERROR);
 
     box_t boundingBoxFull = bg::return_envelope<box_t>(full);
-    std::vector<ring_t> trFull = getTopRightQuadrant(full, boundingBoxFull);
+    std::vector<ring_t> trFull;
+    getTopRightQuadrant(full, boundingBoxFull, trFull);
 
     result = func(trFull);
     EXPECT_NEAR(result, 0.25, ALLOWED_ERROR);
@@ -353,10 +365,12 @@ void combiningTestCommonSquare(double (*func)(std::vector<ring_t>)) {
     ASSERT_TRUE(bg::is_valid(bottom));
 
     box_t boundingBoxTop = bg::return_envelope<box_t>(top);
-    std::vector<ring_t> trTop = getTopRightQuadrant(top, boundingBoxTop);
+    std::vector<ring_t> trTop;
+    getTopRightQuadrant(top, boundingBoxTop, trTop);
 
     box_t boundingBoxBottom = bg::return_envelope<box_t>(top);
-    std::vector<ring_t> trBottom = getTopRightQuadrant(bottom, boundingBoxBottom);
+    std::vector<ring_t> trBottom;
+    getTopRightQuadrant(bottom, boundingBoxBottom, trBottom);
 
     double result;
     result = func(trTop);
@@ -366,7 +380,8 @@ void combiningTestCommonSquare(double (*func)(std::vector<ring_t>)) {
     EXPECT_NEAR(result, 0.125, ALLOWED_ERROR);
 
     box_t boundingBoxFull = bg::return_envelope<box_t>(full);
-    std::vector<ring_t> trFull = getTopRightQuadrant(full, boundingBoxFull);
+    std::vector<ring_t> trFull;
+    getTopRightQuadrant(full, boundingBoxFull, trFull);
 
     result = func(trFull);
     EXPECT_NEAR(result, 0.25, ALLOWED_ERROR);
@@ -401,10 +416,12 @@ void combiningTestCommonTriangle1x1(double (*func)(std::vector<ring_t>)) {
     ASSERT_TRUE(bg::is_valid(bottom));
 
     box_t boundingBoxTop = bg::return_envelope<box_t>(top);
-    std::vector<ring_t> trTop = getTopRightQuadrant(top, boundingBoxTop);
+    std::vector<ring_t> trTop;
+    getTopRightQuadrant(top, boundingBoxTop, trTop);
 
     box_t boundingBoxBottom = bg::return_envelope<box_t>(top);
-    std::vector<ring_t> trBottom = getTopRightQuadrant(bottom, boundingBoxBottom);
+    std::vector<ring_t> trBottom;
+    getTopRightQuadrant(bottom, boundingBoxBottom, trBottom);
 
     double result;
     result = func(trTop);
@@ -414,7 +431,8 @@ void combiningTestCommonTriangle1x1(double (*func)(std::vector<ring_t>)) {
     EXPECT_NEAR(result, 0.083333333333333343, ALLOWED_ERROR);
 
     box_t boundingBoxFull = bg::return_envelope<box_t>(full);
-    std::vector<ring_t> trFull = getTopRightQuadrant(full, boundingBoxFull);
+    std::vector<ring_t> trFull;
+    getTopRightQuadrant(full, boundingBoxFull, trFull);
 
     result = func(trFull);
     EXPECT_NEAR(result, 0.25, ALLOWED_ERROR);
@@ -449,10 +467,12 @@ void combiningTestCommonTriangle2x1(double (*func)(std::vector<ring_t>)) {
     ASSERT_TRUE(bg::is_valid(bottom));
 
     box_t boundingBoxTop = bg::return_envelope<box_t>(top);
-    std::vector<ring_t> trTop = getTopRightQuadrant(top, boundingBoxTop);
+    std::vector<ring_t> trTop;
+    getTopRightQuadrant(top, boundingBoxTop, trTop);
 
     box_t boundingBoxBottom = bg::return_envelope<box_t>(top);
-    std::vector<ring_t> trBottom = getTopRightQuadrant(bottom, boundingBoxBottom);
+    std::vector<ring_t> trBottom;
+    getTopRightQuadrant(bottom, boundingBoxBottom, trBottom);
 
     double result;
     result = func(trTop);
@@ -462,7 +482,8 @@ void combiningTestCommonTriangle2x1(double (*func)(std::vector<ring_t>)) {
     EXPECT_NEAR(result, 0.16666666666666669, ALLOWED_ERROR);
 
     box_t boundingBoxFull = bg::return_envelope<box_t>(full);
-    std::vector<ring_t> trFull = getTopRightQuadrant(full, boundingBoxFull);
+    std::vector<ring_t> trFull;
+    getTopRightQuadrant(full, boundingBoxFull, trFull);
 
     result = func(trFull);
     EXPECT_NEAR(result, 0.5, ALLOWED_ERROR);
@@ -491,10 +512,14 @@ void combiningTestCommonTriangle1x1Rotated10(double (*func)(std::vector<ring_t>)
     bg::transform(full, transformedPoly, rotate);
 
     box_t boundingBoxFull = bg::return_envelope<box_t>(transformedPoly);
-    std::vector<ring_t> trFull = getTopRightQuadrant(transformedPoly, boundingBoxFull);
-    std::vector<ring_t> tlFull = getTopLeftQuadrant(transformedPoly, boundingBoxFull);
-    std::vector<ring_t> brFull = getBottomRightQuadrant(transformedPoly, boundingBoxFull);
-    std::vector<ring_t> blFull = getBottomLeftQuadrant(transformedPoly, boundingBoxFull);
+    std::vector<ring_t> trFull;
+    getTopRightQuadrant(transformedPoly, boundingBoxFull, trFull);
+    std::vector<ring_t> tlFull;
+    getTopLeftQuadrant(transformedPoly, boundingBoxFull, tlFull);
+    std::vector<ring_t> brFull;
+    getBottomRightQuadrant(transformedPoly, boundingBoxFull, brFull);
+    std::vector<ring_t> blFull;
+    getBottomLeftQuadrant(transformedPoly, boundingBoxFull, blFull);
 
     double result;
     result = func(trFull);

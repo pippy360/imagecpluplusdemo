@@ -5,7 +5,7 @@
 
 #include "boostGeometryTypes.hpp"
 
-#define CHECK_SHAPES_VALID 1
+#define ASSERT_SHAPES_VALID 0
 #define MIN_SLOPE_VAL 0.0000001
 
 
@@ -70,7 +70,7 @@ static double getAreaUnderTwoPoints(point_t p1, point_t p2) {
             {std::min(p1.get<0>(), p2.get<0>()), std::min(p1.get<1>(), 0.0)},
     };
 
-#ifdef CHECK_SHAPES_VALID
+#if ASSERT_SHAPES_VALID
     assert(bg::is_valid(ring));
 #endif
     return bg::area(ring);
@@ -114,11 +114,10 @@ static double customGetAverageVal(std::vector<ring_t> polyList, double (*func)(p
     return result / totalArea;
 }
 
-static std::vector<ring_t> getQuadrant(ring_t wholeShape, box_t intersectBox) {
-    std::vector<ring_t> output;
+static bool getQuadrant(ring_t wholeShape, box_t intersectBox, std::vector<ring_t> &output) {
     bg::intersection(intersectBox, wholeShape, output);
 
-#ifdef CHECK_SHAPES_VALID
+#if ASSERT_SHAPES_VALID
     assert(bg::is_valid(wholeShape));
     assert(bg::is_valid(intersectBox));
     for (auto& v : output)
@@ -126,39 +125,46 @@ static std::vector<ring_t> getQuadrant(ring_t wholeShape, box_t intersectBox) {
 
     assert(output.size() > 0);
 #endif
-    return output;
+    bool valid = true;
+    for (auto& v : output) {
+        valid = valid && bg::is_valid(v);
+        double segArea = bg::area(v);
+        valid = valid && (segArea > 0);
+    }
+
+    return  valid && bg::is_valid(wholeShape) && bg::is_valid(intersectBox);
 }
 
-static std::vector<ring_t> getTopRightQuadrant(ring_t wholeShape, box_t shapeBoundingBox) {
+static bool getTopRightQuadrant(ring_t wholeShape, box_t shapeBoundingBox, std::vector<ring_t> &output) {
     double max_x = shapeBoundingBox.max_corner().get<0>();
     double max_y = shapeBoundingBox.max_corner().get<1>();
 
     bg::model::box<point_t> tr_box{ {0, 0}, {max_x,max_y} };
-    return getQuadrant(wholeShape, tr_box);
+    return getQuadrant(wholeShape, tr_box, output);
 }
 
-static std::vector<ring_t> getTopLeftQuadrant(ring_t wholeShape, box_t shapeBoundingBox) {
+static bool getTopLeftQuadrant(ring_t wholeShape, box_t shapeBoundingBox, std::vector<ring_t> &output) {
     double min_x = shapeBoundingBox.min_corner().get<0>();
     double max_y = shapeBoundingBox.max_corner().get<1>();
 
     bg::model::box<point_t> tl_box{ {min_x, 0}, {0, max_y} };
-    return getQuadrant(wholeShape, tl_box);
+    return getQuadrant(wholeShape, tl_box, output);
 }
 
-static std::vector<ring_t> getBottomRightQuadrant(ring_t wholeShape, box_t shapeBoundingBox) {
+static bool getBottomRightQuadrant(ring_t wholeShape, box_t shapeBoundingBox, std::vector<ring_t> &output) {
     double min_y = shapeBoundingBox.min_corner().get<1>();
     double max_x = shapeBoundingBox.max_corner().get<0>();
 
     bg::model::box<point_t> br_box{ {0, min_y}, {max_x, 0} };
-    return getQuadrant(wholeShape, br_box);
+    return getQuadrant(wholeShape, br_box, output);
 }
 
-static std::vector<ring_t> getBottomLeftQuadrant(ring_t wholeShape, box_t shapeBoundingBox) {
+static bool getBottomLeftQuadrant(ring_t wholeShape, box_t shapeBoundingBox, std::vector<ring_t> &output) {
     double min_y = shapeBoundingBox.min_corner().get<1>();
     double min_x = shapeBoundingBox.min_corner().get<0>();
 
     bg::model::box<point_t> bl_box{ {min_x, min_y}, {0, 0} };
-    return getQuadrant(wholeShape, bl_box);
+    return getQuadrant(wholeShape, bl_box, output);
 }
 
 #endif /* MISCUTILS_H */

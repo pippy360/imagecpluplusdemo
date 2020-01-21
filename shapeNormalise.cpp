@@ -2,6 +2,9 @@
 #include "boostGeometryTypes.hpp"
 #include "miscUtils.hpp"
 
+#include "opencv2/highgui/highgui.hpp"
+#include "opencv2/imgproc/imgproc.hpp"
+
 #include <iostream>
 
 //[int_from p = 0 to (mx+c), x=k1 ... (p)*k1]/(mx+c)
@@ -82,45 +85,50 @@ static double getArea(std::vector<ring_t> shape) {
 
 double getAverageValForEveryQuadrant(ring_t inPoly, double (*func)(point_t p1, point_t p2)) {
 
-#ifdef CHECK_SHAPES_VALID
+#if ASSERT_SHAPES_VALID
     assert(bg::is_valid(inPoly));
 #endif
 
 //    std::cout << "----start " << std::endl;
     //FIXME: rename these below to the actual tr...
-    box_t boundingBox = bg::return_envelope<box_t>(inPoly);
-    std::vector<ring_t> bl = getTopRightQuadrant(inPoly, boundingBox);
-    std::vector<ring_t> br = getTopLeftQuadrant(inPoly, boundingBox);
-    std::vector<ring_t> tl = getBottomRightQuadrant(inPoly, boundingBox);
-    std::vector<ring_t> tr = getBottomLeftQuadrant(inPoly, boundingBox);
-
-
-//    std::cout << bg::dsv(bl[0]) << std::endl;
 
     double result = 0;
-    double areaBl   = getArea(bl);
-    double valBl    = customGetAverageVal(bl, func);
-    result += valBl*areaBl;
+    double totalArea = 0;
+    box_t boundingBox = bg::return_envelope<box_t>(inPoly);
 
-//    std::cout << bg::dsv(br[0]) << std::endl;
+    std::vector<ring_t> tr;
+    if (getTopRightQuadrant(inPoly, boundingBox, tr)) {
+        double areaTr   = getArea(tr);
+        double valTr    = customGetAverageVal(tr, func);
+        result += valTr*areaTr;
+        totalArea += areaTr;
+    }
 
-    double areaBr   = getArea(br);
-    double valBr    = customGetAverageVal(br, func);
-    result += valBr * areaBr;
+    std::vector<ring_t> tl;
+    if (getTopLeftQuadrant(inPoly, boundingBox, tl)) {
+        double areaTl   = getArea(tl);
+        double valTl    = customGetAverageVal(tl, func);
+        result += valTl*areaTl;
+        totalArea += areaTl;
+    }
 
-//    std::cout << bg::dsv(tl[0]) << std::endl;
+    std::vector<ring_t> br;
+    if (getBottomRightQuadrant(inPoly, boundingBox, br)) {
+        double areaBr   = getArea(br);
+        double valBr    = customGetAverageVal(br, func);
+        result += valBr * areaBr;
+        totalArea += areaBr;
+    }
 
-    double areaTl   = getArea(tl);
-    double valTl    = customGetAverageVal(tl, func);
-    result += valTl*areaTl;
+    std::vector<ring_t> bl;
+    if (getBottomLeftQuadrant(inPoly, boundingBox, bl)) {
+        double areaBl   = getArea(bl);
+        double valBl    = customGetAverageVal(bl, func);
+        result += valBl*areaBl;
+        totalArea += areaBl;
+    }
 
-//    std::cout << bg::dsv(tr[0]) << std::endl;
-
-    double areaTr   = getArea(tr);
-    double valTr    = customGetAverageVal(tr, func);
-    result += valTr*areaTr;
-
-    double fin = result/(areaBl + areaBr + areaTl + areaTr);
+    double fin = result/totalArea;
     return fin;
 }
 
@@ -156,14 +164,25 @@ double getB(ring_t inPoly) {
 }
 
 std::tuple<double, double> getAandB(ring_t inPoly) {
-/*
 
-    std::cout << "here:" << std::endl;
-    std::cout << getA(inPoly) << std::endl;
-    std::cout << getB(inPoly) << std::endl;
-    */
+    //TODO:
+    //FIXME: assert that the input shape is centered
     double a = getA(inPoly);
     double b = getB(inPoly);
     return  {a, b};
+}
+
+bool convert_to_boost(std::vector<cv::Point> inPoly, ring_t &result, std::string &reason) {
+    std::vector<point_t> points;
+    for (int i = 0; i < inPoly.size(); i++) {
+        points.push_back(point_t(inPoly[i].x, inPoly[i].y));
+    }
+    bg::assign_points(result, points);
+
+    //fix it up
+    bg::remove_spikes(result);
+    bg::correct(result);
+
+    return bg::is_valid(result, reason);
 }
 

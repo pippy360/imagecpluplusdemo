@@ -7,9 +7,9 @@ project (imagecppdemo)
 find_package(JPEG REQUIRED)
 find_package(OpenCV REQUIRED)
 
-add_subdirectory("googletest/googletest/")
+add_subdirectory("./externalDependencies/googletest/googletest/")
 
-add_executable(runtests shapeNormalise.cpp testIntegrationValues.cpp canny.cpp canny.h)
+add_executable(runtests src/shapeNormalise.cpp src/testIntegrationValues.cpp src/canny.cpp src/canny.h)
 
 target_include_directories(runtests PUBLIC "." "googletest/googletest/include/" ${JPEG_INCLUDE_DIR} ${OpenCV_INCLUDE_DIRS})
 

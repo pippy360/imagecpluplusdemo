@@ -11,7 +11,7 @@ add_subdirectory("./externalDependencies/googletest/googletest/")
 
 add_executable(runtests src/shapeNormalise.cpp src/testIntegrationValues.cpp src/canny.cpp src/canny.h)
 
-target_include_directories(runtests PUBLIC "." "googletest/googletest/include/" ${JPEG_INCLUDE_DIR} ${OpenCV_INCLUDE_DIRS})
+target_include_directories(runtests PUBLIC "." "./externalDependencies" "googletest/googletest/include/" ${JPEG_INCLUDE_DIR} ${OpenCV_INCLUDE_DIRS})
 
 target_link_libraries(runtests gtest gtest_main ${JPEG_LIBRARIES} ${OpenCV_LIBS})
 

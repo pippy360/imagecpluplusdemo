@@ -95,10 +95,10 @@ public:
     PerceptualHash()
     {}
 
-    PerceptualHash(ShapeAndPositionInvariantImage frag):
-            FragmentHash<vector<bool>>(frag)
+    PerceptualHash(cv::Mat image_data):
+            FragmentHash<vector<bool>>(image_data)
     {
-        hash_ = computeHash(frag.getImageData());
+        hash_ = computeHash(image_data);
     }
 
     PerceptualHash(string getHashFromString, ring_t shape):

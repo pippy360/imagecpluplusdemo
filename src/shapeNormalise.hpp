@@ -7,4 +7,6 @@
 
 std::tuple<double, double> getAandB(ring_t inPoly);
 
+bool convert_to_boost(std::vector<cv::Point> inPoly, ring_t &result);
+
 #endif /* SHAPENORMALISE_H */

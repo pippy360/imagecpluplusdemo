@@ -23,11 +23,8 @@
 using namespace std;
 
 void addAllHashesToRedis(string imagePath) {
-    /*
-    auto loadedImage = getLoadedImage(imagePath);
-    ring_t keypoints = getKeypoints(loadedImage.getImageData());
-    vector<ring_t> tris = buildTrianglesFromKeypoints(keypoints, 50, 400);;
-    auto hashTrianglePairs = cv::getAllTheHashesForImage<hashes::PerceptualHash>(loadedImage, tris);
+    auto loadedImage = cv::imread(imagePath);
+    auto hashTrianglePairs = getAllTheHashesForImage<hashes::PerceptualHash>(loadedImage);
 
     redisContext *c;
 //    redisReply *reply;
@@ -55,7 +52,6 @@ void addAllHashesToRedis(string imagePath) {
 	count++;
     }
     cout << "Added " << count << " image fragments to DB" << endl;
-     */
 }
 
 int findMatchingHashInRedis(string imageName) {
@@ -163,11 +159,12 @@ void compareTwoImages(string imageName1, string imageName2) {
 
 int main(int argc, char* argv[])
 {
+    addAllHashesToRedis("input.jpg");
+/*
     if (argc < 3){
         printf("error: no args!!!\n Example:\nTo insert an image run the following command:\n ./runDemo insert inputImages/cat1.png\nTo query the database with an image run the following command:\n ./runDemo lookup inputImages/cat1.png\n");
         return -1;
     }
-
 
     if (argc > 2 && !strcmp(argv[1], "insert")){
 	for (int i = 2; i < argc; i++) {
@@ -182,4 +179,5 @@ int main(int argc, char* argv[])
     }else{
         cout << "Bad argument: " << argv[1] << endl;
     }
+    */
 }

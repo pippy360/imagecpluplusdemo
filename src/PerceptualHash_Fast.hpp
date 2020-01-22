@@ -93,10 +93,10 @@ public:
     PerceptualHash_Fast()
     {}
 
-    PerceptualHash_Fast(ShapeAndPositionInvariantImage frag):
-            FragmentHash<vector<bool>>(frag)
+    PerceptualHash_Fast(cv::Mat image_data):
+            FragmentHash<vector<bool>>(image_data)
     {
-        hash_ = computeHash(frag.getImageData());
+        hash_ = computeHash(image_data);
     }
 
     PerceptualHash_Fast(string getHashFromString, ring_t shape):

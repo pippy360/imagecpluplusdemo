@@ -20,7 +20,7 @@ public:
     FragmentHash()
     {}
 
-    FragmentHash(ShapeAndPositionInvariantImage image)
+    FragmentHash(cv::Mat image_data)
     {}
 
     FragmentHash(const string &conver, ring_t shape):

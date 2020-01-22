@@ -3,9 +3,9 @@
 
 #include <string>
 #include <vector>
-#include <Keypoint.h>
 #include <memory>
-#include "ShapeAndPositionInvariantImage.h"
+
+#include "ShapeAndPositionInvariantImage.hpp"
 
 using namespace std;
 
@@ -14,7 +14,7 @@ template <typename T> class FragmentHash
 private:
 protected:
     T hash_;
-    vector<Keypoint> shape_;
+    ring_t shape_;
 public:
 
     FragmentHash()
@@ -23,7 +23,7 @@ public:
     FragmentHash(ShapeAndPositionInvariantImage image)
     {}
 
-    FragmentHash(string conver, std::vector<Keypoint> shape=vector<Keypoint>()):
+    FragmentHash(const string &conver, ring_t shape):
         shape_(shape)
     {
         //convert string to hash
@@ -40,10 +40,9 @@ public:
 
     virtual inline T getHash() const { return hash_; } 
 
-    virtual vector<Keypoint> getShape() const { return shape_; } 
+    virtual ring_t getShape() const { return shape_; }
 
     virtual int getHammingDistance(const FragmentHash<T>& inHash) = 0;
-
 };
 
 #endif // fragment_hash_h

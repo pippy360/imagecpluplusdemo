@@ -7,6 +7,39 @@
 
 #include <iostream>
 
+//used to get the average x/y/x^2/y^2/x*y value of every point in a polygon segment
+static double customGetAverageVal(std::vector<ring_t> polyList, double (*func)(point_t p1, point_t p2)) {
+    double result = 0;
+    double totalArea = 0;
+
+    for (auto &poly : polyList) {
+        //the first point is always repeated at the end so poly.size() - 1 is enough loops
+        for (int i = 0; i < poly.size() - 1; i++) {
+            point_t p = poly[i];
+            point_t np = poly[i + 1];
+            double x1 = p.get<0>();
+            double x2 = np.get<0>();
+            double area = getAreaUnderTwoPoints(p, np);
+
+            if (abs(area) < 0.000001)
+                continue;
+
+            //check direction
+            if (x1 < x2) {
+                double funcVal = func(p, np);
+                result += funcVal * area;
+                totalArea += area;
+            } else {
+                double funcVal = func(p, np);
+                result -= funcVal * area;
+                totalArea -= area;
+            }
+        }
+    }
+
+    return result / totalArea;
+}
+
 //[int_from p = 0 to (mx+c), x=k1 ... (p)*k1]/(mx+c)
 // = (p)^2*k1/2(mx+c) = (mx+c)*x/2.0
 //
@@ -28,7 +61,7 @@ static double iszero(double in){
     return abs(in) < 0.000000001;
 }
 
-double xyFromX1ToX2Wrapper(point_t p1, point_t p2) {
+static double xyFromX1ToX2Wrapper(point_t p1, point_t p2) {
     double x1 = p1.get<0>();
     double y1 = p1.get<1>();
     double x2 = p2.get<0>();
@@ -66,7 +99,7 @@ static double ySquaredFromX1ToX2(double m, double c, double x1, double x2) {
     return (first - second);
 }
 
-double ySquaredFromX1ToX2Wrapper(point_t p1, point_t p2) {
+static double ySquaredFromX1ToX2Wrapper(point_t p1, point_t p2) {
     double x1 = p1.get<0>();
     double x2 = p2.get<0>();
     double m = getSlopeOfLine(p1, p2);
@@ -83,7 +116,7 @@ static double getArea(std::vector<ring_t> shape) {
     return result;
 }
 
-double getAverageValForEveryQuadrant(ring_t inPoly, double (*func)(point_t p1, point_t p2)) {
+static double getAverageValForEveryQuadrant(ring_t inPoly, double (*func)(point_t p1, point_t p2)) {
 
 #if ASSERT_SHAPES_VALID
     assert(bg::is_valid(inPoly));
@@ -132,23 +165,22 @@ double getAverageValForEveryQuadrant(ring_t inPoly, double (*func)(point_t p1, p
     return fin;
 }
 
-double getXYAverage(ring_t inPoly) {
+static double getXYAverage(ring_t inPoly) {
      return getAverageValForEveryQuadrant(inPoly, xyFromX1ToX2Wrapper);
 }
 
-double getYSquaredAverage(ring_t inPoly) {
+static double getYSquaredAverage(ring_t inPoly) {
     return getAverageValForEveryQuadrant(inPoly, ySquaredFromX1ToX2Wrapper);
 }
 
-double getXSquaredAverage(ring_t inPoly) {
+static double getXSquaredAverage(ring_t inPoly) {
     ring_t transformedPoly;
     bg::strategy::transform::rotate_transformer<bg::degree, double, 2, 2> rotate(90);
     bg::transform(inPoly, transformedPoly, rotate);
     return getAverageValForEveryQuadrant(transformedPoly, ySquaredFromX1ToX2Wrapper);
 }
 
-//FIXME: make static
-double getA(ring_t inPoly) {
+static double getA(ring_t inPoly) {
     double ys = getYSquaredAverage(inPoly);
     double xs = getXSquaredAverage(inPoly);
     double xy = getXYAverage(inPoly);
@@ -156,17 +188,13 @@ double getA(ring_t inPoly) {
     return sqrt(sqrt( val ));
 }
 
-//FIXME: make static
-double getB(ring_t inPoly) {
+static double getB(ring_t inPoly) {
     double ys = getYSquaredAverage(inPoly);
     double xy = getXYAverage(inPoly);
     return getA(inPoly)*(-xy/ys);
 }
 
 std::tuple<double, double> getAandB(ring_t inPoly) {
-
-    //TODO:
-    //FIXME: assert that the input shape is centered
     double a = getA(inPoly);
     double b = getB(inPoly);
     return  {a, b};

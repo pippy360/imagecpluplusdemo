@@ -8,12 +8,11 @@
 #include <stdlib.h>     /* srand, rand */
 #include <time.h>       /* time */
 
-#include "PerceptualHash.h"
-#include "PerceptualHash_Fast.h"
+#include "PerceptualHash.hpp"
+#include "PerceptualHash_Fast.hpp"
 
 //#include "FragmentHash.h"
 //#include "ShapeAndPositionInvariantImage.h"
-#include "Triangle.h"
 #include "mainImageProcessingFunctions.hpp"
 #include <boost/program_options.hpp>
 #include <iostream>
@@ -23,10 +22,11 @@
 
 using namespace std;
 
-void addAllHashesToRedis(string imagePath){
+void addAllHashesToRedis(string imagePath) {
+    /*
     auto loadedImage = getLoadedImage(imagePath);
-    vector<Keypoint> keypoints = getKeypoints(loadedImage.getImageData());
-    vector<Triangle> tris = buildTrianglesFromKeypoints(keypoints, 50, 400);;
+    ring_t keypoints = getKeypoints(loadedImage.getImageData());
+    vector<ring_t> tris = buildTrianglesFromKeypoints(keypoints, 50, 400);;
     auto hashTrianglePairs = cv::getAllTheHashesForImage<hashes::PerceptualHash>(loadedImage, tris);
 
     redisContext *c;
@@ -55,13 +55,14 @@ void addAllHashesToRedis(string imagePath){
 	count++;
     }
     cout << "Added " << count << " image fragments to DB" << endl;
+     */
 }
 
-int findMatchingHashInRedis(string imageName){
-    auto loadedImage = getLoadedImage(imageName);
-    vector<Keypoint> keypoints = getKeypoints(loadedImage.getImageData());
-    vector<Triangle> tris = buildTrianglesFromKeypoints(keypoints, 50, 400);;
-    auto hashTrianglePairs = cv::getAllTheHashesForImage<hashes::PerceptualHash>(loadedImage, tris);
+int findMatchingHashInRedis(string imageName) {
+    /*
+    auto img = cv::imread(imageName);
+    vector<ring_t> shapes = extractShapes(img);;
+    auto hashTrianglePairs = cv::getAllTheHashesForImage<hashes::PerceptualHash>(img, shapes);
 
     redisContext *c;
     redisReply *reply;
@@ -123,6 +124,8 @@ int findMatchingHashInRedis(string imageName){
 
     cout << "Number of matches: " << result.size() << endl;
     return result.size();
+     */
+    return 0;
 }
 
 

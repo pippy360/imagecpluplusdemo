@@ -1,36 +1,11 @@
 #ifndef MISCUTILS_H
 #define MISCUTILS_H
 
-#include <iostream>
-
 #include "boostGeometryTypes.hpp"
 
 #define ASSERT_SHAPES_VALID 0
 #define MIN_SLOPE_VAL 0.0000001
 
-
-//#include <boost/geometry/io/svg/write_svg.hpp>
-//
-//template <typename Geometry1>
-//void __debug_create_svg(std::string const& filename, Geometry1 const& a)
-//{
-//    ring_t b;
-//    bg::read_wkt("POLYGON((0 0,0 7,4 2,2 0,0 0))", b);
-//    box_t box;
-//    bg::envelope(a, box);
-//    typedef typename boost::geometry::point_type<Geometry1>::type point_type;
-//    std::ofstream svg(filename.c_str());
-//
-//    boost::geometry::svg_mapper<point_type> mapper(svg, 400, 400);
-//    mapper.add(a);
-//    mapper.add(box);
-//    mapper.add(b);
-//
-//    mapper.map(a, "fill-opacity:0.5;fill:rgb(153,204,0);stroke:rgb(153,204,0);stroke-width:2");
-//    mapper.map(b, "fill-opacity:0.5;fill:rgb(153,204,0);stroke:rgb(153,204,0);stroke-width:2");
-//    mapper.map(box, "opacity:0.8;fill:none;stroke:rgb(255,128,0);stroke-width:4;stroke-dasharray:1,7;stroke-linecap:round");
-//
-//}
 
 static double getSlopeOfLine(point_t p1, point_t p2) {
     double x1 = p1.get<0>();
@@ -74,44 +49,6 @@ static double getAreaUnderTwoPoints(point_t p1, point_t p2) {
     assert(bg::is_valid(ring));
 #endif
     return bg::area(ring);
-}
-
-//used to get the average x/y/x^2/y^2/x*y value of every point in a polygon segment
-static double customGetAverageVal(std::vector<ring_t> polyList, double (*func)(point_t p1, point_t p2)) {
-
-    double result = 0;
-    double totalArea = 0;
-
-    for (auto &poly : polyList) {
-        //the first point is always repeated at the end so poly.size() - 1 is enough loops
-        for (int i = 0; i < poly.size() - 1; i++) {
-            point_t p = poly[i];
-            point_t np = poly[i + 1];
-            double x1 = p.get<0>();
-            double x2 = np.get<0>();
-            double area = getAreaUnderTwoPoints(p, np);
-
-            if (abs(area) < 0.000001)
-                continue;
-
-            //check direction
-            if (x1 < x2) {
-                double funcVal = func(p, np);
-//                std::cout << " func: " << funcVal << " area: " << area << std::endl;
-                result += funcVal * area;
-                totalArea += area;
-            } else {
-                double funcVal = func(p, np);
-//                std::cout << "-func: " << funcVal << " area: " << area << std::endl;
-                result -= funcVal * area;
-                totalArea -= area;
-            }
-        }
-    }
-
-//    std::cout << "final value: " << result / totalArea << std::endl;
-
-    return result / totalArea;
 }
 
 static bool getQuadrant(ring_t wholeShape, box_t intersectBox, std::vector<ring_t> &output) {

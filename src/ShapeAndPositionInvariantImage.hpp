@@ -3,26 +3,27 @@
 #include <vector>
 #include <opencv2/opencv.hpp>
 
-#include "Keypoint.h"
+#include "boostGeometryTypes.hpp"
 
 class ShapeAndPositionInvariantImage
 {
 public:
-	ShapeAndPositionInvariantImage(const std::string imageName, const cv::Mat imageData, const std::vector<Keypoint> shape, const std::string imageFullPath);
+	ShapeAndPositionInvariantImage(const std::string imageName, const cv::Mat imageData, const ring_t shape, const std::string imageFullPath);
 
 	const std::string& getImageName() const { return imageName_; }
 	cv::Mat getImageData() const { return imageData_; }
-	const std::vector<Keypoint>& getShape() const { return shape_; }
+	ring_t getShape() const { return shape_; }
 	const std::string& getImageFullPath() const { return imageFullPath_; }
 
 private:
 	const std::string imageName_;
 	const cv::Mat imageData_;
-	const std::vector<Keypoint> shape_;
+	const ring_t shape_;
 	const std::string imageFullPath_;
 };
 
-inline ShapeAndPositionInvariantImage::ShapeAndPositionInvariantImage(const std::string imageName, const cv::Mat imageData, const std::vector<Keypoint> shape, const std::string imageFullPath)
+inline ShapeAndPositionInvariantImage::ShapeAndPositionInvariantImage(const std::string imageName,
+            const cv::Mat imageData, const ring_t shape, const std::string imageFullPath)
 	: imageName_(imageName),
 	  imageData_(imageData),
 	  shape_(shape),

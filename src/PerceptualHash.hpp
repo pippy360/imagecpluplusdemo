@@ -7,17 +7,16 @@
 #include <iomanip>
 
 #include "opencv2/opencv.hpp"
-#include "Keypoint.h"
 #include "FragmentHash.h"
 #include "img_hash_opencv_module/phash.hpp"
-using namespace std;
 
+using namespace std;
 
 namespace hashes{
 class PerceptualHash : public FragmentHash<vector<bool>> {
 private:
     vector<bool> hash;
-    vector<Keypoint> shape;
+    ring_t shape;
 
     static std::string convertHashToString(vector<bool> hash) {
         std::string ret = "";
@@ -102,7 +101,7 @@ public:
         hash_ = computeHash(frag.getImageData());
     }
 
-    PerceptualHash(string getHashFromString, std::vector<Keypoint> shape=vector<Keypoint>()):
+    PerceptualHash(string getHashFromString, ring_t shape):
             FragmentHash<vector<bool>>(getHashFromString, shape)
     {
         hash_ = hex_str_to_hash(getHashFromString);
@@ -117,7 +116,7 @@ public:
         return convertHashToString(hash_);
     }
     
-    int getHammingDistance(const FragmentHash<vector<bool>>& inHash){
+    int getHammingDistance(const FragmentHash<vector<bool>>& inHash) override {
         return getHashDistance(*this, inHash);
     }
 

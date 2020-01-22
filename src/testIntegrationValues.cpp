@@ -16,6 +16,8 @@
 //FIXME: explain
 #define ALLOWED_ERROR_MORE_ACCURATE 0.0000001
 
+#include "shapeNormalise.cpp"
+
 double bruteForcePointEquationCommon(point_t p1, point_t p2, double (*func)(double x, double y)) {
     double x1 = p1.get<0>();
     double x2 = p2.get<0>();

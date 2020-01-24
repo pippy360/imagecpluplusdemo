@@ -53,12 +53,12 @@ ShapeAndPositionInvariantImage getFragment(const cv::Mat& input_image, const rin
     return ShapeAndPositionInvariantImage("output.jpg", input_image, shape, "");
 }
 
-template<typename T> static std::vector<T> getHashesForShape(const cv::Mat& input_image, const ring_t& shape)
+template<typename T> static vector<pair<ring_t, T>> getHashesForShape(const cv::Mat& input_image, const ring_t& shape)
 {
-    auto ret = vector<T>();
+    auto ret = vector<pair<ring_t, T>>();
     int outputTriangleSizeX = FRAGMENT_WIDTH;
     int outputTriangleSizeY = FRAGMENT_HEIGHT;
-    for (unsigned int i = 0; i < 1; i++)
+    for (unsigned int i = 0; i < 20; i++)
     {
         auto transformationMatrix = calcTransformationMatrixWithShapePreperation(shape, i);
         auto newImageData = applyTransformationMatrixToImage(input_image, transformationMatrix, outputTriangleSizeX, outputTriangleSizeY);
@@ -86,16 +86,16 @@ template<typename T> static std::vector<T> getHashesForShape(const cv::Mat& inpu
                                 0.0, 0.0, 1.0);
 
         Mat m = covertToDynamicallyAllocatedMatrix(transpose_3*transpose_2*transpose_rot*transpose_m);
-        Mat outputImage(500, 500, CV_8UC3, Scalar(0, 0, 0));
+        Mat outputImage(32, 32, CV_8UC3, Scalar(0, 0, 0));
         warpAffine(input_image, outputImage, m, outputImage.size());
 
         //imwrite("frag.jpg" , outputImage);
-        imshow( "Contours", outputImage );
-        waitKey(0);
+//        imshow( "Contours", outputImage );
+//        waitKey(0);
 
         auto calculatedHash = T(outputImage);
-        cout << calculatedHash.toString() << endl;
-        ret.push_back(calculatedHash);
+//        cout << calculatedHash.toString() << endl;
+        ret.push_back(std::make_pair(shape, calculatedHash));
     }
     return ret;
 }
@@ -136,20 +136,16 @@ vector<ring_t> extractShapes(Mat &imgdata)
     return result;
 }
 
-template<typename T> static vector<pair<ring_t, T>> getAllTheHashesForImage(cv::Mat &imgdata)
+template<typename T> static vector<vector<pair<ring_t, T>>> getAllTheHashesForImage(cv::Mat &imgdata)
 {
     auto shapes = extractShapes(imgdata);
-    vector<pair<ring_t, T>> ret;
+    vector<vector<pair<ring_t, T>>> ret(shapes.size());
 
 #pragma omp parallel for
-    for (auto &shape : shapes)
+    for (int i = 0; i < shapes.size(); i++)
     {
-        auto hashes = getHashesForShape<T>(imgdata, shape);
-
-        for (auto &hash : hashes)
-        {
-            ret.push_back(pair<ring_t, T>(shape, hash));
-        }
+        auto shape = shapes[i];
+        ret[i] = getHashesForShape<T>(imgdata, shape);
     }
     return ret;
 }

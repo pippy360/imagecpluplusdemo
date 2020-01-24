@@ -1,5 +1,6 @@
 #include <vector>
 #include <opencv2/opencv.hpp>
+#include <opencv2/imgcodecs.hpp>
 #include <fstream>
 #include <string>
 #include <regex>
@@ -24,14 +25,14 @@ using namespace std;
 
 void addAllHashesToRedis(string imagePath) {
     auto loadedImage = cv::imread(imagePath);
-    auto hashTrianglePairs = getAllTheHashesForImage<hashes::PerceptualHash>(loadedImage);
+    auto hashTrianglePairsVector = getAllTheHashesForImage<hashes::PerceptualHash>(loadedImage);
 
     redisContext *c;
 //    redisReply *reply;
     const char *hostname = "127.0.0.1";
     int port = 6379;
 
-    struct timeval timeout = { 1, 500000 }; // 1.5 seconds
+    struct timeval timeout = {1, 500000}; // 1.5 seconds
     c = redisConnectWithTimeout(hostname, port, timeout);
     if (c == NULL || c->err) {
         if (c) {
@@ -44,12 +45,13 @@ void addAllHashesToRedis(string imagePath) {
     }
 
     int count = 0;
-    for (auto hashTriangle : hashTrianglePairs)
-    {
-        string redisEntry = convertToRedisEntryJson(imagePath, hashTriangle.first);
-        redisCommand(c,"SADD %s %s", hashTriangle.second.toString().c_str(), redisEntry.c_str());
+    for (auto &hashTrianglePairs : hashTrianglePairsVector){
+        for (auto &hashTriangle : hashTrianglePairs) {
+            string redisEntry = convertToRedisEntryJson(imagePath, hashTriangle.first);
+            redisCommand(c, "SADD %s %s", hashTriangle.second.toString().c_str(), redisEntry.c_str());
 
-	count++;
+            count++;
+        }
     }
     cout << "Added " << count << " image fragments to DB" << endl;
 }

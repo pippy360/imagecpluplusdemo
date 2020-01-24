@@ -25,7 +25,7 @@ using namespace std;
 
 void addAllHashesToRedis(string imagePath) {
     auto loadedImage = cv::imread(imagePath);
-    auto hashTrianglePairsVector = getAllTheHashesForImage<hashes::PerceptualHash>(loadedImage);
+    auto hashTrianglePairs = getAllTheHashesForImage<hashes::PerceptualHash>(loadedImage);
 
     redisContext *c;
 //    redisReply *reply;
@@ -45,13 +45,11 @@ void addAllHashesToRedis(string imagePath) {
     }
 
     int count = 0;
-    for (auto &hashTrianglePairs : hashTrianglePairsVector){
-        for (auto &hashTriangle : hashTrianglePairs) {
-            string redisEntry = convertToRedisEntryJson(imagePath, hashTriangle.first);
-            redisCommand(c, "SADD %s %s", hashTriangle.second.toString().c_str(), redisEntry.c_str());
+    for (auto &hashTriangle : hashTrianglePairs) {
+        string redisEntry = convertToRedisEntryJson(imagePath, hashTriangle.first);
+        redisCommand(c, "SADD %s %s", hashTriangle.second.toString().c_str(), redisEntry.c_str());
 
-            count++;
-        }
+        count++;
     }
     cout << "Added " << count << " image fragments to DB" << endl;
 }
@@ -79,28 +77,27 @@ int findMatchingHashInRedis(string imageName) {
 //    cout << "finished hashing" << endl;
 //    vector<hashes::PerceptualHash_Fast> result;
     vector<string> result;
-//    for (auto hash : hashes)
-//    {
-//    unsigned int batchSize = 1000;
-//    for (unsigned int i = 0; i < hashTrianglePairs.size(); i++)
-//    {
-//        unsigned int j = 0;
-//        for(;i < hashTrianglePairs.size() && j < batchSize; j++, i++){
-//            auto hashTriangle = hashTrianglePairs[i];
-//            redisAppendCommand(c,"SMEMBERS %s", hashTriangle.second.toString().c_str());
-//        }
-//
-//        for(; j > 0; j--){
-//            redisGetReply(c, (void **) &reply );
-//            //unsigned int r = redisGetReply(c, (void **) &reply );
-//            for (unsigned int k = 0; k < reply->elements; k++)
-//            {
-//                string str(reply->element[k]->str);
-//                result.push_back(str);
-//            }
-//        }
-//
-//    }
+    unsigned int batchSize = 10;
+
+    for (unsigned int i = 0; i < hashTrianglePairs.size(); i++)
+    {
+        unsigned int j = 0;
+        for(;i < hashTrianglePairs.size() && j < batchSize; j++, i++){
+            auto hashTriangle = hashTrianglePairs[i];
+            redisAppendCommand(c,"SMEMBERS %s", hashTriangle.second.toString().c_str());
+        }
+
+        for(; j > 0; j--){
+            redisGetReply(c, (void **) &reply );
+            //unsigned int r = redisGetReply(c, (void **) &reply );
+            for (unsigned int k = 0; k < reply->elements; k++)
+            {
+                string str(reply->element[k]->str);
+                result.push_back(str);
+            }
+        }
+
+    }
     std::map<string,vector<ring_t>> resultMap;
     for (auto t_str : result)
     {

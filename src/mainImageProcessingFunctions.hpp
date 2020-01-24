@@ -13,7 +13,7 @@
 #include "miscUtils.hpp"
 #include "shapeNormalise.hpp"
 
-#define NUM_OF_ROTATIONS 360
+#define NUM_OF_ROTATIONS 1
 #define HASH_SIZE 8
 #define FRAGMENT_WIDTH 60*.86
 #define FRAGMENT_HEIGHT 60
@@ -136,16 +136,19 @@ vector<ring_t> extractShapes(Mat &imgdata)
     return result;
 }
 
-template<typename T> static vector<vector<pair<ring_t, T>>> getAllTheHashesForImage(cv::Mat &imgdata)
+template<typename T> static vector<pair<ring_t, T>> getAllTheHashesForImage(cv::Mat &imgdata)
 {
     auto shapes = extractShapes(imgdata);
-    vector<vector<pair<ring_t, T>>> ret(shapes.size());
+    vector<pair<ring_t, T>> ret(shapes.size()*NUM_OF_ROTATIONS);
 
-#pragma omp parallel for
+//#pragma omp parallel for
     for (int i = 0; i < shapes.size(); i++)
     {
         auto shape = shapes[i];
-        ret[i] = getHashesForShape<T>(imgdata, shape);
+        auto hashes = getHashesForShape<T>(imgdata, shape);
+        for (int j =0; j < hashes.size(); j++) {
+            ret[(i*j) + j] = hashes[j];
+        }
     }
     return ret;
 }

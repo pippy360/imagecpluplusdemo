@@ -57,10 +57,8 @@ void addAllHashesToRedis(string imagePath) {
 }
 
 int findMatchingHashInRedis(string imageName) {
-    /*
     auto img = cv::imread(imageName);
-    vector<ring_t> shapes = extractShapes(img);;
-    auto hashTrianglePairs = cv::getAllTheHashesForImage<hashes::PerceptualHash>(img, shapes);
+    auto hashTrianglePairs = getAllTheHashesForImage<hashes::PerceptualHash>(img);
 
     redisContext *c;
     redisReply *reply;
@@ -83,31 +81,31 @@ int findMatchingHashInRedis(string imageName) {
     vector<string> result;
 //    for (auto hash : hashes)
 //    {
-    unsigned int batchSize = 1000;
-    for (unsigned int i = 0; i < hashTrianglePairs.size(); i++)
-    {
-        unsigned int j = 0;
-        for(;i < hashTrianglePairs.size() && j < batchSize; j++, i++){
-            auto hashTriangle = hashTrianglePairs[i];
-            redisAppendCommand(c,"SMEMBERS %s", hashTriangle.second.toString().c_str());
-        }
-
-        for(; j > 0; j--){
-            redisGetReply(c, (void **) &reply );
-            //unsigned int r = redisGetReply(c, (void **) &reply );
-            for (unsigned int k = 0; k < reply->elements; k++)
-            {
-                string str(reply->element[k]->str);
-                result.push_back(str);
-            }
-        }
-
-    }
-    std::map<string,vector<Triangle>> resultMap;
+//    unsigned int batchSize = 1000;
+//    for (unsigned int i = 0; i < hashTrianglePairs.size(); i++)
+//    {
+//        unsigned int j = 0;
+//        for(;i < hashTrianglePairs.size() && j < batchSize; j++, i++){
+//            auto hashTriangle = hashTrianglePairs[i];
+//            redisAppendCommand(c,"SMEMBERS %s", hashTriangle.second.toString().c_str());
+//        }
+//
+//        for(; j > 0; j--){
+//            redisGetReply(c, (void **) &reply );
+//            //unsigned int r = redisGetReply(c, (void **) &reply );
+//            for (unsigned int k = 0; k < reply->elements; k++)
+//            {
+//                string str(reply->element[k]->str);
+//                result.push_back(str);
+//            }
+//        }
+//
+//    }
+    std::map<string,vector<ring_t>> resultMap;
     for (auto t_str : result)
     {
         auto redisReplyImageName = getImageNameFromRedisEntry(t_str);
-        auto redisReplyTriangle = getTriangleFromRedisEntry(t_str);
+        auto redisReplyTriangle = getShapeFromRedisEntry(t_str);
         resultMap[redisReplyImageName];
         resultMap[redisReplyImageName].push_back(redisReplyTriangle);
     }
@@ -122,8 +120,6 @@ int findMatchingHashInRedis(string imageName) {
 
     cout << "Number of matches: " << result.size() << endl;
     return result.size();
-     */
-    return 0;
 }
 
 

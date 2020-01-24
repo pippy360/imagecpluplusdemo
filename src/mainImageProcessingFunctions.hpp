@@ -58,7 +58,7 @@ template<typename T> static vector<pair<ring_t, T>> getHashesForShape(const cv::
     auto ret = vector<pair<ring_t, T>>();
     int outputTriangleSizeX = FRAGMENT_WIDTH;
     int outputTriangleSizeY = FRAGMENT_HEIGHT;
-    for (unsigned int i = 0; i < 20; i++)
+    for (unsigned int i = 0; i < NUM_OF_ROTATIONS; i++)
     {
         auto transformationMatrix = calcTransformationMatrixWithShapePreperation(shape, i);
         auto newImageData = applyTransformationMatrixToImage(input_image, transformationMatrix, outputTriangleSizeX, outputTriangleSizeY);

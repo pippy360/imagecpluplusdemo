@@ -29,8 +29,11 @@ target_link_libraries(runtests gtest gtest_main hiredis ${JPEG_LIBRARIES} ${Open
 
 add_dependencies(runtests gtest_main hiredis)
 
-set( CMAKE_CXX_COMPILER "/usr/local/opt/llvm/bin/clang++" )
-set( CMAKE_CXX_FLAGS "-fopenmp -L/usr/local/Cellar/libomp/9.0.0/lib/" )
-#target_compile_options(runtests PUBLIC "-Ofast")
-target_compile_options(runtests PUBLIC "-g")
+#set( CMAKE_CXX_COMPILER "/usr/local/opt/llvm/bin/clang++" )
+#set( CMAKE_CXX_FLAGS "-fopenmp -L/usr/local/Cellar/libomp/9.0.0/lib/" )
+
+#set( CMAKE_CXX_FLAGS "-fopenmp" )
+
+target_compile_options(runtests PUBLIC "-Ofast")
+#target_compile_options(runtests PUBLIC "-g")
 

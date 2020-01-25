@@ -13,7 +13,7 @@
 #include "miscUtils.hpp"
 #include "shapeNormalise.hpp"
 
-#define NUM_OF_ROTATIONS 1
+#define NUM_OF_ROTATIONS 359
 #define HASH_SIZE 8
 #define FRAGMENT_WIDTH 60*.86
 #define FRAGMENT_HEIGHT 60
@@ -34,55 +34,34 @@ Mat covertToDynamicallyAllocatedMatrix(const Matx33d transformation_matrix)
     return m;
 }
 
-Mat applyTransformationMatrixToImage(Mat inputImage, const Matx33d transformation_matrix, int outputTriangleSizeX, int outputTriangleSizeY)
-{
-    Mat m = covertToDynamicallyAllocatedMatrix(transformation_matrix);
-    Mat outputImage(outputTriangleSizeY, outputTriangleSizeX, CV_8UC3, Scalar(0, 0, 0));
-    warpAffine(inputImage, outputImage, m, outputImage.size());
-    return outputImage;
-}
-
-Matx33d calcTransformationMatrixWithShapePreperation(const ring_t shape, double rotation)
-{
-    //get centroid, move it over and then compute the transformaiton matrix
-    return {};
-}
-
-ShapeAndPositionInvariantImage getFragment(const cv::Mat& input_image, const ring_t& shape)
-{
-    return ShapeAndPositionInvariantImage("output.jpg", input_image, shape, "");
-}
-
 template<typename T> static vector<pair<ring_t, T>> getHashesForShape(const cv::Mat& input_image, const ring_t& shape)
 {
     auto ret = vector<pair<ring_t, T>>();
     int outputTriangleSizeX = FRAGMENT_WIDTH;
     int outputTriangleSizeY = FRAGMENT_HEIGHT;
+    point_t p;
+    ring_t transformedPoly;
+    bg::centroid(shape, p);
+    bg::strategy::transform::translate_transformer<double, 2, 2> translate(-p.get<0>(), -p.get<1>());
+    bg::transform(shape, transformedPoly, translate);
+    auto [a, b] = getAandB(transformedPoly);
+    cv::Matx33d transpose_m(1.0, 0.0, -p.get<0>(),
+			0.0, 1.0, -p.get<1>(),
+			0.0, 0.0, 1.0);
+    cv::Matx33d transpose_2(a, b, 0,
+			0.0, 1.0/a, 0,
+			0.0, 0.0, 1.0);
+    cv::Matx33d transpose_3(1.0, 1.0, 250,
+			0.0, 1.0, 250,
+			0.0, 0.0, 1.0);
+
     for (unsigned int i = 0; i < NUM_OF_ROTATIONS; i++)
     {
-        auto transformationMatrix = calcTransformationMatrixWithShapePreperation(shape, i);
-        auto newImageData = applyTransformationMatrixToImage(input_image, transformationMatrix, outputTriangleSizeX, outputTriangleSizeY);
-        point_t p;
-        ring_t transformedPoly;
-        bg::centroid(shape, p);
-        bg::strategy::transform::translate_transformer<double, 2, 2> translate(-p.get<0>(), -p.get<1>());
-        bg::transform(shape, transformedPoly, translate);
-
-        auto [a, b] = getAandB(transformedPoly);
-        cv::Matx33d transpose_m(1.0, 0.0, -p.get<0>(),
-                                0.0, 1.0, -p.get<1>(),
-                                0.0, 0.0, 1.0);
         double val = PI / 180.0;
         double cosval = cos( ((double)i)*val );
         double sinval = sin( ((double)i)*val );
         cv::Matx33d transpose_rot(cosval, -sinval, 0,
                                 sinval, cosval, 0,
-                                0.0, 0.0, 1.0);
-        cv::Matx33d transpose_2(a, b, 0,
-                                0.0, 1.0/a, 0,
-                                0.0, 0.0, 1.0);
-        cv::Matx33d transpose_3(1.0, 1.0, 250,
-                                0.0, 1.0, 250,
                                 0.0, 0.0, 1.0);
 
         Mat m = covertToDynamicallyAllocatedMatrix(transpose_3*transpose_2*transpose_rot*transpose_m);
@@ -141,7 +120,7 @@ template<typename T> static vector<pair<ring_t, T>> getAllTheHashesForImage(cv::
     auto shapes = extractShapes(imgdata);
     vector<pair<ring_t, T>> ret(shapes.size()*NUM_OF_ROTATIONS);
 
-//#pragma omp parallel for
+#pragma omp parallel for
     for (int i = 0; i < shapes.size(); i++)
     {
         auto shape = shapes[i];

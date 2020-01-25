@@ -24,7 +24,8 @@
 using namespace std;
 
 void addAllHashesToRedis(string imagePath) {
-    auto loadedImage = cv::imread(imagePath);
+/*
+    auto loadedImage = ;cv::imread(imagePath);
     auto hashTrianglePairs = getAllTheHashesForImage<hashes::PerceptualHash>(loadedImage);
 
     redisContext *c;
@@ -52,9 +53,11 @@ void addAllHashesToRedis(string imagePath) {
         count++;
     }
     cout << "Added " << count << " image fragments to DB" << endl;
+*/
 }
 
 int findMatchingHashInRedis(string imageName) {
+/*
     auto img = cv::imread(imageName);
     auto hashTrianglePairs = getAllTheHashesForImage<hashes::PerceptualHash>(img);
 
@@ -117,6 +120,8 @@ int findMatchingHashInRedis(string imageName) {
 
     cout << "Number of matches: " << result.size() << endl;
     return result.size();
+*/
+return 0;
 }
 
 

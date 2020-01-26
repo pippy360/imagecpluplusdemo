@@ -1217,6 +1217,7 @@
     <textarea id="output" rows="8"></textarea>
 
     <script type='text/javascript'>
+      let api = 0;
       var statusElement = document.getElementById('status');
       var progressElement = document.getElementById('progress');
       var spinnerElement = document.getElementById('spinner');
@@ -1292,8 +1293,44 @@
           if (text) Module.printErr('[post-exception status] ' + text);
         };
       };
+
+
     </script>
     <script async type="text/javascript" src="cppdemo.js"></script>
+    <canvas id="outputImageCanvas" height="500px" width="500px"></canvas>
+    <script>
+      Module.onRuntimeInitialized = async _ => {
+        api = {
+          create_buffer: Module.cwrap('create_buffer', 'number', ['number', 'number']),
+          destroy_buffer: Module.cwrap('destroy_buffer', '', ['number']),
+          encode: Module.cwrap('encode', 'number', ['number', 'number', 'number', 'number']),
+        };
+      };
+      async function loadImage(src) {
+        // Load image
+        const imgBlob = await fetch(src).then(resp => resp.blob());
+        const img = await createImageBitmap(imgBlob);
+        // Make canvas same size as image
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        // Draw image onto canvas
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        const image = ctx.getImageData(0, 0, img.width, img.height);
+        console.log(image.data);
+
+        const p = api.create_buffer(image.width, image.height);
+        const p2 = api.create_buffer(image.width, image.height);
+        Module.HEAP8.set(image.data, p);
+        api.encode(p, p2, img.width, img.height);
+        const resultView = new Uint8ClampedArray(Module.HEAP8.buffer, p2, image.width*image.height*4);
+        const canvas2 = document.getElementById('outputImageCanvas');
+        const ctx2 = canvas2.getContext('2d');
+        const imageout = new ImageData(resultView, image.width, image.height);
+        ctx2.putImageData(imageout, 0, 0);
+      }
+    </script>
   </body>
 </html>
 

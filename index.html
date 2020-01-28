@@ -1299,6 +1299,14 @@
     <script async type="text/javascript" src="cppdemo.js"></script>
     <canvas id="outputImageCanvas" height="500px" width="500px"></canvas>
     <script>
+      byteArrayToLong = function(/*byte[]*/byteArray) {
+        var value = 0;
+        for ( var i = byteArray.length - 1; i >= 0; i--) {
+          value = (value * 256) + byteArray[i];
+        }
+
+        return value;
+      };
       Module.onRuntimeInitialized = async _ => {
         api = {
           create_buffer: Module.cwrap('create_buffer', 'number', ['number', 'number']),
@@ -1306,7 +1314,7 @@
           encode: Module.cwrap('encode', 'number', ['number', 'number', 'number', 'number']),
         };
       };
-      async function loadImage(src) {
+    async function loadImage(src) {
         // Load image
         const imgBlob = await fetch(src).then(resp => resp.blob());
         const img = await createImageBitmap(imgBlob);
@@ -1322,14 +1330,22 @@
 
         const p = api.create_buffer(image.width, image.height);
         const p2 = api.create_buffer(image.width, image.height);
+        const p3 = api.create_buffer(8, 1);
         Module.HEAP8.set(image.data, p);
-        api.encode(p, p2, img.width, img.height);
+        const p4 = api.encode(p, p2, p3, img.width, img.height);
         const resultView = new Uint8ClampedArray(Module.HEAP8.buffer, p2, image.width*image.height*4);
-        const canvas2 = document.getElementById('outputImageCanvas');
+      const resultView4 = byteArrayToLong(new Uint8ClampedArray(Module.HEAP8.buffer, p3, 8));
+      console.log("resultView4");
+      console.log(resultView4);
+        const resultView2 = new Uint8ClampedArray(Module.HEAP8.buffer, p4, resultView4);
+      var string = new TextDecoder("utf-8").decode(resultView2);
+      console.log(string);
+
+      const canvas2 = document.getElementById('outputImageCanvas');
         const ctx2 = canvas2.getContext('2d');
         const imageout = new ImageData(resultView, image.width, image.height);
         ctx2.putImageData(imageout, 0, 0);
-      }
+    }
     </script>
   </body>
 </html>

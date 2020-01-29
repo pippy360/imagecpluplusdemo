@@ -1,7 +1,7 @@
 //include Jquery
 //include matrixMath
 
-
+const INTERACTIVE_CANVAS_OVERLAY_ID = "shapeDemo_ui";
 
 const enum_TransformationOperation = {
     TRANSLATE: 1,
@@ -64,7 +64,7 @@ let g_transformState = {
     isMouseDownAndClickedOnCanvas: false,
     temporaryAppliedTransformations: getIdentityTransformations(),
     appliedTransformationsMat: getIdentityMatrix(),
-    temporaryAppliedTransformationsMat: getIdentityTransformations(),    
+    temporaryAppliedTransformationsMat: getIdentityMatrix(),
 };
 
 function wipeTemporaryAppliedTransformations() {
@@ -90,12 +90,6 @@ function applyTransformationEffects(state) {
         $(".twoCanvasWrapper").removeClass("move");
     }
 }
-
-function setCurrnetOperation(newState) {
-    g_transformState.currentTranformationOperationState = newState;
-    applyTransformationEffects(newState);
-}
-
 
 function handleMouseMoveTranslate(pageMouseDownPosition, pageMousePosition, globalState) {
     var translateDelta = minusTwoPoints(pageMouseDownPosition, pageMousePosition);
@@ -476,5 +470,121 @@ function newLayer(layerImage, keypoints, colour) {
     };
 }
 
+let g_initImages = false;
+const g_src = './images/richandmalty.jpg'
+var g_img = new Image();
+g_img.src = g_src;
+
+
+function initImages() {
+
+}
+
+var g_globalState = {
+    canvasClickLocation: {x: .5, y: .5},
+    inputImage1Mat: null,
+    inputImage2Mat: null,
+};
+
+function draw(pageMousePosition) {
+    if (!g_initImages) {
+        initImages();
+        g_initImages = true;
+    }
+
+    window.history.pushState("object or string", "Title", "index.html?point=" + g_globalState.canvasClickLocation.x + ","
+        + g_globalState.canvasClickLocation.y + "&image=" + g_src + "&appliedTransformationsMat="
+        + JSON.stringify(g_transformState.appliedTransformationsMat)+"" );
+
+
+    const temporaryAppliedTransformations = g_transformState.temporaryAppliedTransformationsMat;
+    const appliedTransformationsMat = g_transformState.appliedTransformationsMat;
+    let transMat = matrixMultiply(appliedTransformationsMat, temporaryAppliedTransformations);
+
+    const c_shapeDemo = getCleanCanvas("shapeDemo");
+
+    drawImageWithTransformations(c_shapeDemo.ctx, g_img, transMat);
+
+    drawline_m(c_shapeDemo.ctx_ui, [[0, 200], [400, 200]], 'red');
+    drawline_m(c_shapeDemo.ctx_ui, [[200, 0], [200, 400]], 'red');
+
+    //drawRotationEffect(pageMousePosition);
+}
+
+//hooks
+$(document).mousedown(function (e) {
+    //ignore
+});
+
+$(document).mousemove(function (e) {
+    var pageMousePosition = getCurrentPageMousePosition(e);
+    mouseMoveOnDocumentEvent(pageMousePosition);
+    draw(pageMousePosition);
+});
+
+$(document).bind( "touchmove", function (e) {
+    const pageMousePosition = [
+        e.originalEvent.touches[0].pageX,
+        e.originalEvent.touches[0].pageY
+    ];
+    if (g_transformState != null && g_transformState.isMouseDownAndClickedOnCanvas) {
+        e.preventDefault();
+    }
+    mouseMoveOnDocumentEvent(pageMousePosition);
+});
+
+$(document).mouseup(function (e) {
+    mouseUpEvent();
+    draw();
+});
+
+$(document).bind( "touchend", function (e) {
+    mouseUpEvent()
+});
+
+
+$("#" + INTERACTIVE_CANVAS_OVERLAY_ID).mousedown(function (e) {
+    e.preventDefault();
+    draw();
+    initImages();
+
+    var canvasElem = $("#" + INTERACTIVE_CANVAS_OVERLAY_ID)[0];
+    const pageMousePosition = getCurrentPageMousePosition(e);
+    const canvasMousePosition = getCurrentCanvasMousePosition(e, canvasElem);
+    canvasMouseDownEvent(pageMousePosition, canvasMousePosition);
+});
+
+$(document).on('touchstart', "#" + INTERACTIVE_CANVAS_OVERLAY_ID, function(e) {
+    e.preventDefault();
+    const pageMousePosition = [
+        e.originalEvent.touches[0].pageX,
+        e.originalEvent.touches[0].pageY
+    ];
+    var canvasElem = $("#" + INTERACTIVE_CANVAS_OVERLAY_ID)[0];
+    const canvasMousePosition = getCurrentCanvasMousePosition(e, canvasElem);
+    canvasMouseDownEvent(pageMousePosition, canvasMousePosition);
+});
+
+
+$("#" + INTERACTIVE_CANVAS_OVERLAY_ID).mousemove(function (e) {
+    var canvasElem = $("#" + INTERACTIVE_CANVAS_OVERLAY_ID)[0];
+    const canvasMousePosition = getCurrentCanvasMousePosition(e, canvasElem);
+
+    canvasMouseMoveEvent(canvasMousePosition);
+});
+
+$(document).on('touchmove', "#" + INTERACTIVE_CANVAS_OVERLAY_ID, function(e) {
+    e.preventDefault();
+    var canvasElem = $("#" + INTERACTIVE_CANVAS_OVERLAY_ID)[0];
+    const canvasMousePosition = getCurrentCanvasMousePosition(e, canvasElem);
+    canvasMouseMoveEvent(canvasMousePosition);
+});
+
+$("#" + INTERACTIVE_CANVAS_OVERLAY_ID).mouseup(function (e) {
+    if (g_transformState == null) {
+        return;
+    }
+    //ignore
+});
 
 

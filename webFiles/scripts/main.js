@@ -29,6 +29,9 @@ async function loadImage(src) {
     const ctx2 = canvas2.getContext('2d');
     const imageout = new ImageData(resultView, image.width, image.height);
     ctx2.putImageData(imageout, 0, 0);
+    const c_shapeDemo = getCleanCanvas("shapeDemo");
+    c_shapeDemo.ctx.putImageData(imageout, 0, 0);
+
 }
 
 function main() {

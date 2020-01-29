@@ -3,6 +3,10 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+
     <title>Emscripten-Generated Code</title>
     <style>
       body {
@@ -102,15 +106,63 @@
     </style>
   </head>
   <body>
+    <div class="buttonsWrapper">
+      <div class="buttonsInner">
+              <span data-toggle="buttons">
+                  <label id="translateButton" class="btn btn-secondary active"
+                         onclick="setCurrnetOperation(enum_TransformationOperation.TRANSLATE)">
+                      <input type="radio" name="options" autocomplete="off" checked>Move</input>
+                  </label>
+                  <label class="btn btn-secondary"
+                         onclick="setCurrnetOperation(enum_TransformationOperation.NON_UNIFORM_SCALE)">
+                      <input type="radio" name="options" autocomplete="off">Directional Scale</input>
+                  </label>
+                  <label class="btn btn-secondary"
+                         onclick="setCurrnetOperation(enum_TransformationOperation.UNIFORM_SCALE)">
+                      <input type="radio" name="options" autocomplete="off">Uniform Scale</input>
+                  </label>
+                  <label class="btn btn-secondary" onclick="setCurrnetOperation(enum_TransformationOperation.ROTATE)">
+                      <input type="radio" name="options" autocomplete="off">Rotate</input>
+                  </label>
+                  <label class="btn btn-secondary" onclick="setCurrnetOperation(enum_TransformationOperation.SKEW_X)">
+                      <input type="radio" name="options" autocomplete="off">Skew/Shear X</input>
+                  </label>
+                  <label class="btn btn-secondary" onclick="setCurrnetOperation(enum_TransformationOperation.SKEW_Y)">
+                      <input type="radio" name="options" autocomplete="off">Skew/Shear Y</input>
+                  </label>
 
-    <canvas id="outputImageCanvas" height="500px" width="500px"></canvas>
-
+              </span>
+        <!--<button class="btn btn-default" onclick="toggleDrawKeypointsMode()" >Toggle DrawKeypoints</button>-->
+        <!--<button class="btn btn-default" style="float:right;" onclick="callSearch()">CompareImages</button>-->
+        <span style="float: right">
+                  <span data-toggle="buttons">
+                     <div style="float: left; padding-right: 10px;">
+                          <button type="button" style="margin-bottom: 8px;" class="alert-danger btn btn-secondary"
+                                  onclick="reset()">Reset</button>
+                     </div>
+                  </span>
+              </span>
+      </div>
+    </div>
+    <div>
+      <div class="canvasWrapper">
+        <canvas id="shapeDemo" class="canvasInline" width="400" height="400"></canvas>
+        <canvas id="shapeDemo_ui" class="canvasInline" width="400" height="400"></canvas>
+      </div>
+    </div>
     <div class="spinner" id='spinner'></div>
     <div class="emscripten" id="status">Downloading...</div>
     <div class="emscripten">
       <progress value="0" max="100" id="progress" hidden=1></progress>
     </div>
+    <canvas id="outputImageCanvas" height="500px" width="500px"></canvas>
 
+
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="scripts/jquery.min.js"></script>
+    <script src="scripts/bootstrap.min.js" integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k" crossorigin="anonymous"></script>
 
     <script src="scripts/math.min.js"></script>
     <script src="scripts/matrixMaths.js"></script>

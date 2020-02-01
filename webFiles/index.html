@@ -184,7 +184,7 @@
     </div>
     <canvas id="outputImageCanvas" height="500px" width="500px"></canvas>
 
-
+    <canvas id="canvasImg" height="500px" width="500px"></canvas>
 
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
@@ -271,7 +271,8 @@
     <script>
       byteArrayToLong = function(/*byte[]*/byteArray) {
         var value = 0;
-        for ( var i = byteArray.length - 1; i >= 0; i--) {
+          for ( var i = byteArray.length - 1; i >= 0; i--) {
+//        for ( var i = 0; i < byteArray.length; i++) {
           value = (value * 256) + byteArray[i];
         }
 
@@ -279,9 +280,10 @@
       };
       Module.onRuntimeInitialized = async _ => {
         api = {
-          create_buffer: Module.cwrap('create_buffer', 'number', ['number', 'number']),
-          destroy_buffer: Module.cwrap('destroy_buffer', '', ['number']),
-          encode: Module.cwrap('encode', 'number', ['number', 'number', 'number', 'number']),
+            create_buffer:    Module.cwrap('create_buffer', 'number', ['number', 'number']),
+            create_buffer_zero:    Module.cwrap('create_buffer_zero', 'number', ['number', 'number']),
+            destroy_buffer:   Module.cwrap('destroy_buffer', '', ['number']),
+            encode:           Module.cwrap('encode', 'number', ['number', 'number', 'number', 'number']),
         };
         main();
       };

@@ -69,6 +69,7 @@ let g_transformState = {
 
 function wipeTemporaryAppliedTransformations() {
     g_transformState.temporaryAppliedTransformations = getIdentityTransformations();
+    g_transformState.temporaryAppliedTransformationsMat = getIdentityMatrix();
 }
 
 function setCurrnetOperation(newState) {
@@ -220,6 +221,7 @@ function handleMouseUp() {
     }
 
     wipeTemporaryAppliedTransformations();
+
 }
 
 function drawRotationEffect(pageMousePosition) {
@@ -265,20 +267,7 @@ function handleMouseMoveOnDocument(pageMousePosition) {
             break;
     }
 
-    // const activeLayer = getActiveLayer(globalState);
-    // const imageOutline = applyTransformationToImageOutline(activeLayer.nonTransformedImageOutline, g_transformState.transformationMatBeforeTemporaryTransformations);
-    // var shapeCenter = getCenterPointOfPoly(imageOutline);
-    // shapeCenter = {
-        // x: shapeCenter[0],
-        // y: shapeCenter[1]
-    // };
-    // const shapeCenter = [200, 200]//FIXME:
-    // const temporaryAppliedTransformationsMat = convertTransformationObjectToTransformationMatrix(g_transformState.temporaryAppliedTransformations, shapeCenter);
-    // // const savedLayerMat = g_transformState.transformationMatBeforeTemporaryTransformations;
-    // // activeLayer.appliedTransformations = matrixMultiply(temporaryAppliedTransformationsMat, savedLayerMat);
-    // g_transformState.appliedTransformationsMat = matrixMultiply(temporaryAppliedTransformationsMat, g_transformState.appliedTransformationsMat);
-
-    currentTranslation = [g_transformState.transformationMatBeforeTemporaryTransformations[0][2],g_transformState.transformationMatBeforeTemporaryTransformations[1][2]];
+    currentTranslation = [0, 0];
     const temporaryAppliedTransformationsMat = convertTransformationObjectToTransformationMatrix(g_transformState.temporaryAppliedTransformations, currentTranslation);
 
     const savedLayerMat = g_transformState.transformationMatBeforeTemporaryTransformations;
@@ -401,6 +390,7 @@ function mouseUpEvent() {
     if (g_transformState != null && g_transformState.isMouseDownAndClickedOnCanvas) {
         handleMouseUp();
         g_transformState.isMouseDownAndClickedOnCanvas = false;
+        copyimagetocpp();
     }
 }
 

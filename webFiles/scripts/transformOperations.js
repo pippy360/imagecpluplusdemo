@@ -383,11 +383,13 @@ function mouseMoveOnDocumentEvent(pageMousePosition) {
         handleMouseMoveOnDocument(pageMousePosition);
         //draw();
         //clearOutputListAndWipeCanvas();//FIXME:
+        draw(pageMousePosition);
     }
 }
 
 function mouseUpEvent() {
     if (g_transformState != null && g_transformState.isMouseDownAndClickedOnCanvas) {
+        draw();
         handleMouseUp();
         g_transformState.isMouseDownAndClickedOnCanvas = false;
         copyimagetocpp();
@@ -463,11 +465,12 @@ function newLayer(layerImage, keypoints, colour) {
 let g_initImages = false;
 const g_src = './images/richandmalty.jpg'
 var g_img = new Image();
+g_img.addEventListener('load', function () {
+    draw()
+})
 g_img.src = g_src;
 
-
 function initImages() {
-
 }
 
 var g_globalState = {
@@ -477,6 +480,7 @@ var g_globalState = {
 };
 
 function draw(pageMousePosition) {
+    console.log("draw called")
     if (!g_initImages) {
         initImages();
         g_initImages = true;
@@ -509,7 +513,6 @@ $(document).mousedown(function (e) {
 $(document).mousemove(function (e) {
     var pageMousePosition = getCurrentPageMousePosition(e);
     mouseMoveOnDocumentEvent(pageMousePosition);
-    draw(pageMousePosition);
 });
 
 $(document).bind( "touchmove", function (e) {
@@ -525,7 +528,6 @@ $(document).bind( "touchmove", function (e) {
 
 $(document).mouseup(function (e) {
     mouseUpEvent();
-    draw();
 });
 
 $(document).bind( "touchend", function (e) {

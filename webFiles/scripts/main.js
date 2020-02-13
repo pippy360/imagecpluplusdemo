@@ -42,51 +42,38 @@ function parseGlobalShapes(ctx, shapes) {
 }
 
 function copyimagetocpp() {
-    const c_shapeDemo = getCanvas("shapeDemo");
-
-    // Load image
-    // Make canvas same size as image
+    // const c_shapeDemo = getCanvas("shapeDemo");
+    //
+    // // Load image
+    // // Make canvas same size as image
     const canvas = document.getElementById('shapeDemo');
     const ctx = canvas.getContext('2d');
     const image = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
-    const p = api.create_buffer(canvas.width, canvas.height);
-    const p2 = api.create_buffer(canvas.width, canvas.height);
-    const imageEdgeBufferPtr = api.create_buffer(canvas.width, canvas.height);
-    const p3 = api.create_buffer_zero(8, 1);
-
-    Module.HEAP8.set(image.data, p);
+    Module.HEAP8.set(image.data, heap_image_in);
     let kernelSize = parseInt(document.getElementById("cannyKernelSize").value)+1;
     kernelSize += 1-(kernelSize%2);
-    console.log("kernelSize")
-    console.log(kernelSize)
     const ratioSize = document.getElementById("cannyRatio").value;
-    console.log(kernelSize);
-    console.log(ratioSize);
-    const p4 = api.encode(p, p2, p3, imageEdgeBufferPtr, canvas.width, canvas.height, 100, ratioSize, kernelSize);
-    const imageEdgeBuffer = new Uint8ClampedArray(Module.HEAP8.buffer, imageEdgeBufferPtr, canvas.width*canvas.height*4);
-    const resultView = new Uint8ClampedArray(Module.HEAP8.buffer, p2, canvas.width*canvas.height*4);
-    const resultView4 = byteArrayToLong(new Uint8ClampedArray(Module.HEAP8.buffer, p3, 8));
-    console.log("resultView4");
-    console.log(resultView4);
-    const resultView2 = new Uint8ClampedArray(Module.HEAP8.buffer, p4, resultView4);
-    var string = new TextDecoder("utf-8").decode(resultView2);
-    // console.log("string: " + string);
 
+    console.log("kernelSize" + kernelSize);
+    console.log("ratioSize" + ratioSize);
+
+    module.encode(heap_image_in, valHolder, canvas.width, canvas.height, 100, parseInt(ratioSize), parseInt(kernelSize));
     const ctx2 = document.getElementById('outputImageCanvas').getContext('2d');
     const ctxEdge = getCleanCanvas("canvasImgEdge");
-    const imageout = new ImageData(resultView, canvas.width, canvas.height);
-    const edgeImageOut = new ImageData(imageEdgeBuffer, canvas.width, canvas.height);
+
+    const in1 = new Uint8ClampedArray(valHolder.edgeImage.val_);
+    const in2 = new Uint8ClampedArray(valHolder.outputImage1.val_);
+    const imageout = new ImageData(in1, canvas.width, canvas.height);
+    const edgeImageOut = new ImageData(in2, canvas.width, canvas.height);
+
     ctx2.putImageData(imageout, 0, 0);
     ctxEdge.ctx.putImageData(edgeImageOut, 0, 0);
-    api.destroy_buffer(p);
-    api.destroy_buffer(p2);
-    api.destroy_buffer(p3);
-    api.destroy_buffer(p4);
-    api.destroy_buffer(imageEdgeBufferPtr);
 
-    const shapeDemo_ui = document.getElementById('shapeDemo_ui').getContext('2d');
-    parseGlobalShapes(shapeDemo_ui, string)
+    // api.destroy_buffer(p4);//FIXME: doesn't clear string or clear buffers
+    //
+    // const shapeDemo_ui = document.getElementById('shapeDemo_ui').getContext('2d');
+    // parseGlobalShapes(shapeDemo_ui, shapeString)
 }
 
 function main() {

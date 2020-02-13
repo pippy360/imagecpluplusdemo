@@ -5,7 +5,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 
     <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+<!--    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">-->
       <style>
           .canvasInline {
               display: inline-block;
@@ -262,6 +262,9 @@
 
     <script type='text/javascript'>
       let api = 0;
+      let module = 0;
+      let heap_image_in = 0;
+      let valHolder = 0;
       var statusElement = document.getElementById('status');
       var progressElement = document.getElementById('progress');
       var spinnerElement = document.getElementById('spinner');
@@ -340,16 +343,31 @@
         return value;
       };
       Module.onRuntimeInitialized = async _ => {
+          module = Module;
+
+          const canvas = document.getElementById('shapeDemo');
+
+          heap_image_in = module._malloc(canvas.width * canvas.height * 4);
+
+          valHolder = new module.ValHolder(canvas.width*canvas.height*4);
         api = {
-            create_buffer:    Module.cwrap('create_buffer', 'number', ['number', 'number']),
-            create_buffer_zero:    Module.cwrap('create_buffer_zero', 'number', ['number', 'number']),
-            destroy_buffer:   Module.cwrap('destroy_buffer', '', ['number']),
-            encode:           Module.cwrap('encode', 'number', ['number', 'number', 'number', 'number']),
+            create_buffer: Module.create_buffer,
+
         };
-        main();
+        //     create_buffer_zero:     Module.cwrap('create_buffer_zero', 'number', ['number', 'number']),
+        //     destroy_buffer:         Module.cwrap('destroy_buffer', '', ['number']),
+        //     encode:                 Module.cwrap('encode', 'number', ['number', 'number', 'number']),
+        //     getShapeString:         Module.cwrap('getShapeString', 'String', ['number']),
+        //     getImageEdgeImage:      Module.cwrap('getImageEdgeImage', 'number', ['number']),
+        //     getImageOut1:           Module.cwrap('getImageOut1', 'number', ['number']),
+        //     getImageOut2:           Module.cwrap('getImageOut2', 'number', ['number']),
+        //     getImageOut3:           Module.cwrap('getImageOut3', 'number', ['number']),
+        //     getImageOut4:           Module.cwrap('getImageOut4', 'number', ['number']),
+        //   };
+        main(Module);
       };
 
-    </script>
+    </script>s
   </body>
 </html>
 

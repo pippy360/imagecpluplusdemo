@@ -122,3 +122,15 @@ function minusTwoPoints(point1, point2) {
         point1[1] - point2[1]
     ]
 }
+
+function applyTransformationMatrixToPoint(point, mat) {
+    var resPoint = matrixMultiply( mat, [[point[0]], [point[1]], [1]]);
+    return [ resPoint[0][0], resPoint[1][0] ];
+}
+
+function applyTransformationMatrixToAllPoints(points, mat) {
+    var result = [];
+    for (var i = 0; i < points.length; i++)
+        result.push(applyTransformationMatrixToPoint(points[i], mat));
+    return result;
+}

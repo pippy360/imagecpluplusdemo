@@ -34,51 +34,66 @@ static Mat covertToDynamicallyAllocatedMatrix(const Matx33d transformation_matri
     return m;
 }
 
-static Mat applyTransformationMatrixToImage(Mat inputImage, const Matx33d transformation_matrix, int outputTriangleSizeX, int outputTriangleSizeY)
-{
-    Mat m = covertToDynamicallyAllocatedMatrix(transformation_matrix);
-    Mat outputImage(outputTriangleSizeY, outputTriangleSizeX, CV_8UC3, Scalar(0, 0, 0));
-    warpAffine(inputImage, outputImage, m, outputImage.size());
-    return outputImage;
+static Mat calcMatrix(
+        double areaFix,
+        double transx,
+        double transy,
+        double rotation,
+        double output_width,
+        double a,
+        double b,
+        double zoomin=100) {
+
+    double cosval = cos( rotation );
+    double sinval = sin( rotation );
+
+    cv::Matx33d transpose_1(1.0, 0.0, transx,
+                            0.0, 1.0, transy,
+                            0.0, 0.0, 1.0);
+
+    cv::Matx33d transpose_rot(cosval, -sinval, 0,
+                              sinval, cosval, 0,
+                              0.0, 0.0, 1.0);
+
+    cv::Matx33d transpose_2(a, b, 0,
+                            0.0, 1.0/a, 0,
+                            0.0, 0.0, 1.0);
+
+    cv::Matx33d transpose_scale(
+                            zoomin/sqrt(areaFix), 0.0, 0.0,
+                            0.0, zoomin/sqrt(areaFix), 0.0,
+                            0.0, 0.0, 1.0);
+
+    cv::Matx33d transpose_3(1.0, 0.0, output_width/2,
+                            0.0, 1.0, output_width/2,
+                            0.0, 0.0, 1.0);
+
+//    return covertToDynamicallyAllocatedMatrix(transpose_3*transpose_2*transpose_rot*transpose_1);
+    return covertToDynamicallyAllocatedMatrix(transpose_3*transpose_scale*transpose_2*transpose_rot*transpose_1);
 }
 
-template<typename T> static vector<pair<ring_t, T>> getHashesForShape(const cv::Mat& input_image, const ring_t& shape)
+template<typename T>
+static vector<pair<ring_t, T>> getHashesForShape(const cv::Mat& input_image, const ring_t& shape, int output_width=32)
 {
     auto ret = vector<pair<ring_t, T>>();
-    int outputTriangleSizeX = FRAGMENT_WIDTH;
-    int outputTriangleSizeY = FRAGMENT_HEIGHT;
+    ring_t transformedPoly;
+    point_t p;
+    bg::centroid(shape, p);
+    bg::strategy::transform::translate_transformer<double, 2, 2> translate(-p.get<0>(), -p.get<1>());
+    bg::transform(shape, transformedPoly, translate);
+    auto [a, b] = getAandB(transformedPoly);
+    double area = bg::area(transformedPoly);
     for (unsigned int i = 0; i < NUM_OF_ROTATIONS; i++)
     {
-        Mat transformationMatrix;
-        auto newImageData = applyTransformationMatrixToImage(input_image, transformationMatrix, outputTriangleSizeX, outputTriangleSizeY);
-        point_t p;
-        ring_t transformedPoly;
-        bg::centroid(shape, p);
-        bg::strategy::transform::translate_transformer<double, 2, 2> translate(-p.get<0>(), -p.get<1>());
-        bg::transform(shape, transformedPoly, translate);
 
-        auto [a, b] = getAandB(transformedPoly);
-        cv::Matx33d transpose_m(1.0, 0.0, -p.get<0>(),
-                                0.0, 1.0, -p.get<1>(),
-                                0.0, 0.0, 1.0);
         double val = PI / 180.0;
-        double cosval = cos( ((double)i)*val );
-        double sinval = sin( ((double)i)*val );
-        cv::Matx33d transpose_rot(cosval, -sinval, 0,
-                                sinval, cosval, 0,
-                                0.0, 0.0, 1.0);
-        cv::Matx33d transpose_2(a, b, 0,
-                                0.0, 1.0/a, 0,
-                                0.0, 0.0, 1.0);
-        cv::Matx33d transpose_3(1.0, 1.0, 250,
-                                0.0, 1.0, 250,
-                                0.0, 0.0, 1.0);
 
-        Mat m = covertToDynamicallyAllocatedMatrix(transpose_3*transpose_2*transpose_rot*transpose_m);
-        Mat outputImage(32, 32, CV_8UC3, Scalar(0, 0, 0));
+        Mat m = calcMatrix(area, -p.get<0>(), -p.get<1>(), ((double) i)*val, output_width, a, b);
+
+        Mat outputImage(output_width, output_width, CV_8UC3, Scalar(0, 0, 0));
         warpAffine(input_image, outputImage, m, outputImage.size());
 
-        //imwrite("frag.jpg" , outputImage);
+//        imwrite("frag.jpg" , outputImage);
 //        imshow( "Contours", outputImage );
 //        waitKey(0);
 
@@ -89,20 +104,20 @@ template<typename T> static vector<pair<ring_t, T>> getHashesForShape(const cv::
     return ret;
 }
 
-static void extractShapes(Mat &imgdata, vector<ring_t> &result)
+static void extractShapes(Mat &imgdata, vector<ring_t> &result, int thresh = 100, int ratio=3, int kernel_size=3)
 {
     Mat canny_output;
     vector<vector<Point> > contours;
     vector<Vec4i> hierarchy;
     Mat src_gray;
-    int thresh = 50;
 
     /// Convert image to gray and blur it
     cvtColor( imgdata, src_gray, COLOR_BGR2GRAY );
     blur( src_gray, src_gray, Size(6,6) );
 
     /// Detect edges using canny
-    Canny( src_gray, canny_output, thresh, thresh*2, 3 );
+    Canny( src_gray, canny_output, thresh, thresh*ratio, kernel_size );
+
     /// Find contours
     findContours( canny_output, contours, hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE, Point(0, 0) );
 

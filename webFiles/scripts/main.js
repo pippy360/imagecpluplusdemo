@@ -14,11 +14,29 @@ async function loadImage(src) {
 
 let global_shapes = [];
 
-function drawshapefromlist(index) {
+function drawshapefromlist(index, shapeStr) {
     const can = getCleanUICanvas("shapeDemo");
     const ctxEdge = getCleanUICanvas("canvasImgEdge");
     drawPolyFull(can.ctx_ui, global_shapes[index]);
     drawPolyFull(ctxEdge.ctx_ui, global_shapes[index]);
+
+    module.getHashesForShape2(heap_image_in, valHolder, shapeStr, 400);
+
+    const in3 = new Uint8ClampedArray(valHolder.outputImage2.val_);
+    const edgeImageOut2 = new ImageData(in3, 400, 400);
+    const ctxOutImage = getCleanCanvas("canvasImgFrag");
+    ctxOutImage.ctx.putImageData(edgeImageOut2, 0, 0);
+
+    var bval = module.calcMatrixFromString(shapeStr, 400);
+    console.log("bval");
+    console.log(bval);
+    var matrix = [
+        [bval[0], bval[1], bval[2]],
+        [bval[3], bval[4], bval[5]],
+        [bval[6], bval[7], bval[8]],
+    ];
+    const transshape = applyTransformationMatrixToAllPoints(global_shapes[index], matrix);
+    drawPolyFull(ctxOutImage.ctx_ui, transshape);
 }
 
 function parseGlobalShapes(ctx, shapes) {
@@ -36,7 +54,7 @@ function parseGlobalShapes(ctx, shapes) {
     for(let i = 0;i < lines.length;i++) {
         let opt = lines[i];
         let el = document.createElement("div");
-        el.innerHTML = `<div class='shapeListEl' onmouseover="drawshapefromlist(${i})" id='shapeListEl${i}'>${opt}</div>`;
+        el.innerHTML = `<div class='shapeListEl' onmouseover="drawshapefromlist(${i}, '${lines[i]}')" id='shapeListEl${i}'>${opt}</div>`;
         list.appendChild(el);
     }
 }
@@ -70,10 +88,10 @@ function copyimagetocpp() {
     ctx2.putImageData(imageout, 0, 0);
     ctxEdge.ctx.putImageData(edgeImageOut, 0, 0);
 
-    // api.destroy_buffer(p4);//FIXME: doesn't clear string or clear buffers
-    //
-    // const shapeDemo_ui = document.getElementById('shapeDemo_ui').getContext('2d');
-    // parseGlobalShapes(shapeDemo_ui, shapeString)
+
+
+    const shapeDemo_ui = document.getElementById('shapeDemo_ui').getContext('2d');
+    parseGlobalShapes(shapeDemo_ui, valHolder.shapeStr)
 }
 
 function main() {

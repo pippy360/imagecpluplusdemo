@@ -19,8 +19,15 @@ public:
         size_(size),
         val_(emscripten::typed_memory_view(size, ptr))
     {
+        std::cout << "ptr created with size " << size_ << std::endl;
+
     }
 
+    ~ValWrapper()
+    {
+        std::cout << "ptr free with size " << size_ << std::endl;
+        free(ptr_);
+    }
     unsigned char *ptr_;
     size_t size_;
     emscripten::val val_;
@@ -35,6 +42,7 @@ public:
     {
     }
 
+
     string shapeStr;
     ValWrapper edgeImage;
     ValWrapper outputImage1;
@@ -43,7 +51,7 @@ public:
 
 RNG rng(12345);
 
-emscripten::val calcMatrixFromString(string shapeStr, int output_width=400) {
+emscripten::val calcMatrixFromString(string shapeStr, int output_width=400, double zoom=1) {
     ring_t shape;
     bg::read_wkt(shapeStr, shape);
     point_t p;
@@ -55,18 +63,19 @@ emscripten::val calcMatrixFromString(string shapeStr, int output_width=400) {
     auto [a, b] = getAandB(transformedPoly);
     double val = PI / 180.0;
     double area = bg::area(transformedPoly);
-    Mat m = calcMatrix(area, -p.get<0>(), -p.get<1>(), ((double) 0)*val, output_width, a, b);
+    Mat m = calcMatrix(area, -p.get<0>(), -p.get<1>(), ((double) 0)*val, output_width, a, b, zoom);
 
     return emscripten::val(emscripten::typed_memory_view(9, (double *)m.data));
 }
 
-void getHashesForShape2(uintptr_t img_in, ValHolder *valsOut, string shapeStr, int output_width=400)
+void getHashesForShape2(uintptr_t img_in, ValHolder *valsOut, string shapeStr, int output_width=400, double zoom=1)
 {
-    Mat image(cv::Size(output_width, output_width), CV_8UC4, (void *) img_in, cv::Mat::AUTO_STEP);
-    ring_t shape;
-    bg::read_wkt(shapeStr, shape);
     point_t p;
     ring_t transformedPoly;
+
+    ring_t shape;
+    bg::read_wkt(shapeStr, shape);
+
     bg::centroid(shape, p);
     bg::strategy::transform::translate_transformer<double, 2, 2> translate(-p.get<0>(), -p.get<1>());
     bg::transform(shape, transformedPoly, translate);
@@ -75,9 +84,11 @@ void getHashesForShape2(uintptr_t img_in, ValHolder *valsOut, string shapeStr, i
     double val = PI / 180.0;
 
     double area = bg::area(transformedPoly);
-    Mat m = calcMatrix(area, -p.get<0>(), -p.get<1>(), ((double) 0)*val, output_width, a, b);
+    Mat m = calcMatrix(area, -p.get<0>(), -p.get<1>(), ((double) 0)*val, output_width, a, b, zoom);
 
     Mat outputImage(output_width, output_width, CV_8UC3, Scalar(0, 0, 0));
+    Mat image(cv::Size(400, 400), CV_8UC4, (void *) img_in, cv::Mat::AUTO_STEP);
+
     warpAffine(image, outputImage, m, outputImage.size());
     memcpy(valsOut->outputImage2.ptr_, outputImage.data, output_width*output_width*4);
 }

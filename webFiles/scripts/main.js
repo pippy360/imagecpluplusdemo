@@ -15,28 +15,68 @@ async function loadImage(src) {
 let global_shapes = [];
 
 function drawshapefromlist(index, shapeStr) {
+
     const can = getCleanUICanvas("shapeDemo");
     const ctxEdge = getCleanUICanvas("canvasImgEdge");
     drawPolyFull(can.ctx_ui, global_shapes[index]);
     drawPolyFull(ctxEdge.ctx_ui, global_shapes[index]);
 
-    module.getHashesForShape2(heap_image_in, valHolder, shapeStr, 400);
+    const zoom = 1.0/1.5;
 
+    let shapeSize = 400;
+    module.getHashesForShape2(heap_image_in, valHolder, shapeStr, shapeSize, zoom);
     const in3 = new Uint8ClampedArray(valHolder.outputImage2.val_);
-    const edgeImageOut2 = new ImageData(in3, 400, 400);
+    const edgeImageOut2 = new ImageData(in3, shapeSize, shapeSize);
     const ctxOutImage = getCleanCanvas("canvasImgFrag");
     ctxOutImage.ctx.putImageData(edgeImageOut2, 0, 0);
-
-    var bval = module.calcMatrixFromString(shapeStr, 400);
-    console.log("bval");
-    console.log(bval);
-    var matrix = [
+    let bval = module.calcMatrixFromString(shapeStr, shapeSize, zoom);
+    let matrix = [
         [bval[0], bval[1], bval[2]],
         [bval[3], bval[4], bval[5]],
         [bval[6], bval[7], bval[8]],
     ];
-    const transshape = applyTransformationMatrixToAllPoints(global_shapes[index], matrix);
+    let transshape = applyTransformationMatrixToAllPoints(global_shapes[index], matrix);
     drawPolyFull(ctxOutImage.ctx_ui, transshape);
+
+
+    shapeSize = 200;
+    var valHolder2 = new module.ValHolder(shapeSize*shapeSize*4);
+    module.getHashesForShape2(heap_image_in, valHolder2, shapeStr, shapeSize, zoom);
+
+    const in5 = new Uint8ClampedArray(valHolder2.outputImage2.val_);
+    const edgeImageOut5 = new ImageData(in5, shapeSize, shapeSize);
+    const ctxOutImage200 = getCleanCanvas("canvasImgFrag200");
+    ctxOutImage200.ctx.putImageData(edgeImageOut5, 0, 0);
+    bval = module.calcMatrixFromString(shapeStr, shapeSize, zoom);
+    matrix = [
+        [bval[0], bval[1], bval[2]],
+        [bval[3], bval[4], bval[5]],
+        [bval[6], bval[7], bval[8]],
+    ];
+    transshape = applyTransformationMatrixToAllPoints(global_shapes[index], matrix);
+    drawPolyFull(ctxOutImage200.ctx_ui, transshape);
+
+
+    shapeSize = 32;
+    var valHolder3 = new module.ValHolder(shapeSize*shapeSize*4);
+    module.getHashesForShape2(heap_image_in, valHolder3, shapeStr, shapeSize, zoom);
+
+    const in4 = new Uint8ClampedArray(valHolder3.outputImage2.val_);
+    const edgeImageOut4 = new ImageData(in4, shapeSize, shapeSize);
+    const ctxOutImage32 = getCleanCanvas("canvasImgFrag32");
+    ctxOutImage32.ctx.putImageData(edgeImageOut4, 0, 0);
+    bval = module.calcMatrixFromString(shapeStr, shapeSize, zoom);
+    matrix = [
+        [bval[0], bval[1], bval[2]],
+        [bval[3], bval[4], bval[5]],
+        [bval[6], bval[7], bval[8]],
+    ];
+    transshape = applyTransformationMatrixToAllPoints(global_shapes[index], matrix);
+    drawPolyFull(ctxOutImage32.ctx_ui, transshape);
+
+
+    valHolder2.delete();
+    valHolder3.delete();
 }
 
 function parseGlobalShapes(ctx, shapes) {

@@ -42,7 +42,7 @@ static Mat calcMatrix(
         double output_width,
         double a,
         double b,
-        double zoomin=100) {
+        double zoomin=1) {
 
     double cosval = cos( rotation );
     double sinval = sin( rotation );
@@ -59,21 +59,23 @@ static Mat calcMatrix(
                             0.0, 1.0/a, 0,
                             0.0, 0.0, 1.0);
 
+    //FIXME: explain all the variables here
+    double scaleFix = zoomin*output_width;///(sqrt(areaFix))
     cv::Matx33d transpose_scale(
-                            zoomin/sqrt(areaFix), 0.0, 0.0,
-                            0.0, zoomin/sqrt(areaFix), 0.0,
+                            scaleFix/sqrt(areaFix), 0.0, 0.0,
+                            0.0, scaleFix/sqrt(areaFix), 0.0,
                             0.0, 0.0, 1.0);
 
     cv::Matx33d transpose_3(1.0, 0.0, output_width/2,
                             0.0, 1.0, output_width/2,
                             0.0, 0.0, 1.0);
 
-//    return covertToDynamicallyAllocatedMatrix(transpose_3*transpose_2*transpose_rot*transpose_1);
     return covertToDynamicallyAllocatedMatrix(transpose_3*transpose_scale*transpose_2*transpose_rot*transpose_1);
 }
 
 template<typename T>
-static vector<pair<ring_t, T>> getHashesForShape(const cv::Mat& input_image, const ring_t& shape, int output_width=32)
+static vector<pair<ring_t, T>> getHashesForShape(const cv::Mat& input_image, const ring_t& shape, int output_width=32,
+        int numRotations=360)
 {
     auto ret = vector<pair<ring_t, T>>();
     ring_t transformedPoly;
@@ -83,7 +85,7 @@ static vector<pair<ring_t, T>> getHashesForShape(const cv::Mat& input_image, con
     bg::transform(shape, transformedPoly, translate);
     auto [a, b] = getAandB(transformedPoly);
     double area = bg::area(transformedPoly);
-    for (unsigned int i = 0; i < NUM_OF_ROTATIONS; i++)
+    for (unsigned int i = 0; i < numRotations; i++)
     {
 
         double val = PI / 180.0;
@@ -93,12 +95,7 @@ static vector<pair<ring_t, T>> getHashesForShape(const cv::Mat& input_image, con
         Mat outputImage(output_width, output_width, CV_8UC3, Scalar(0, 0, 0));
         warpAffine(input_image, outputImage, m, outputImage.size());
 
-//        imwrite("frag.jpg" , outputImage);
-//        imshow( "Contours", outputImage );
-//        waitKey(0);
-
         auto calculatedHash = T(outputImage);
-//        cout << calculatedHash.toString() << endl;
         ret.push_back(std::make_pair(shape, calculatedHash));
     }
     return ret;

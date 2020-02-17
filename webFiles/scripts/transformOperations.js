@@ -31,15 +31,11 @@ function convertTransformationObjectToTransformationMatrix(transformations, shap
 
     ret = matrixMultiply(getScaleMatrix(transformations.uniformScale, transformations.uniformScale), ret);
 
-    ret = matrixMultiply(getTranslateMatrix_point(shapeCenter, 1), ret);
 
     //Rotate
     ret = matrixMultiply(getSkewMatrix(transformations.skew_x, transformations.skew_y), ret);
 
-    ret = matrixMultiply(getScaleMatrix(transformations.uniformScale, transformations.uniformScale), ret);
-
     ret = matrixMultiply(getTranslateMatrix_point(shapeCenter, 1), ret);
-
 
     //Translate
     ret = matrixMultiply(getTranslateMatrix_point(transformations.translate, -1), ret);
@@ -267,8 +263,9 @@ function handleMouseMoveOnDocument(pageMousePosition) {
             break;
     }
 
-    currentTranslation = [0, 0];
-    const temporaryAppliedTransformationsMat = convertTransformationObjectToTransformationMatrix(g_transformState.temporaryAppliedTransformations, currentTranslation);
+    //some transformation use the clicked canvas position as the center of the transformation
+    const clickedPosition = g_transformState.temporaryAppliedTransformations.transformationCenterPoint;
+    const temporaryAppliedTransformationsMat = convertTransformationObjectToTransformationMatrix(g_transformState.temporaryAppliedTransformations, clickedPosition);
 
     const savedLayerMat = g_transformState.transformationMatBeforeTemporaryTransformations;
     // activeLayer.appliedTransformations = matrixMultiply(temporaryAppliedTransformationsMat, savedLayerMat);

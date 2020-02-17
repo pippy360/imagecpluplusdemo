@@ -2,12 +2,17 @@
 #include <opencv2/opencv.hpp>
 #include <sstream>
 
+#include <map>
+
 #include <emscripten.h>
 #include <emscripten/bind.h>
 #include <emscripten/val.h>
 
 #include "boostGeometryTypes.hpp"
 #include "mainImageProcessingFunctions.hpp"
+
+#include "PerceptualHash.hpp"
+#include "PerceptualHash_Fast.hpp"
 
 using namespace cv;
 
@@ -52,18 +57,10 @@ public:
 RNG rng(12345);
 
 emscripten::val calcMatrixFromString(string shapeStr, int output_width=400, double zoom=1) {
+
     ring_t shape;
     bg::read_wkt(shapeStr, shape);
-    point_t p;
-    ring_t transformedPoly;
-    bg::centroid(shape, p);
-    bg::strategy::transform::translate_transformer<double, 2, 2> translate(-p.get<0>(), -p.get<1>());
-    bg::transform(shape, transformedPoly, translate);
-
-    auto [a, b] = getAandB(transformedPoly);
-    double val = PI / 180.0;
-    double area = bg::area(transformedPoly);
-    Mat m = calcMatrix(area, -p.get<0>(), -p.get<1>(), ((double) 0)*val, output_width, a, b, zoom);
+    Mat m = calcMatrix(shape, 0, output_width, zoom);
 
     return emscripten::val(emscripten::typed_memory_view(9, (double *)m.data));
 }
@@ -75,16 +72,7 @@ void getHashesForShape2(uintptr_t img_in, ValHolder *valsOut, string shapeStr, i
 
     ring_t shape;
     bg::read_wkt(shapeStr, shape);
-
-    bg::centroid(shape, p);
-    bg::strategy::transform::translate_transformer<double, 2, 2> translate(-p.get<0>(), -p.get<1>());
-    bg::transform(shape, transformedPoly, translate);
-
-    auto [a, b] = getAandB(transformedPoly);
-    double val = PI / 180.0;
-
-    double area = bg::area(transformedPoly);
-    Mat m = calcMatrix(area, -p.get<0>(), -p.get<1>(), ((double) 0)*val, output_width, a, b, zoom);
+    Mat m = calcMatrix(shape, 0, output_width, zoom);
 
     Mat outputImage(output_width, output_width, CV_8UC3, Scalar(0, 0, 0));
     Mat image(cv::Size(400, 400), CV_8UC4, (void *) img_in, cv::Mat::AUTO_STEP);
@@ -93,7 +81,27 @@ void getHashesForShape2(uintptr_t img_in, ValHolder *valsOut, string shapeStr, i
     memcpy(valsOut->outputImage2.ptr_, outputImage.data, output_width*output_width*4);
 }
 
-
+std::string getAllTheHashesForImageFromCanvas(uintptr_t img_in, int rotation)
+{
+    Mat image(cv::Size(400, 400), CV_8UC4, (void *) img_in, cv::Mat::AUTO_STEP);
+    auto vec = getAllTheHashesForImage<hashes::PerceptualHash>(image, rotation);
+    std::stringstream polygonString;
+    polygonString << "{ ";
+//    for (auto &v: vec) {
+    for (int i = 0; i < vec.size(); i++) {
+        auto v = vec[i];
+        auto [shape, hash] = v;
+        if (i > 0)
+            polygonString << ",";
+        polygonString << "\"";
+        polygonString << hash.toString();
+        polygonString << "\" : \"";
+        polygonString << bg::wkt(shape);
+        polygonString << "\"";
+    }
+    polygonString << "} ";
+    return polygonString.str();
+}
 
 void encode(
         uintptr_t img_in,
@@ -104,9 +112,6 @@ void encode(
         int ratio=3,
         int kernel_size=3)
 {
-
-    cout << width << " <- width height -> " << height << endl;
-
     int size = width * height * 4 * sizeof(uint8_t);
     cout << "size: " << size << endl;
     vector<vector<Point> > contours;
@@ -166,32 +171,6 @@ void encode(
 
 using namespace emscripten;
 
-double getAandBWithStringAVal(string shapeStr) {
-    ring_t shape;
-    bg::read_wkt(shapeStr, shape);
-    point_t p;
-    ring_t transformedPoly;
-    bg::centroid(shape, p);
-    bg::strategy::transform::translate_transformer<double, 2, 2> translate(-p.get<0>(), -p.get<1>());
-    bg::transform(shape, transformedPoly, translate);
-
-    auto [a, b] = getAandB(transformedPoly);
-    return a;
-}
-
-double getAandBWithStringBVal(string shapeStr) {
-    ring_t shape;
-    bg::read_wkt(shapeStr, shape);
-    point_t p;
-    ring_t transformedPoly;
-    bg::centroid(shape, p);
-    bg::strategy::transform::translate_transformer<double, 2, 2> translate(-p.get<0>(), -p.get<1>());
-    bg::transform(shape, transformedPoly, translate);
-
-    auto [a, b] = getAandB(transformedPoly);
-    return b;
-}
-
 EMSCRIPTEN_BINDINGS(my_value_example) {
 
     class_<ValWrapper>("ValWrapper")
@@ -209,4 +188,5 @@ EMSCRIPTEN_BINDINGS(my_value_example) {
     emscripten::function("encode", &encode, allow_raw_pointers());
     emscripten::function("getHashesForShape2", &getHashesForShape2, allow_raw_pointers());
     emscripten::function("calcMatrixFromString", &calcMatrixFromString);
+    emscripten::function("getAllTheHashesForImageFromCanvas", &getAllTheHashesForImageFromCanvas);
 }

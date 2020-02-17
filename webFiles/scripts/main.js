@@ -9,7 +9,13 @@ async function loadImage(src) {
     // Draw image onto canvas
     const ctx = canvas.getContext('2d');
     ctx.drawImage(img, 0, 0);
+
     //const image = ctx.getImageData(0, 0, img.width, img.height);
+    let canvas2 = document.getElementById('shapeDemo');
+    let ctx2 = canvas2.getContext('2d');
+    ctx2.drawImage(img, 0, 0, ctx2.canvas.width, ctx2.canvas.height);
+    const image = ctx2.getImageData(0, 0, canvas2.width, canvas2.height);
+    Module.HEAP8.set(image.data, heap_image_og);
 }
 
 let global_shapes = [];
@@ -74,9 +80,28 @@ function drawshapefromlist(index, shapeStr) {
     transshape = applyTransformationMatrixToAllPoints(global_shapes[index], matrix);
     drawPolyFull(ctxOutImage32.ctx_ui, transshape);
 
-
     valHolder2.delete();
     valHolder3.delete();
+}
+
+function findMatches() {
+    var db = module.getAllTheHashesForImageFromCanvas(heap_image_og, 90);
+    var check = module.getAllTheHashesForImageFromCanvas(heap_image_in, 90);
+
+    let dbObj = JSON.parse(db);
+    let checkObj = JSON.parse(check);
+
+    console.log(dbObj);
+    console.log(checkObj);
+
+    let keys = Object.keys(dbObj);
+    for (var i = 0; i < keys.length; i++)
+    {
+        var key = keys[i];
+        if (checkObj[key] !== undefined) {
+            console.log("match");
+        }
+    }
 }
 
 function parseGlobalShapes(ctx, shapes) {
@@ -132,6 +157,7 @@ function copyimagetocpp() {
 
     const shapeDemo_ui = document.getElementById('shapeDemo_ui').getContext('2d');
     parseGlobalShapes(shapeDemo_ui, valHolder.shapeStr)
+    setTimeout(findMatches(), 0)
 }
 
 function main() {

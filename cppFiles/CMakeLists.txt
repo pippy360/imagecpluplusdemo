@@ -19,7 +19,9 @@ add_executable(
         src/main.cc
         src/img_hash_opencv_module/phash.cpp
         src/img_hash_opencv_module/PHash_Fast.cpp
-        src/utils.hpp src/mainImageProcessingFunctions.hpp src/webasmMain.cpp)
+        src/utils.hpp src/mainImageProcessingFunctions.hpp
+#        src/webasmMain.cpp
+)
 
 target_include_directories(runtests PUBLIC "." ./externalDependencies googletest/googletest/include/ ${JPEG_INCLUDE_DIR} ${OpenCV_INCLUDE_DIRS})
 
@@ -34,8 +36,8 @@ add_dependencies(runtests gtest_main hiredis)
 #set( CMAKE_CXX_FLAGS "-fopenmp -L/usr/local/Cellar/libomp/9.0.0/lib/" )
 
 #webasm settings
-set( CMAKE_CXX_COMPILER "/Users/tmurphy/git/image/emsdk/upstream/emscripten/emcc" )
-set( CMAKE_CXX_FLAGS "-O3 -s WASM=1 -s EXTRA_EXPORTED_RUNTIME_METHODS='[\"cwrap\"]'  -o hello.html" )
+#set( CMAKE_CXX_COMPILER "/Users/tmurphy/git/image/emsdk/upstream/emscripten/emcc" )
+#set( CMAKE_CXX_FLAGS "-O3 -s WASM=1 -s EXTRA_EXPORTED_RUNTIME_METHODS='[\"cwrap\"]'  -o hello.html" )
 
 #target_compile_options(runtests PUBLIC "-Ofast")
 target_compile_options(runtests PUBLIC "-g")

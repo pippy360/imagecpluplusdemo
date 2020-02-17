@@ -24,13 +24,15 @@
 using namespace std;
 
 void addAllHashesToRedis(string imagePath) {
-cout << "here: " << endl;
-/*
-    auto loadedImage = ;cv::imread(imagePath);
-    auto hashTrianglePairs = getAllTheHashesForImage<hashes::PerceptualHash>(loadedImage);
+    
+
+    //    auto loadedImage = cv::imread("/Users/tmurphy/git/image/imagecpluplusdemo/webFiles/images/richandmalty.jpg");
+    auto loadedImage = cv::imread("/Users/tmurphy/git/image/imagecpluplusdemo/webFiles/images/richandmalty400px.png");
+
+    auto hashTrianglePairs = getAllTheHashesForImage<hashes::PerceptualHash>(loadedImage, 20);
 
     redisContext *c;
-//    redisReply *reply;
+    redisReply *reply;
     const char *hostname = "127.0.0.1";
     int port = 6379;
 
@@ -54,11 +56,9 @@ cout << "here: " << endl;
         count++;
     }
     cout << "Added " << count << " image fragments to DB" << endl;
-*/
 }
 
 int findMatchingHashInRedis(string imageName) {
-/*
     auto img = cv::imread(imageName);
     auto hashTrianglePairs = getAllTheHashesForImage<hashes::PerceptualHash>(img);
 
@@ -121,8 +121,6 @@ int findMatchingHashInRedis(string imageName) {
 
     cout << "Number of matches: " << result.size() << endl;
     return result.size();
-*/
-return 0;
 }
 
 
@@ -160,7 +158,7 @@ void compareTwoImages(string imageName1, string imageName2) {
 
 int main(int argc, char* argv[])
 {
-    addAllHashesToRedis("input.jpg");
+    addAllHashesToRedis("../webFiles/images/richandmalty.jpg");
 /*
     if (argc < 3){
         printf("error: no args!!!\n Example:\nTo insert an image run the following command:\n ./runDemo insert inputImages/cat1.png\nTo query the database with an image run the following command:\n ./runDemo lookup inputImages/cat1.png\n");

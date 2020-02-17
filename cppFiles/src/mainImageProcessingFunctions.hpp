@@ -34,7 +34,7 @@ static Mat covertToDynamicallyAllocatedMatrix(const Matx33d transformation_matri
     return m;
 }
 
-static Mat calcMatrix(
+static Mat _calcMatrix(
         double areaFix,
         double transx,
         double transy,
@@ -44,8 +44,8 @@ static Mat calcMatrix(
         double b,
         double zoomin=1) {
 
-    double cosval = cos( rotation );
-    double sinval = sin( rotation );
+    double cosval = cos( rotation*PI / 180.0 );
+    double sinval = sin( rotation*PI / 180.0 );
 
     cv::Matx33d transpose_1(1.0, 0.0, transx,
                             0.0, 1.0, transy,
@@ -70,12 +70,25 @@ static Mat calcMatrix(
                             0.0, 1.0, output_width/2,
                             0.0, 0.0, 1.0);
 
-    return covertToDynamicallyAllocatedMatrix(transpose_3*transpose_scale*transpose_2*transpose_rot*transpose_1);
+    return covertToDynamicallyAllocatedMatrix(transpose_3*transpose_scale*transpose_rot*transpose_2*transpose_1);
+}
+
+//FIXME: move this from this header file and stop making everything static
+static Mat calcMatrix(ring_t shape, double rotation, double output_width, double zoom=1) {
+    point_t p;
+    ring_t transformedPoly;
+    bg::centroid(shape, p);
+    bg::strategy::transform::translate_transformer<double, 2, 2> translate(-p.get<0>(), -p.get<1>());
+    bg::transform(shape, transformedPoly, translate);
+
+    auto [a, b] = getAandB(transformedPoly);
+    double area = bg::area(transformedPoly);
+    return _calcMatrix(area, -p.get<0>(), -p.get<1>(), rotation, output_width, a, b, zoom);
 }
 
 template<typename T>
-static vector<pair<ring_t, T>> getHashesForShape(const cv::Mat& input_image, const ring_t& shape, int output_width=32,
-        int numRotations=360)
+static vector<pair<ring_t, T>> getHashesForShape(const cv::Mat& input_image, const ring_t& shape,
+        int numRotations=360, int output_width=32)
 {
     auto ret = vector<pair<ring_t, T>>();
     ring_t transformedPoly;
@@ -87,15 +100,17 @@ static vector<pair<ring_t, T>> getHashesForShape(const cv::Mat& input_image, con
     double area = bg::area(transformedPoly);
     for (unsigned int i = 0; i < numRotations; i++)
     {
-
-        double val = PI / 180.0;
-
-        Mat m = calcMatrix(area, -p.get<0>(), -p.get<1>(), ((double) i)*val, output_width, a, b);
+        double rotation = ((double) i)*(360.0/(double)numRotations);
+        Mat m = _calcMatrix(area, -p.get<0>(), -p.get<1>(), rotation, output_width, a, b);
 
         Mat outputImage(output_width, output_width, CV_8UC3, Scalar(0, 0, 0));
         warpAffine(input_image, outputImage, m, outputImage.size());
 
         auto calculatedHash = T(outputImage);
+
+//        imshow("image", outputImage);
+//        waitKey(0);
+
         ret.push_back(std::make_pair(shape, calculatedHash));
     }
     return ret;
@@ -135,19 +150,21 @@ static void extractShapes(Mat &imgdata, vector<ring_t> &result, int thresh = 100
     }
 }
 
-template<typename T> static vector<pair<ring_t, T>> getAllTheHashesForImage(cv::Mat &imgdata)
+template<typename T>
+static vector<pair<ring_t, T>> getAllTheHashesForImage(cv::Mat &imgdata, int rotations=360)
 {
     vector<ring_t> shapes;
     extractShapes(imgdata, shapes);
-    vector<pair<ring_t, T>> ret(shapes.size()*NUM_OF_ROTATIONS);
+    vector<pair<ring_t, T>> ret(shapes.size()*rotations);
 
 //#pragma omp parallel for
     for (int i = 0; i < shapes.size(); i++)
     {
         auto shape = shapes[i];
-        auto hashes = getHashesForShape<T>(imgdata, shape);
+        cout << "entering for shape:" << endl;
+        auto hashes = getHashesForShape<T>(imgdata, shape, rotations);
         for (int j =0; j < hashes.size(); j++) {
-            ret[(i*j) + j] = hashes[j];
+            ret[(i*rotations) + j] = hashes[j];
         }
     }
     return ret;

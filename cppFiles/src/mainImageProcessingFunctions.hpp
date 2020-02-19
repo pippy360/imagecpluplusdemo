@@ -87,8 +87,11 @@ static Mat calcMatrix(ring_t shape, double rotation, double output_width, double
 }
 
 template<typename T>
-static vector<pair<ring_t, T>> getHashesForShape(const cv::Mat& input_image, const ring_t& shape,
-        int numRotations=360, int output_width=32)
+static vector<pair<ring_t, T>> getHashesForShape(const cv::Mat& input_image,
+        const ring_t& shape,
+        int numRotations=360,
+        int output_width=32
+        )
 {
     auto ret = vector<pair<ring_t, T>>();
     ring_t transformedPoly;
@@ -116,7 +119,7 @@ static vector<pair<ring_t, T>> getHashesForShape(const cv::Mat& input_image, con
     return ret;
 }
 
-static void extractShapes(Mat &imgdata, vector<ring_t> &result, int thresh = 100, int ratio=3, int kernel_size=3)
+static void extractShapes(Mat &imgdata, vector<ring_t> &result, int thresh = 100, int ratio=3, int kernel_size=3, int blur_width=6)
 {
     Mat canny_output;
     vector<vector<Point> > contours;
@@ -125,7 +128,7 @@ static void extractShapes(Mat &imgdata, vector<ring_t> &result, int thresh = 100
 
     /// Convert image to gray and blur it
     cvtColor( imgdata, src_gray, COLOR_BGR2GRAY );
-    blur( src_gray, src_gray, Size(6,6) );
+    blur( src_gray, src_gray, Size(blur_width, blur_width) );
 
     /// Detect edges using canny
     Canny( src_gray, canny_output, thresh, thresh*ratio, kernel_size );
@@ -151,10 +154,17 @@ static void extractShapes(Mat &imgdata, vector<ring_t> &result, int thresh = 100
 }
 
 template<typename T>
-static vector<pair<ring_t, T>> getAllTheHashesForImage(cv::Mat &imgdata, int rotations=360)
+static vector<pair<ring_t, T>> getAllTheHashesForImage(
+        cv::Mat &imgdata,
+        int rotations=360,
+        int thresh=100,
+        int ratio=3,
+        int kernel_size=3,
+        int blur_width=6
+                )
 {
     vector<ring_t> shapes;
-    extractShapes(imgdata, shapes);
+    extractShapes(imgdata, shapes, thresh, ratio, kernel_size, blur_width);
     vector<pair<ring_t, T>> ret(shapes.size()*rotations);
 
 //#pragma omp parallel for

@@ -1,3 +1,10 @@
+let g_fragmentZoom = 1.0/1.5;
+let g_blurWidth = 6;
+let g_kernelSize = 3;
+let g_ratio = 3;
+let g_thresh = 100;
+
+
 async function loadImage(src) {
     g_img.src = src;
     // Load image
@@ -140,8 +147,22 @@ function drawshapefromlist(index, shapeStr) {
 }
 
 function findMatches() {
-    var db = module.getAllTheHashesForImageFromCanvas(heap_image_og, 360);
-    var check = module.getAllTheHashesForImageFromCanvas(heap_image_in, 360);
+    var db = module.getAllTheHashesForImageFromCanvas(
+        heap_image_og,
+        360,
+        g_thresh,
+        g_ratio,
+        g_kernelSize,
+        g_blurWidth
+    );
+    var check = module.getAllTheHashesForImageFromCanvas(
+        heap_image_in,
+        360,
+        g_thresh,
+        g_ratio,
+        g_kernelSize,
+        g_blurWidth
+    );
 
     let dbObj = JSON.parse(db);
     let checkObj = JSON.parse(check);
@@ -207,7 +228,7 @@ function copyimagetocpp() {
     console.log("kernelSize" + kernelSize);
     console.log("ratioSize" + ratioSize);
 
-    module.encode(heap_image_in, g_valHolder, canvas.width, canvas.height, 100, parseInt(ratioSize), parseInt(kernelSize), 6);
+    module.encode(heap_image_in, g_valHolder, canvas.width, canvas.height, 100, parseInt(ratioSize), parseInt(kernelSize), g_blurWidth);
     const ctx2 = document.getElementById('outputImageCanvas').getContext('2d');
     const ctxEdge = getCleanCanvas("canvasImgEdge");
 

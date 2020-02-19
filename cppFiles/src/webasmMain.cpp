@@ -81,10 +81,25 @@ void getHashesForShape2(uintptr_t img_in, ValHolder *valsOut, string shapeStr, i
     memcpy(valsOut->outputImage2.ptr_, outputImage.data, output_width*output_width*4);
 }
 
-std::string getAllTheHashesForImageFromCanvas(uintptr_t img_in, int rotation)
+std::string getAllTheHashesForImageFromCanvas(uintptr_t img_in, int rotation,
+                                              int thresh,
+                                              int ratio,
+                                              int kernel_size,
+                                              int blur_width
+                                              )
 {
     Mat image(cv::Size(400, 400), CV_8UC4, (void *) img_in, cv::Mat::AUTO_STEP);
-    auto vec = getAllTheHashesForImage<hashes::PerceptualHash>(image, rotation);
+    auto vec = getAllTheHashesForImage<hashes::PerceptualHash>(
+        image,
+        rotation,
+        thresh,
+        ratio,
+        kernel_size,
+        blur_width
+            );
+
+    //FIXME: rotate the image here rather than doing it for each fragment later
+
     std::stringstream polygonString;
     polygonString << "{ ";
 //    for (auto &v: vec) {
@@ -110,7 +125,9 @@ void encode(
         int height,
         int thresh = 100,
         int ratio=3,
-        int kernel_size=3)
+        int kernel_size=3,
+        int blurSize=6
+                )
 {
     int size = width * height * 4 * sizeof(uint8_t);
     cout << "size: " << size << endl;
@@ -124,7 +141,7 @@ void encode(
 
     /// Convert image to gray and blur it
     cvtColor( image, src_gray, COLOR_BGR2GRAY );
-    blur( src_gray, src_gray, Size(6,6) );
+    blur( src_gray, src_gray, Size(blurSize, blurSize) );
 
     /// Detect edges using canny
     Canny( src_gray, canny_output, thresh, thresh*ratio, kernel_size );
@@ -132,7 +149,12 @@ void encode(
     findContours( canny_output, contours, hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE, Point(0, 0) );
 
     Mat imageCannyOut;
+    Mat imageCannyOut2;
+    Mat grayOut;
+
+    cvtColor(src_gray, grayOut, COLOR_GRAY2RGBA);
     cvtColor(canny_output, imageCannyOut, COLOR_GRAY2RGBA);
+    cvtColor(canny_output, imageCannyOut2, COLOR_GRAY2RGBA);
 
     for( int i = 0; i< contours.size(); i++ )
     {
@@ -152,7 +174,9 @@ void encode(
 
     cout << "number of string: " << polygonString.str().length() << endl;
     valsOut->shapeStr = polygonString.str();
-    memcpy(valsOut->outputImage1.ptr_, image.data, size);
+    memcpy(valsOut->outputImage1.ptr_, grayOut.data, size);
+
+    memcpy(valsOut->outputImage2.ptr_, imageCannyOut2.data, size);
 
     memcpy(valsOut->edgeImage.ptr_, imageCannyOut.data, size);
     cout << "sizeout of size of: " << sizeof(size_t) << endl;

@@ -1,4 +1,5 @@
 async function loadImage(src) {
+    g_img.src = src;
     // Load image
     const imgBlob = await fetch(src).then(resp => resp.blob());
     const img = await createImageBitmap(imgBlob);
@@ -137,8 +138,8 @@ function drawshapefromlist(index, shapeStr) {
 }
 
 function findMatches() {
-    var db = module.getAllTheHashesForImageFromCanvas(heap_image_og, 90);
-    var check = module.getAllTheHashesForImageFromCanvas(heap_image_in, 90);
+    var db = module.getAllTheHashesForImageFromCanvas(heap_image_og, 360);
+    var check = module.getAllTheHashesForImageFromCanvas(heap_image_in, 360);
 
     let dbObj = JSON.parse(db);
     let checkObj = JSON.parse(check);
@@ -224,7 +225,7 @@ function copyimagetocpp() {
 }
 
 function main() {
-    loadImage('./images/richandmalty.jpg');
+    loadImage(g_img.src);
     copyimagetocpp();
 }
 

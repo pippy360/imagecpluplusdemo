@@ -493,8 +493,10 @@ function draw(pageMousePosition) {
     let transMat = matrixMultiply(appliedTransformationsMat, temporaryAppliedTransformations);
 
     const c_shapeDemo = getCleanCanvas("shapeDemo");
+    const c_shapeDemo2 = getCleanCanvas("shapeDemoResult");
 
     drawImageWithTransformations(c_shapeDemo.ctx, g_img, transMat);
+    drawImageWithTransformations(c_shapeDemo2.ctx, g_img, transMat);
 
     drawline_m(c_shapeDemo.ctx_ui, [[0, 200], [400, 200]], 'red');
     drawline_m(c_shapeDemo.ctx_ui, [[200, 0], [200, 400]], 'red');

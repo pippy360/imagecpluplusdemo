@@ -5,7 +5,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 
     <!-- Bootstrap CSS -->
-<!--    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">-->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
       <style>
           .canvasInline {
               display: inline-block;
@@ -18,7 +18,6 @@
               position: relative;
               width: 402px;
               height: 402px;
-              float: left;
           }
           .linebreak {
               margin: auto;
@@ -31,6 +30,12 @@
           }
           canvas {
               border: 1px solid black;
+          }
+          .buttonsWrapper {
+              max-width: 300px;
+          }
+          .buttonsWrapper label {
+              display: block;
           }
       </style>
 
@@ -130,47 +135,33 @@
         font-family: 'Lucida Console', Monaco, monospace;
         outline: none;
       }
+
+      #shapelist{
+          overflow: scroll;
+          height: 200px;
+          width: 600px;
+          border: 1px solid black;
+      }
+      .shapeListEl:hover{
+          background-color: grey;
+      }
+      .carousel-inner .carousel-item {
+          transition: -webkit-transform 0s ease;
+          transition: transform 0s ease;
+          transition: transform 0s ease, -webkit-transform 0s ease;
+      }
     </style>
   </head>
   <body>
-    <div class="buttonsWrapper">
-      <div class="buttonsInner">
-              <span data-toggle="buttons">
-                  <label id="translateButton" class="btn btn-secondary active"
-                         onclick="setCurrnetOperation(enum_TransformationOperation.TRANSLATE)">
-                      <input type="radio" name="options" autocomplete="off" checked>Move</input>
-                  </label>
-                  <label class="btn btn-secondary"
-                         onclick="setCurrnetOperation(enum_TransformationOperation.NON_UNIFORM_SCALE)">
-                      <input type="radio" name="options" autocomplete="off">Directional Scale</input>
-                  </label>
-                  <label class="btn btn-secondary"
-                         onclick="setCurrnetOperation(enum_TransformationOperation.UNIFORM_SCALE)">
-                      <input type="radio" name="options" autocomplete="off">Uniform Scale</input>
-                  </label>
-                  <label class="btn btn-secondary" onclick="setCurrnetOperation(enum_TransformationOperation.ROTATE)">
-                      <input type="radio" name="options" autocomplete="off">Rotate</input>
-                  </label>
-                  <label class="btn btn-secondary" onclick="setCurrnetOperation(enum_TransformationOperation.SKEW_X)">
-                      <input type="radio" name="options" autocomplete="off">Skew/Shear X</input>
-                  </label>
-                  <label class="btn btn-secondary" onclick="setCurrnetOperation(enum_TransformationOperation.SKEW_Y)">
-                      <input type="radio" name="options" autocomplete="off">Skew/Shear Y</input>
-                  </label>
 
-              </span>
-        <!--<button class="btn btn-default" onclick="toggleDrawKeypointsMode()" >Toggle DrawKeypoints</button>-->
-        <!--<button class="btn btn-default" style="float:right;" onclick="callSearch()">CompareImages</button>-->
-        <span style="float: right">
-                  <span data-toggle="buttons">
-                     <div style="float: left; padding-right: 10px;">
-                          <button type="button" style="margin-bottom: 8px;" class="alert-danger btn btn-secondary"
-                                  onclick="reset()">Reset</button>
-                     </div>
-                  </span>
-              </span>
-      </div>
+    <div class="alert alert-info">
+        <div class="spinner" id='spinner'></div>
+        <div class="emscripten" id="status">Downloading...</div>
+        <div class="emscripten">
+            <progress value="0" max="100" id="progress" hidden=1></progress>
+        </div>
     </div>
+
     <style>
         .slidecontainer {
             width: 100%;
@@ -207,58 +198,162 @@
             cursor: pointer;
         }
     </style>
-    <p>
-        kernel size:
-    </p>
-    <input type="range" min="1" max="7" value="3" class="slider" oninput="copyimagetocpp()" onchange="copyimagetocpp()"  id="cannyKernelSize">
-    <p>
-        ratio size:
-    </p>
 
-    <input type="range" min="1" max="100" value="3" class="slider" oninput="copyimagetocpp()" onchange="copyimagetocpp()"  id="cannyRatio">
-    <div class="canvasWrapper">
-        <canvas id="shapeDemo" class="canvasInline" width="400" height="400"></canvas>
-        <canvas id="shapeDemo_ui" class="canvasInline" width="400" height="400"></canvas>
-    </div>
-    <style>
-#shapelist{
-    overflow: scroll;
-    height: 200px;
-    width: 600px;
-    border: 1px solid black;
-}
-.shapeListEl:hover{
-    background-color: grey;
-}
-    </style>
-    <div class="spinner" id='spinner'></div>
-    <div class="emscripten" id="status">Downloading...</div>
-    <div class="emscripten">
-      <progress value="0" max="100" id="progress" hidden=1></progress>
-    </div>
-    <canvas id="outputImageCanvas" height="400px" width="400px"></canvas>
+    <div class="rightSide" style="">
+        <canvas id="canvasImg" height="400px" width="400px"></canvas>
 
-    <canvas id="canvasImg" height="400px" width="400px"></canvas>
-    <div class="canvasWrapper">
-        <canvas id="canvasImgEdge" class="canvasInline" width="400" height="400"></canvas>
-        <canvas id="canvasImgEdge_ui" class="canvasInline" width="400" height="400"></canvas>
-    </div>
-    <div class="canvasWrapper">
-        <canvas id="canvasImgFrag" class="canvasInline" width="400" height="400"></canvas>
-        <canvas id="canvasImgFrag_ui" class="canvasInline" width="400" height="400"></canvas>
-    </div>
-    <div class="canvasWrapper">
-        <canvas id="canvasImgFrag200" class="canvasInline" width="200" height="200" style="width: 400px;height: 400px"></canvas>
-        <canvas id="canvasImgFrag200_ui" class="canvasInline" width="200" height="200" style="width: 400px;height: 400px"></canvas>
-    </div>
-    <div class="canvasWrapper">
-        <canvas id="canvasImgFrag32" class="canvasInline" width="32" height="32" style="width: 400px;height: 400px"></canvas>
-        <canvas id="canvasImgFrag32_ui" class="canvasInline" width="32" height="32" style="width: 400px;height: 400px"></canvas>
+        <div class="buttonsWrapper">
+            <div class="buttonsInner">
+              <span data-toggle="buttons" class="btn-group">
+                  <label id="translateButton" class="btn btn-secondary active"
+                         onclick="setCurrnetOperation(enum_TransformationOperation.TRANSLATE)">
+                      <input type="radio" name="options" autocomplete="off" checked>Move</input>
+                  </label>
+                  <label class="btn btn-secondary"
+                         onclick="setCurrnetOperation(enum_TransformationOperation.NON_UNIFORM_SCALE)">
+                      <input type="radio" name="options" autocomplete="off">Directional Scale</input>
+                  </label>
+                  <label class="btn btn-secondary"
+                         onclick="setCurrnetOperation(enum_TransformationOperation.UNIFORM_SCALE)">
+                      <input type="radio" name="options" autocomplete="off">Uniform Scale</input>
+                  </label>
+                  <label class="btn btn-secondary" onclick="setCurrnetOperation(enum_TransformationOperation.ROTATE)">
+                      <input type="radio" name="options" autocomplete="off">Rotate</input>
+                  </label>
+                  <label class="btn btn-secondary" onclick="setCurrnetOperation(enum_TransformationOperation.SKEW_X)">
+                      <input type="radio" name="options" autocomplete="off">Skew/Shear X</input>
+                  </label>
+                  <label class="btn btn-secondary" onclick="setCurrnetOperation(enum_TransformationOperation.SKEW_Y)">
+                      <input type="radio" name="options" autocomplete="off">Skew/Shear Y</input>
+                  </label>
+                    <button type="button" style="margin-bottom: 8px;" class="alert-danger btn btn-secondary"
+                            onclick="reset()">Reset</button>
+              </span>
+            </div>
+        </div>
+        <div class="clearfix">
+            <div id="shapelist" style="max-width: 300px; height: 400px; float: left">
+                <pre>shape list goes here...</pre>
+            </div>
+            <div class="canvasWrapper" style="float: left">
+                <canvas id="shapeDemo" class="canvasInline" width="400" height="400"></canvas>
+                <canvas id="shapeDemo_ui" class="canvasInline" width="400" height="400"></canvas>
+            </div>
+            <div class="canvasWrapper" style="float: left">
+                <canvas id="shapeDemo2" class="canvasInline" width="400" height="400"></canvas>
+                <canvas id="shapeDemo2_ui" class="canvasInline" width="400" height="400"></canvas>
+            </div>
+        </div>
+        <div id="carouselExampleControls" style="width: 402px;" class="carousel slide" data-interval="false" data-ride="carousel">
+            <div class="carousel-inner">
+                <div class="carousel-item active">
+                    <div class="canvasWrapper" style="float: left">
+                        <canvas id="canvasImgFrag" class="canvasInline" width="400" height="400"></canvas>
+                        <canvas id="canvasImgFrag_ui" class="canvasInline" width="400" height="400"></canvas>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <div class="canvasWrapper" style="float: left">
+                        <canvas id="canvasImgFrag200" class="canvasInline" width="200" height="200" style="width: 400px;height: 400px"></canvas>
+                        <canvas id="canvasImgFrag200_ui" class="canvasInline" width="200" height="200" style="width: 400px;height: 400px"></canvas>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <div class="canvasWrapper" style="float: left">
+                        <canvas id="canvasImgFrag32" class="canvasInline" width="32" height="32" style="width: 400px;height: 400px"></canvas>
+                        <canvas id="canvasImgFrag32_ui" class="canvasInline" width="32" height="32" style="width: 400px;height: 400px"></canvas>
+                    </div>
+                </div>
+            </div>
+            <a class="carousel-control-prev" href="#carouselExampleControls" role="button" data-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="sr-only">Previous</span>
+            </a>
+            <a class="carousel-control-next" href="#carouselExampleControls" role="button" data-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="sr-only">Next</span>
+            </a>
+        </div>
+        <div style="max-width: 400px;">
+            <p>
+                kernel size:
+            </p>
+            <input type="range" min="1" max="7" value="3" class="slider" oninput="copyimagetocpp()" onchange="copyimagetocpp()"  id="cannyKernelSize">
+            <p>
+                ratio size:
+            </p>
+            <input type="range" min="1" max="100" value="3" class="slider" oninput="copyimagetocpp()" onchange="copyimagetocpp()"  id="cannyRatio">
+        </div>
+        <div class="clearfix">
+            <div class="canvasWrapper" style="float: left">
+                <canvas id="canvasImgEdge" class="canvasInline" width="400" height="400"></canvas>
+                <canvas id="canvasImgEdge_ui" class="canvasInline" width="400" height="400"></canvas>
+            </div>
+            <div class="canvasWrapper" style="float: left">
+                <canvas id="outputImageCanvas" class="canvasInline" width="400" height="400"></canvas>
+                <canvas id="coutputImageCanvas_ui" class="canvasInline" width="400" height="400"></canvas>
+            </div>
+        </div>
+        <div class="clearfix">
+            <div id="shapelist2" style="max-width: 300px; height: 400px; overflow: scroll; float: left">
+                <pre>shape list goes here...</pre>
+            </div>
+            <div class="canvasWrapper" style="float: left">
+                <canvas id="shapeDemoResult" class="canvasInline" width="400" height="400"></canvas>
+                <canvas id="shapeDemoResult_ui" class="canvasInline" width="400" height="400"></canvas>
+            </div>
+            <div class="canvasWrapper" style="float: left">
+                <canvas id="shapeDemoResult2" class="canvasInline" width="400" height="400"></canvas>
+                <canvas id="shapeDemoResult2_ui" class="canvasInline" width="400" height="400"></canvas>
+            </div>
+        </div>
+
+        <div id="carouselExampleControls2" style="width: 804px;" class="carousel slide" data-interval="false" data-ride="carousel">
+            <div class="carousel-inner">
+                <div class="carousel-item active">
+                    <div class="canvasWrapper" style="float: left">
+                        <canvas id="canvasImgFrag2" class="canvasInline" width="400" height="400"></canvas>
+                        <canvas id="canvasImgFrag2_ui" class="canvasInline" width="400" height="400"></canvas>
+                    </div>
+                    <div class="canvasWrapper" style="float: left">
+                        <canvas id="canvasImgFrag2Right" class="canvasInline" width="400" height="400"></canvas>
+                        <canvas id="canvasImgFrag2Right_ui" class="canvasInline" width="400" height="400"></canvas>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <div class="canvasWrapper" style="float: left">
+                        <canvas id="canvasImgFrag2002" class="canvasInline" width="200" height="200" style="width: 400px;height: 400px"></canvas>
+                        <canvas id="canvasImgFrag2002_ui" class="canvasInline" width="200" height="200" style="width: 400px;height: 400px"></canvas>
+                    </div>
+                    <div class="canvasWrapper" style="float: left">
+                        <canvas id="canvasImgFrag2002Right" class="canvasInline" width="200" height="200" style="width: 400px;height: 400px"></canvas>
+                        <canvas id="canvasImgFrag2002Right_ui" class="canvasInline" width="200" height="200" style="width: 400px;height: 400px"></canvas>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <div class="canvasWrapper" style="float: left">
+                        <canvas id="canvasImgFrag322" class="canvasInline" width="32" height="32" style="width: 400px;height: 400px"></canvas>
+                        <canvas id="canvasImgFrag322_ui" class="canvasInline" width="32" height="32" style="width: 400px;height: 400px"></canvas>
+                    </div>
+                    <div class="canvasWrapper" style="float: left">
+                        <canvas id="canvasImgFrag322Right" class="canvasInline" width="32" height="32" style="width: 400px;height: 400px"></canvas>
+                        <canvas id="canvasImgFrag322Right_ui" class="canvasInline" width="32" height="32" style="width: 400px;height: 400px"></canvas>
+                    </div>
+                </div>
+            </div>
+            <a class="carousel-control-prev" href="#carouselExampleControls2" role="button" data-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="sr-only">Previous</span>
+            </a>
+            <a class="carousel-control-next" href="#carouselExampleControls2" role="button" data-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="sr-only">Next</span>
+            </a>
+
+        </div>
+
     </div>
 
-    <div id="shapelist">
-        <pre>shape list goes here...</pre>
-    </div>
 
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
@@ -278,7 +373,7 @@
       let module = 0;
       let heap_image_in = 0;
       let heap_image_og = 0;
-      let valHolder = 0;
+      let g_valHolder = 0;
       var statusElement = document.getElementById('status');
       var progressElement = document.getElementById('progress');
       var spinnerElement = document.getElementById('spinner');
@@ -364,7 +459,7 @@
           heap_image_in = module._malloc(canvas.width * canvas.height * 4);
           heap_image_og = module._malloc(canvas.width * canvas.height * 4);
 
-          valHolder = new module.ValHolder(canvas.width*canvas.height*4);
+          g_valHolder = new module.ValHolder(canvas.width*canvas.height*4);
         api = {
             create_buffer: Module.create_buffer,
 
@@ -382,7 +477,7 @@
         main(Module);
       };
 
-    </script>s
+    </script>
   </body>
 </html>
 

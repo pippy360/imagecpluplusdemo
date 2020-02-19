@@ -463,9 +463,6 @@ let g_initImages = false;
 const g_src = './images/basicshapes.png'
 //"./images/IMG_20191024_130833.jpg"
 var g_img = new Image();
-g_img.addEventListener('load', function () {
-    draw()
-})
 g_img.src = g_src;
 
 function initImages() {

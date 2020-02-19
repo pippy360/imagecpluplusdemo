@@ -23,6 +23,8 @@ async function loadImage(src) {
     const image = ctx2.getImageData(0, 0, canvas2.width, canvas2.height);
     Module.HEAP8.set(image.data, heap_image_og);
 
+    draw();
+    copyimagetocpp();
 
 }
 

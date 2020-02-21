@@ -376,6 +376,8 @@ function handleMouseDownOnCanvas(pageMousePosition, canvasMousePosition) {
 function mouseMoveOnDocumentEvent(pageMousePosition) {
     if (g_transformState != null && g_transformState.isMouseDownAndClickedOnCanvas) {
         g_transformState.referenceImageHighlightedTriangle = null;
+        // copyimagetocpp();
+
         // g_transformState.activeCanvas.imageOutlineHighlightLayer = g_transformState.activeCanvas.activeLayer;
         handleMouseMoveOnDocument(pageMousePosition);
         //draw();

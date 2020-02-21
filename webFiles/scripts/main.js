@@ -1,9 +1,27 @@
 let g_fragmentZoom = 1.0/1.5;
-let g_blurWidth = 6;
+let g_blurWidth = 3;
 let g_kernelSize = 3;
 let g_ratio = 3;
 let g_thresh = 100;
+let g_areaThresh = 800;
 
+
+function setRatioVal() {
+    const ratioSize = document.getElementById("cannyRatio").value;
+    g_ratio = parseInt(ratioSize);
+}
+
+function setBlurVal() {
+    const blur_size = document.getElementById("cannyBlurSize").value;
+    g_blurWidth = parseInt(blur_size);
+}
+
+function setKernelVal() {
+    let kernelSize = parseInt(document.getElementById("cannyKernelSize").value)+1;
+    kernelSize += 1-(kernelSize%2);
+
+    g_kernelSize = parseInt(kernelSize);
+}
 
 async function loadImage(src) {
     g_img.src = src;
@@ -32,7 +50,19 @@ async function loadImage(src) {
 
     draw();
     copyimagetocpp();
+    var valHolder = new module.ValHolder(canvas3.width*canvas3.height*4);
+    module.encode(heap_image_og, valHolder, canvas3.width, canvas3.height, 100, g_ratio, g_kernelSize, g_blurWidth, g_areaThresh);
+    const ctx4 = document.getElementById('bluredGreyOutputImageRight').getContext('2d');
+    const ctxEdge = getCleanCanvas("canvasImgEdgeRight");
 
+    const in1 = new Uint8ClampedArray(valHolder.outputImage1.val_);
+    const in2 = new Uint8ClampedArray(valHolder.edgeImage.val_);
+    const imageout = new ImageData(in1, canvas3.width, canvas3.height);
+    const edgeImageOut = new ImageData(in2, canvas3.width, canvas3.height);
+
+    ctx4.putImageData(imageout, 0, 0);
+    ctxEdge.ctx.putImageData(edgeImageOut, 0, 0);
+    valHolder.delete();
 }
 
 function drawShapeAndFragment(imageHeap, shapeStr, shapeSize, canvasId) {
@@ -212,24 +242,15 @@ function parseGlobalShapes(ctx, shapes) {
 }
 
 function copyimagetocpp() {
-    // const c_shapeDemo = getCanvas("shapeDemo");
-    //
-    // // Load image
-    // // Make canvas same size as image
+
     const canvas = document.getElementById('shapeDemo');
     const ctx = canvas.getContext('2d');
     const image = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
     Module.HEAP8.set(image.data, heap_image_in);
-    let kernelSize = parseInt(document.getElementById("cannyKernelSize").value)+1;
-    kernelSize += 1-(kernelSize%2);
-    const ratioSize = document.getElementById("cannyRatio").value;
 
-    console.log("kernelSize" + kernelSize);
-    console.log("ratioSize" + ratioSize);
-
-    module.encode(heap_image_in, g_valHolder, canvas.width, canvas.height, 100, parseInt(ratioSize), parseInt(kernelSize), g_blurWidth);
-    const ctx2 = document.getElementById('outputImageCanvas').getContext('2d');
+    module.encode(heap_image_in, g_valHolder, canvas.width, canvas.height, 100, g_ratio, g_kernelSize, g_blurWidth, g_areaThresh);
+    const ctx2 = document.getElementById('bluredGreyOutputImage').getContext('2d');
     const ctxEdge = getCleanCanvas("canvasImgEdge");
 
     const in1 = new Uint8ClampedArray(g_valHolder.outputImage1.val_);

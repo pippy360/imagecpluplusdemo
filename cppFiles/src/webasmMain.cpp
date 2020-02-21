@@ -14,6 +14,8 @@
 #include "PerceptualHash.hpp"
 #include "PerceptualHash_Fast.hpp"
 
+#include "shapeNormalise.hpp"
+
 using namespace cv;
 
 class ValWrapper{
@@ -102,7 +104,7 @@ std::string getAllTheHashesForImageFromCanvas(uintptr_t img_in, int rotation,
 
     std::stringstream polygonString;
     polygonString << "{ ";
-//    for (auto &v: vec) {
+////    for (auto &v: vec) {
     for (int i = 0; i < vec.size(); i++) {
         auto v = vec[i];
         auto [shape, hash] = v;
@@ -118,6 +120,29 @@ std::string getAllTheHashesForImageFromCanvas(uintptr_t img_in, int rotation,
     return polygonString.str();
 }
 
+inline uchar reduceVal(const uchar val)
+{
+//    if (val < 64) return 0;
+    if (val < 128) return 0;
+    return 255;
+}
+
+void processColors(Mat& img)
+{
+    uchar* pixelPtr = img.data;
+    for (int i = 0; i < img.rows; i++)
+    {
+        for (int j = 0; j < img.cols; j++)
+        {
+            const int pi = i*img.cols*4 + j*4;
+            pixelPtr[pi + 0] = reduceVal(pixelPtr[pi + 0]); // B
+            pixelPtr[pi + 1] = reduceVal(pixelPtr[pi + 1]); // G
+            pixelPtr[pi + 2] = reduceVal(pixelPtr[pi + 2]); // R
+            pixelPtr[pi + 3] = reduceVal(pixelPtr[pi + 3]); // A
+        }
+    }
+}
+
 void encode(
         uintptr_t img_in,
         ValHolder *valsOut,
@@ -126,7 +151,8 @@ void encode(
         int thresh = 100,
         int ratio=3,
         int kernel_size=3,
-        int blurSize=6
+        int blurSize=3,
+        int areaThresh=200
                 )
 {
     int size = width * height * 4 * sizeof(uint8_t);
@@ -140,6 +166,7 @@ void encode(
     Mat image(cv::Size(width, height), CV_8UC4, (void *) img_in, cv::Mat::AUTO_STEP);
 
     /// Convert image to gray and blur it
+    processColors(image);
     cvtColor( image, src_gray, COLOR_BGR2GRAY );
     blur( src_gray, src_gray, Size(blurSize, blurSize) );
 
@@ -158,6 +185,13 @@ void encode(
 
     for( int i = 0; i< contours.size(); i++ )
     {
+        vector<Point> hull;
+        convexHull( contours[i], hull );
+        ring_t outPoly;
+
+        if(!convert_to_boost(hull, outPoly) || bg::area(outPoly) <= areaThresh ){
+            continue;
+        }
         Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255), 255 );
         //drawContours( image, contours, i, color, 2, 8, hierarchy, 0, Point() );
         drawContours( imageCannyOut, contours, i, color, 2, 8, hierarchy, 0, Point() );
@@ -181,16 +215,6 @@ void encode(
     memcpy(valsOut->edgeImage.ptr_, imageCannyOut.data, size);
     cout << "sizeout of size of: " << sizeof(size_t) << endl;
 
-    int output_width = width;
-    auto shape = result[0];
-//    auto ret = vector<pair<ring_t, hashes::PerceptualHash>>();
-    ring_t transformedPoly;
-    point_t p;
-    bg::centroid(shape, p);
-    bg::strategy::transform::translate_transformer<double, 2, 2> translate(-p.get<0>(), -p.get<1>());
-    bg::transform(shape, transformedPoly, translate);
-
-//    hashes::PerceptualHash calculatedHash(outputImage);
 }
 
 using namespace emscripten;

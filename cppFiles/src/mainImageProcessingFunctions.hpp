@@ -119,7 +119,7 @@ static vector<pair<ring_t, T>> getHashesForShape(const cv::Mat& input_image,
     return ret;
 }
 
-static void extractShapes(Mat &imgdata, vector<ring_t> &result, int thresh = 100, int ratio=3, int kernel_size=3, int blur_width=6)
+static void extractShapes(Mat &imgdata, vector<ring_t> &result, int thresh = 100, int ratio=3, int kernel_size=3, int blur_width=6, int areaThresh=200)
 {
     Mat canny_output;
     vector<vector<Point> > contours;
@@ -149,7 +149,8 @@ static void extractShapes(Mat &imgdata, vector<ring_t> &result, int thresh = 100
         if(!convert_to_boost(hull[i], outPoly)){
             continue;
         }
-        result.push_back(outPoly);
+        if (bg::area(outPoly) > areaThresh)
+            result.push_back(outPoly);
     }
 }
 
@@ -160,11 +161,12 @@ static vector<pair<ring_t, T>> getAllTheHashesForImage(
         int thresh=100,
         int ratio=3,
         int kernel_size=3,
-        int blur_width=6
+        int blur_width=6,
+        int areaFix=200
                 )
 {
     vector<ring_t> shapes;
-    extractShapes(imgdata, shapes, thresh, ratio, kernel_size, blur_width);
+    extractShapes(imgdata, shapes, thresh, ratio, kernel_size, blur_width, areaFix);
     vector<pair<ring_t, T>> ret(shapes.size()*rotations);
 
 //#pragma omp parallel for

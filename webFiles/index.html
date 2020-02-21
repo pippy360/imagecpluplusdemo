@@ -247,7 +247,7 @@
                 <canvas id="shapeDemo2_ui" class="canvasInline" width="400" height="400"></canvas>
             </div>
         </div>
-        <div id="carouselExampleControls" style="width: 402px;" class="carousel slide" data-interval="false" data-ride="carousel">
+        <div id="carouselExampleControls" style="width: 402px; display: none" class="carousel slide" data-interval="false" data-ride="carousel">
             <div class="carousel-inner">
                 <div class="carousel-item active">
                     <div class="canvasWrapper" style="float: left">
@@ -279,13 +279,18 @@
         </div>
         <div style="max-width: 400px;">
             <p>
+                blur size:
+            </p>
+            <input type="text"  onchange="setBlurVal()" min="1" max="40" value="6" class="slider"   id="cannyBlurSize">
+
+            <p>
                 kernel size:
             </p>
-            <input type="range" min="1" max="7" value="3" class="slider" oninput="copyimagetocpp()" onchange="copyimagetocpp()"  id="cannyKernelSize">
+            <input type="text"  onchange="setKernelVal()" min="1" max="7" value="3" class="slider"  id="cannyKernelSize">
             <p>
                 ratio size:
             </p>
-            <input type="range" min="1" max="100" value="3" class="slider" oninput="copyimagetocpp()" onchange="copyimagetocpp()"  id="cannyRatio">
+            <input type="text"  onchange="setRatioVal()" min="1" max="100" value="3" class="slider" id="cannyRatio">
         </div>
         <div class="clearfix">
             <div class="canvasWrapper" style="float: left">
@@ -293,10 +298,21 @@
                 <canvas id="canvasImgEdge_ui" class="canvasInline" width="400" height="400"></canvas>
             </div>
             <div class="canvasWrapper" style="float: left">
-                <canvas id="outputImageCanvas" class="canvasInline" width="400" height="400"></canvas>
-                <canvas id="coutputImageCanvas_ui" class="canvasInline" width="400" height="400"></canvas>
+                <canvas id="canvasImgEdgeRight" class="canvasInline" width="400" height="400"></canvas>
+                <canvas id="canvasImgEdgeRight_ui" class="canvasInline" width="400" height="400"></canvas>
             </div>
         </div>
+        <div class="clearfix">
+            <div class="canvasWrapper" style="float: left">
+                <canvas id="bluredGreyOutputImage" class="canvasInline" width="400" height="400"></canvas>
+                <canvas id="bluredGreyOutputImage_ui" class="canvasInline" width="400" height="400"></canvas>
+            </div>
+            <div class="canvasWrapper" style="float: left">
+                <canvas id="bluredGreyOutputImageRight" class="canvasInline" width="400" height="400"></canvas>
+                <canvas id="bluredGreyOutputImageRight_ui" class="canvasInline" width="400" height="400"></canvas>
+            </div>
+        </div>
+
         <div class="clearfix">
             <div id="shapelist2" style="max-width: 300px; height: 400px; overflow: scroll; float: left">
                 <pre>shape list goes here...</pre>

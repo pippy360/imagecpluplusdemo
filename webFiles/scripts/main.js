@@ -6,6 +6,14 @@ let g_thresh = 100;
 let g_areaThresh = 800;
 
 
+
+
+function setAreaThresh() {
+    const areaThresh = document.getElementById("areaThresh").value;
+    g_areaThresh = parseInt(areaThresh);
+}
+
+
 function setRatioVal() {
     const ratioSize = document.getElementById("cannyRatio").value;
     g_ratio = parseInt(ratioSize);

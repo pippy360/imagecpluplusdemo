@@ -277,20 +277,24 @@
                 <span class="sr-only">Next</span>
             </a>
         </div>
-        <div style="max-width: 400px;">
-            <p>
+        <div style="max-width: 800px;">
+            <span>
                 blur size:
-            </p>
-            <input type="text"  onchange="setBlurVal()" min="1" max="40" value="6" class="slider"   id="cannyBlurSize">
+            </span>
+            <input type="text" style="width: 40px; display: inline-block" onchange="setBlurVal()" min="1" max="40" value="3" id="cannyBlurSize">
 
-            <p>
+            <span>
                 kernel size:
-            </p>
-            <input type="text"  onchange="setKernelVal()" min="1" max="7" value="3" class="slider"  id="cannyKernelSize">
-            <p>
+            </span>
+            <input type="text" style="width: 40px; display: inline-block" onchange="setKernelVal()" min="1" max="7" value="3" id="cannyKernelSize">
+            <span>
                 ratio size:
-            </p>
-            <input type="text"  onchange="setRatioVal()" min="1" max="100" value="3" class="slider" id="cannyRatio">
+            </span>
+            <input type="text" style="width: 40px; display: inline-block" onchange="setRatioVal()" min="1" max="100" value="3" id="cannyRatio">
+            <span>
+                Area threshold:
+            </span>
+            <input type="text" style="width: 40px; display: inline-block" onchange="setAreaThresh()" min="1" max="1000" value="600" id="areaThresh">
         </div>
         <div class="clearfix">
             <div class="canvasWrapper" style="float: left">

@@ -117,16 +117,14 @@ vector<ring_t> extractShapesFromContours(
         convexHull( contours[i], hull[i] );
     }
 
-    for( int i = 0; i< contours.size(); i++ ) {
+    for( int i = 0; i < contours.size(); i++ ) {
 
         ring_t outPoly;
-
-        if(!convert_to_boost(hull[i], outPoly)){
+        if(!convert_to_boost(hull[i], outPoly) || bg::area(outPoly) <= areaThresh){
             continue;
         }
 
-        if (bg::area(outPoly) > areaThresh)
-            result.push_back(outPoly);
+        result.push_back(outPoly);
     }
 
     return result;

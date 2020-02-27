@@ -149,7 +149,7 @@ void getShapeWithPointInside(
 
     vector<vector<Point> > contours;
     vector<Vec4i> hierarchy;
-    findContours(canny_output, contours, hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE, Point(0, 0));
+    findContours(canny_output, contours, hierarchy, RETR_LIST, CHAIN_APPROX_SIMPLE, Point(0, 0));
 
     vector<ring_t> shapes = extractShapesFromContours(contours, areaThresh);
 
@@ -174,10 +174,10 @@ void encode(
         bool simplify=true
                 )
 {
-    cout << "width: " << width << endl;
-    cout << "height: " << height << endl;
+    cout << "width: " << width << " height: " << height << endl;
+
     Mat img_in(cv::Size(width, height), CV_8UC4, (void *) img_in_ptr, cv::Mat::AUTO_STEP);
-    Mat img = img_in;
+    Mat img = img_in.clone();
     if (simplify) {
         simplifyColors(img);
     }
@@ -188,7 +188,7 @@ void encode(
 
     vector<vector<Point> > contours;
     vector<Vec4i> hierarchy;
-    findContours(_canny_output, contours, hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE, Point(0, 0));
+    findContours(_canny_output, contours, hierarchy, RETR_LIST, CHAIN_APPROX_SIMPLE, Point(0, 0));
 
     //Draw contours------
     Mat contours_img = imageCannyOut.clone();
@@ -201,18 +201,42 @@ void encode(
 
     //Draw hulls------
     Mat hulls_img = imageCannyOut.clone();
-    for( int i = 0; i< contours.size(); i++ )
+    for ( int i = 0; i < contours.size(); i++ )
     {
         vector<Point> hull;
         convexHull( contours[i], hull );
         Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255), 255 );
         drawContours( hulls_img, vector<vector<Point> >(1,hull), -1, color );
     }
-    //--------
-//
-    vector<ring_t> shapes = extractShapesFromContours(contours, areaThresh);
 
-    cout << "The amount of matches we have: " << shapes.size() << endl;
+    Mat valid_hulls_img = imageCannyOut.clone();
+    int  failed_area = 0;
+    for ( int i = 0; i < contours.size(); i++ )
+    {
+        vector<Point> hull;
+        convexHull( contours[i], hull );
+        Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255), 255 );
+        ring_t outPoly;
+        cout << "convert_to_boost about to be called: " << endl;
+        if (!convert_to_boost(hull, outPoly)) {
+            continue;
+        }
+
+        if (bg::area(outPoly) <= areaThresh){
+            cout << "passed area" << endl;
+            failed_area++;
+            continue;
+        }
+
+        drawContours( valid_hulls_img, vector<vector<Point> >(1,hull), -1, color );
+    }
+    cout << "Number of shapes which failed area: " << failed_area << endl;
+
+    //--------
+
+    cout << "contours.size(): " << contours.size() << endl;
+    vector<ring_t> shapes = extractShapesFromContours(contours, areaThresh);
+    cout << "shapes.size(): " << shapes.size() << endl;
 
     std::stringstream polygonString;
     for (auto &shape : shapes) {
@@ -224,7 +248,7 @@ void encode(
     valsOut->shapeStr = polygonString.str();
     memcpy(valsOut->outputImage1.ptr_, contours_img.data, size);
     memcpy(valsOut->outputImage2.ptr_, hulls_img.data, size);
-
+    memcpy(valsOut->outputImage3.ptr_, valid_hulls_img.data, size);
 
     memcpy(valsOut->edgeImage.ptr_, imageCannyOut.data, size);
 }
@@ -243,6 +267,7 @@ EMSCRIPTEN_BINDINGS(my_value_example) {
             .property("edgeImage", &ValHolder::edgeImage)
             .property("outputImage1", &ValHolder::outputImage1)
             .property("outputImage2", &ValHolder::outputImage2)
+            .property("outputImage3", &ValHolder::outputImage3)
         ;
 
     emscripten::function("encode", &encode, allow_raw_pointers());

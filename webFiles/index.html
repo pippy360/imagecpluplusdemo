@@ -45,6 +45,9 @@
               width: 800px;
               height: 800px;
           }
+          .canvasUILayer {
+              opacity: .3;
+          }
       </style>
 
     <title>Emscripten-Generated Code</title>
@@ -222,11 +225,11 @@
             </div>
             <div class="canvasWrapper" style="float: left">
                 <canvas id="shapeDemo" class="canvasInline" width="400" height="400"></canvas>
-                <canvas id="shapeDemo_ui" class="canvasInline" width="400" height="400"></canvas>
+                <canvas id="shapeDemo_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
             </div>
             <div class="canvasWrapper" style="float: left">
                 <canvas id="shapeDemo2" class="canvasInline" width="400" height="400"></canvas>
-                <canvas id="shapeDemo2_ui" class="canvasInline" width="400" height="400"></canvas>
+                <canvas id="shapeDemo2_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
             </div>
         </div>
         <div id="carouselExampleControls" style="width: 402px; display: none" class="carousel slide" data-interval="false" data-ride="carousel">
@@ -234,19 +237,19 @@
                 <div class="carousel-item active">
                     <div class="canvasWrapper" style="float: left">
                         <canvas id="canvasImgFrag" class="canvasInline" width="400" height="400"></canvas>
-                        <canvas id="canvasImgFrag_ui" class="canvasInline" width="400" height="400"></canvas>
+                        <canvas id="canvasImgFrag_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
                     </div>
                 </div>
                 <div class="carousel-item">
                     <div class="canvasWrapper" style="float: left">
                         <canvas id="canvasImgFrag200" class="canvasInline" width="200" height="200" style="width: 400px;height: 400px"></canvas>
-                        <canvas id="canvasImgFrag200_ui" class="canvasInline" width="200" height="200" style="width: 400px;height: 400px"></canvas>
+                        <canvas id="canvasImgFrag200_ui" class="canvasInline canvasUILayer" width="200" height="200" style="width: 400px;height: 400px"></canvas>
                     </div>
                 </div>
                 <div class="carousel-item">
                     <div class="canvasWrapper" style="float: left">
                         <canvas id="canvasImgFrag32" class="canvasInline" width="32" height="32" style="width: 400px;height: 400px"></canvas>
-                        <canvas id="canvasImgFrag32_ui" class="canvasInline" width="32" height="32" style="width: 400px;height: 400px"></canvas>
+                        <canvas id="canvasImgFrag32_ui" class="canvasInline canvasUILayer" width="32" height="32" style="width: 400px;height: 400px"></canvas>
                     </div>
                 </div>
             </div>
@@ -280,32 +283,42 @@
         </div>
         <div class="clearfix largeCanvas">
             <div class="canvasWrapper" style="float: left">
-                <canvas id="canvasImgEdgeContoursLeft" class="canvasInline" width="400" height="400"></canvas>
-                <canvas id="canvasImgEdgeContoursLeft_ui" class="canvasInline" width="400" height="400"></canvas>
+                <canvas id="canvasImgEdgeHullValidLeft" class="canvasInline" width="400" height="400"></canvas>
+                <canvas id="canvasImgEdgeHullValidLeft_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
             </div>
             <div class="canvasWrapper" style="float: left">
-                <canvas id="canvasImgEdgeContoursRight" class="canvasInline" width="400" height="400"></canvas>
-                <canvas id="canvasImgEdgeContoursRight_ui" class="canvasInline" width="400" height="400"></canvas>
+                <canvas id="canvasImgEdgeHullValidRight" class="canvasInline" width="400" height="400"></canvas>
+                <canvas id="canvasImgEdgeHullValidRight_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
             </div>
         </div>
         <div class="clearfix largeCanvas">
             <div class="canvasWrapper" style="float: left">
-                <canvas id="canvasImgEdge" class="canvasInline" width="400" height="400"></canvas>
-                <canvas id="canvasImgEdge_ui" class="canvasInline" width="400" height="400"></canvas>
+                <canvas id="canvasImgEdgeContoursLeft" class="canvasInline" width="400" height="400"></canvas>
+                <canvas id="canvasImgEdgeContoursLeft_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
             </div>
             <div class="canvasWrapper" style="float: left">
-                <canvas id="canvasImgEdgeRight" class="canvasInline" width="400" height="400"></canvas>
-                <canvas id="canvasImgEdgeRight_ui" class="canvasInline" width="400" height="400"></canvas>
+                <canvas id="canvasImgEdgeContoursRight" class="canvasInline" width="400" height="400"></canvas>
+                <canvas id="canvasImgEdgeContoursRight_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
             </div>
         </div>
         <div class="clearfix largeCanvas">
             <div class="canvasWrapper" style="float: left">
                 <canvas id="bluredGreyOutputImage" class="canvasInline" width="400" height="400"></canvas>
-                <canvas id="bluredGreyOutputImage_ui" class="canvasInline" width="400" height="400"></canvas>
+                <canvas id="bluredGreyOutputImage_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
             </div>
             <div class="canvasWrapper" style="float: left">
                 <canvas id="bluredGreyOutputImageRight" class="canvasInline" width="400" height="400"></canvas>
-                <canvas id="bluredGreyOutputImageRight_ui" class="canvasInline" width="400" height="400"></canvas>
+                <canvas id="bluredGreyOutputImageRight_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
+            </div>
+        </div>
+        <div class="clearfix largeCanvas">
+            <div class="canvasWrapper" style="float: left">
+                <canvas id="canvasImgEdge" class="canvasInline" width="400" height="400"></canvas>
+                <canvas id="canvasImgEdge_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
+            </div>
+            <div class="canvasWrapper" style="float: left">
+                <canvas id="canvasImgEdgeRight" class="canvasInline" width="400" height="400"></canvas>
+                <canvas id="canvasImgEdgeRight_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
             </div>
         </div>
         <div>
@@ -316,11 +329,11 @@
                 </div>
                 <div class="canvasWrapper" style="border: 3px solid red; float: left">
                     <canvas id="clickandseeImageLeft" class="canvasInline" width="400" height="400"></canvas>
-                    <canvas id="clickandseeImageLeft_ui" class="canvasInline" width="400" height="400"></canvas>
+                    <canvas id="clickandseeImageLeft_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
                 </div>
                 <div class="canvasWrapper" style="float: left">
                     <canvas id="clickandseeImageRight" class="canvasInline" width="400" height="400"></canvas>
-                    <canvas id="clickandseeImageRight_ui" class="canvasInline" width="400" height="400"></canvas>
+                    <canvas id="clickandseeImageRight_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
                 </div>
                 <div id="clickandseeListRight" style="max-width: 300px; height: 400px; overflow: scroll; float: left">
                     <pre>shape list goes here...</pre>
@@ -332,31 +345,31 @@
                     <div class="carousel-item active">
                         <div class="canvasWrapper" style="float: left">
                             <canvas id="clickandseeFragLeft400" class="canvasInline" width="400" height="400"></canvas>
-                            <canvas id="clickandseeFragLeft400_ui" class="canvasInline" width="400" height="400"></canvas>
+                            <canvas id="clickandseeFragLeft400_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
                         </div>
                         <div class="canvasWrapper" style="float: left">
                             <canvas id="clickandseeFragRight400" class="canvasInline" width="400" height="400"></canvas>
-                            <canvas id="clickandseeFragRight400_ui" class="canvasInline" width="400" height="400"></canvas>
+                            <canvas id="clickandseeFragRight400_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
                         </div>
                     </div>
                     <div class="carousel-item">
                         <div class="canvasWrapper" style="float: left">
                             <canvas id="clickandseeFragLeft200" class="canvasInline" width="200" height="200" style="width: 400px;height: 400px"></canvas>
-                            <canvas id="clickandseeFragLeft200_ui" class="canvasInline" width="200" height="200" style="width: 400px;height: 400px"></canvas>
+                            <canvas id="clickandseeFragLeft200_ui" class="canvasInline canvasUILayer" width="200" height="200" style="width: 400px;height: 400px"></canvas>
                         </div>
                         <div class="canvasWrapper" style="float: left">
                             <canvas id="clickandseeFragRight200" class="canvasInline" width="200" height="200" style="width: 400px;height: 400px"></canvas>
-                            <canvas id="clickandseeFragRight200_ui" class="canvasInline" width="200" height="200" style="width: 400px;height: 400px"></canvas>
+                            <canvas id="clickandseeFragRight200_ui" class="canvasInline canvasUILayer" width="200" height="200" style="width: 400px;height: 400px"></canvas>
                         </div>
                     </div>
                     <div class="carousel-item">
                         <div class="canvasWrapper" style="float: left">
                             <canvas id="clickandseeFragLeft32" class="canvasInline" width="32" height="32" style="width: 400px;height: 400px"></canvas>
-                            <canvas id="clickandseeFragLeft32_ui" class="canvasInline" width="32" height="32" style="width: 400px;height: 400px"></canvas>
+                            <canvas id="clickandseeFragLeft32_ui" class="canvasInline canvasUILayer" width="32" height="32" style="width: 400px;height: 400px"></canvas>
                         </div>
                         <div class="canvasWrapper" style="float: left">
                             <canvas id="clickandseeFragRight32" class="canvasInline" width="32" height="32" style="width: 400px;height: 400px"></canvas>
-                            <canvas id="clickandseeFragRight32_ui" class="canvasInline" width="32" height="32" style="width: 400px;height: 400px"></canvas>
+                            <canvas id="clickandseeFragRight32_ui" class="canvasInline canvasUILayer" width="32" height="32" style="width: 400px;height: 400px"></canvas>
                         </div>
                     </div>
                 </div>
@@ -379,11 +392,11 @@
                 </div>
                 <div class="canvasWrapper" style="float: left">
                     <canvas id="shapeDemoResult" class="canvasInline" width="400" height="400"></canvas>
-                    <canvas id="shapeDemoResult_ui" class="canvasInline" width="400" height="400"></canvas>
+                    <canvas id="shapeDemoResult_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
                 </div>
                 <div class="canvasWrapper" style="float: left">
                     <canvas id="shapeDemoResult2" class="canvasInline" width="400" height="400"></canvas>
-                    <canvas id="shapeDemoResult2_ui" class="canvasInline" width="400" height="400"></canvas>
+                    <canvas id="shapeDemoResult2_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
                 </div>
             </div>
             <div id="carouselExampleControls2" style="width: 804px;" class="carousel slide" data-interval="false" data-ride="carousel">
@@ -391,31 +404,31 @@
                     <div class="carousel-item active">
                         <div class="canvasWrapper" style="float: left">
                             <canvas id="canvasImgFrag2" class="canvasInline" width="400" height="400"></canvas>
-                            <canvas id="canvasImgFrag2_ui" class="canvasInline" width="400" height="400"></canvas>
+                            <canvas id="canvasImgFrag2_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
                         </div>
                         <div class="canvasWrapper" style="float: left">
                             <canvas id="canvasImgFrag2Right" class="canvasInline" width="400" height="400"></canvas>
-                            <canvas id="canvasImgFrag2Right_ui" class="canvasInline" width="400" height="400"></canvas>
+                            <canvas id="canvasImgFrag2Right_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
                         </div>
                     </div>
                     <div class="carousel-item">
                         <div class="canvasWrapper" style="float: left">
                             <canvas id="canvasImgFrag2002" class="canvasInline" width="200" height="200" style="width: 400px;height: 400px"></canvas>
-                            <canvas id="canvasImgFrag2002_ui" class="canvasInline" width="200" height="200" style="width: 400px;height: 400px"></canvas>
+                            <canvas id="canvasImgFrag2002_ui" class="canvasInline canvasUILayer" width="200" height="200" style="width: 400px;height: 400px"></canvas>
                         </div>
                         <div class="canvasWrapper" style="float: left">
                             <canvas id="canvasImgFrag2002Right" class="canvasInline" width="200" height="200" style="width: 400px;height: 400px"></canvas>
-                            <canvas id="canvasImgFrag2002Right_ui" class="canvasInline" width="200" height="200" style="width: 400px;height: 400px"></canvas>
+                            <canvas id="canvasImgFrag2002Right_ui" class="canvasInline canvasUILayer" width="200" height="200" style="width: 400px;height: 400px"></canvas>
                         </div>
                     </div>
                     <div class="carousel-item">
                         <div class="canvasWrapper" style="float: left">
                             <canvas id="canvasImgFrag322" class="canvasInline" width="32" height="32" style="width: 400px;height: 400px"></canvas>
-                            <canvas id="canvasImgFrag322_ui" class="canvasInline" width="32" height="32" style="width: 400px;height: 400px"></canvas>
+                            <canvas id="canvasImgFrag322_ui" class="canvasInline canvasUILayer" width="32" height="32" style="width: 400px;height: 400px"></canvas>
                         </div>
                         <div class="canvasWrapper" style="float: left">
                             <canvas id="canvasImgFrag322Right" class="canvasInline" width="32" height="32" style="width: 400px;height: 400px"></canvas>
-                            <canvas id="canvasImgFrag322Right_ui" class="canvasInline" width="32" height="32" style="width: 400px;height: 400px"></canvas>
+                            <canvas id="canvasImgFrag322Right_ui" class="canvasInline canvasUILayer" width="32" height="32" style="width: 400px;height: 400px"></canvas>
                         </div>
                     </div>
                 </div>

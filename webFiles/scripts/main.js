@@ -3,7 +3,7 @@ let g_blurWidth = 3;
 let g_kernelSize = 3;
 let g_ratio = 3;
 let g_thresh = 100;
-let g_areaThresh = 800;
+let g_areaThresh = 200;
 
 
 function drawshapefromClickandseeLeft(shapeStr1) {
@@ -156,10 +156,13 @@ async function loadImage(src) {
     var valHolder = new module.ValHolder(canvas3.width*canvas3.height*4);
     module.encode(heap_image_og, valHolder, canvas3.width, canvas3.height, 100, g_ratio, g_kernelSize, g_blurWidth, g_areaThresh, true);
 
+
+    const outputImage3 = new ImageData(new Uint8ClampedArray(valHolder.outputImage3.val_), canvas3.width, canvas3.height);
     const outputImage2 = new ImageData(new Uint8ClampedArray(valHolder.outputImage2.val_), canvas3.width, canvas3.height);
     const outputImage1 = new ImageData(new Uint8ClampedArray(valHolder.outputImage1.val_), canvas3.width, canvas3.height);
     const edgeImageOut = new ImageData(new Uint8ClampedArray(valHolder.edgeImage.val_), canvas3.width, canvas3.height);
 
+    getCleanCanvas("canvasImgEdgeHullValidRight").ctx.putImageData(outputImage3, 0, 0);
     getCleanCanvas("canvasImgEdgeContoursRight").ctx.putImageData(outputImage2, 0, 0);
     getCleanCanvas("bluredGreyOutputImageRight").ctx.putImageData(outputImage1, 0, 0);
     getCleanCanvas("canvasImgEdgeRight").ctx.putImageData(edgeImageOut, 0, 0);
@@ -377,10 +380,12 @@ function copyimagetocpp() {
 
     module.encode(heap_image_in, g_valHolder, canvas.width, canvas.height, 100, g_ratio, g_kernelSize, g_blurWidth, g_areaThresh, true);
 
+    const outputImage3 = new ImageData(new Uint8ClampedArray(g_valHolder.outputImage3.val_), canvas.width, canvas.height);
     const outputImage2 = new ImageData(new Uint8ClampedArray(g_valHolder.outputImage2.val_), canvas.width, canvas.height);
     const outputImage1 = new ImageData(new Uint8ClampedArray(g_valHolder.outputImage1.val_), canvas.width, canvas.height);
     const edgeImageOut = new ImageData(new Uint8ClampedArray(g_valHolder.edgeImage.val_), canvas.width, canvas.height);
 
+    getCleanCanvas("canvasImgEdgeHullValidLeft").ctx.putImageData(outputImage3, 0, 0);
     getCleanCanvas("bluredGreyOutputImage").ctx.putImageData(outputImage1, 0, 0);
     getCleanCanvas("canvasImgEdge").ctx.putImageData(edgeImageOut, 0, 0);
     getCleanCanvas("canvasImgEdgeContoursLeft").ctx.putImageData(outputImage2, 0, 0);

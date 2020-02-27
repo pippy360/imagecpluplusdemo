@@ -201,6 +201,7 @@ std::tuple<double, double> getAandB(ring_t inPoly) {
 }
 
 bool convert_to_boost(std::vector<cv::Point> inPoly, ring_t &result) {
+
     std::vector<point_t> points;
     for (int i = 0; i < inPoly.size(); i++) {
         points.push_back(point_t(inPoly[i].x, inPoly[i].y));
@@ -209,6 +210,7 @@ bool convert_to_boost(std::vector<cv::Point> inPoly, ring_t &result) {
 
     //fix it up
     bg::remove_spikes(result);
+
     bg::correct(result);
 
     return bg::is_valid(result);

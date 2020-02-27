@@ -103,7 +103,7 @@ static vector<pair<ring_t, T>> getAllTheHashesForImage(
         bool simplify=true
 )
 {
-    Mat img = img_in;
+    Mat img = img_in.clone();
     if (simplify) {
         simplifyColors(img);
     }
@@ -112,7 +112,7 @@ static vector<pair<ring_t, T>> getAllTheHashesForImage(
 
     vector<vector<Point> > contours;
     vector<Vec4i> hierarchy;
-    findContours(canny_output, contours, hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE, Point(0, 0));
+    findContours(canny_output, contours, hierarchy, RETR_LIST, CHAIN_APPROX_SIMPLE, Point(0, 0));
 
     vector<ring_t> shapes = extractShapesFromContours(contours, areaThresh);
 

@@ -140,12 +140,12 @@ void getShapeWithPointInside(
                 )
 {
     Mat img_in(cv::Size(width, height), CV_8UC4, (void *) img_in_ptr, cv::Mat::AUTO_STEP);
-
+    Mat img = img_in.clone();
     if (simplify) {
-        simplifyColors(img_in);
+        simplifyColors(img);
     }
 
-    Mat canny_output = applyCanny(img_in, thresh, kernel_size, ratio, blur_width);
+    Mat canny_output = applyCanny(img, thresh, kernel_size, ratio, blur_width);
 
     vector<vector<Point> > contours;
     vector<Vec4i> hierarchy;

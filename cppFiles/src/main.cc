@@ -1,19 +1,11 @@
 #include <vector>
-#include <opencv2/opencv.hpp>
 #include <opencv2/imgcodecs.hpp>
-#include <fstream>
-#include <string>
-#include <regex>
 
 #include <stdio.h>      /* printf, scanf, puts, NULL */
 #include <stdlib.h>     /* srand, rand */
-#include <time.h>       /* time */
 
 #include "PerceptualHash.hpp"
-#include "PerceptualHash_Fast.hpp"
 
-//#include "FragmentHash.h"
-//#include "ShapeAndPositionInvariantImage.h"
 #include "mainImageProcessingFunctions.hpp"
 #include <boost/program_options.hpp>
 #include <iostream>
@@ -27,7 +19,7 @@ void addAllHashesToRedis(string imagePath) {
     
 
     //    auto loadedImage = cv::imread("/Users/tmurphy/git/image/imagecpluplusdemo/webFiles/images/richandmalty.jpg");
-    auto loadedImage = cv::imread("/Users/tmurphy/git/image/imagecpluplusdemo/webFiles/images/richandmalty400px.png");
+    auto loadedImage = cv::imread(imagePath);
 
     auto hashTrianglePairs = getAllTheHashesForImage<hashes::PerceptualHash>(loadedImage, 20);
 
@@ -78,7 +70,7 @@ int findMatchingHashInRedis(string imageName) {
         }
         exit(1);
     }
-//    cout << "finished hashing" << endl;
+    cout << "finished hashing" << endl;
 //    vector<hashes::PerceptualHash_Fast> result;
     vector<string> result;
     unsigned int batchSize = 10;
@@ -158,25 +150,30 @@ void compareTwoImages(string imageName1, string imageName2) {
 
 int main(int argc, char* argv[])
 {
-    addAllHashesToRedis("../webFiles/images/richandmalty.jpg");
-/*
     if (argc < 3){
-        printf("error: no args!!!\n Example:\nTo insert an image run the following command:\n ./runDemo insert inputImages/cat1.png\nTo query the database with an image run the following command:\n ./runDemo lookup inputImages/cat1.png\n");
+        printf("error: no args!!!\n"
+               "Example:\n"
+               "To insert an image run the following command:\n"
+               " %s insert inputImages/cat1.png\n"
+               "To query the database with an image run the following command:\n"
+               " %s lookup inputImages/cat1.png\n", argv[0], argv[0]);
         return -1;
     }
 
-    if (argc > 2 && !strcmp(argv[1], "insert")){
-	for (int i = 2; i < argc; i++) {
-    		string imageName = argv[i];
-        	addAllHashesToRedis(imageName);
-	}
-    }else if (argc > 2 && !strcmp(argv[1], "lookup")){
-	for (int i = 2; i < argc; i++) {
-    		string imageName = argv[i];
-        	findMatchingHashInRedis(imageName);
-	}
+    if (argc > 2 && !strcmp(argv[1], "insert")) {
+        for (int i = 2; i < argc; i++) {
+            string imageName = argv[i];
+            addAllHashesToRedis(imageName);
+        }
+    }else if (argc > 2 && !strcmp(argv[1], "lookup")) {
+        for (int i = 2; i < argc; i++) {
+            string imageName = argv[i];
+            findMatchingHashInRedis(imageName);
+        }
     }else{
         cout << "Bad argument: " << argv[1] << endl;
+        return -2;
     }
-    */
+
+    return 0;
 }

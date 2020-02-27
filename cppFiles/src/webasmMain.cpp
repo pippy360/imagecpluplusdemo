@@ -45,7 +45,8 @@ public:
     ValHolder(size_t size)
             :edgeImage(size, (unsigned char *) malloc(size)),
             outputImage1(size, (unsigned char *) malloc(size)),
-            outputImage2(size, (unsigned char *) malloc(size))
+            outputImage2(size, (unsigned char *) malloc(size)),
+            outputImage3(size, (unsigned char *) malloc(size))
     {
     }
 
@@ -54,6 +55,7 @@ public:
     ValWrapper edgeImage;
     ValWrapper outputImage1;
     ValWrapper outputImage2;
+    ValWrapper outputImage3;
 };
 
 RNG rng(12345);
@@ -104,7 +106,7 @@ std::string getAllTheHashesForImageFromCanvas(uintptr_t img_in, int rotation,
 
     std::stringstream polygonString;
     polygonString << "{ ";
-////    for (auto &v: vec) {
+//    for (auto &v: vec) {
     for (int i = 0; i < vec.size(); i++) {
         auto v = vec[i];
         auto [shape, hash] = v;
@@ -120,101 +122,111 @@ std::string getAllTheHashesForImageFromCanvas(uintptr_t img_in, int rotation,
     return polygonString.str();
 }
 
-inline uchar reduceVal(const uchar val)
-{
-//    if (val < 64) return 0;
-    if (val < 128) return 0;
-    return 255;
-}
 
-void processColors(Mat& img)
+
+void getShapeWithPointInside(
+        uintptr_t img_in_ptr,
+        ValHolder *valsOut,
+        int width,
+        int height,
+        double x,
+        double y,
+        int thresh = 100,
+        int ratio=3,
+        int kernel_size=3,
+        int blur_width=3,
+        int areaThresh=200,
+        bool simplify=true
+                )
 {
-    uchar* pixelPtr = img.data;
-    for (int i = 0; i < img.rows; i++)
-    {
-        for (int j = 0; j < img.cols; j++)
-        {
-            const int pi = i*img.cols*4 + j*4;
-            pixelPtr[pi + 0] = reduceVal(pixelPtr[pi + 0]); // B
-            pixelPtr[pi + 1] = reduceVal(pixelPtr[pi + 1]); // G
-            pixelPtr[pi + 2] = reduceVal(pixelPtr[pi + 2]); // R
-            pixelPtr[pi + 3] = reduceVal(pixelPtr[pi + 3]); // A
-        }
+    Mat img_in(cv::Size(width, height), CV_8UC4, (void *) img_in_ptr, cv::Mat::AUTO_STEP);
+
+    if (simplify) {
+        simplifyColors(img_in);
     }
+
+    Mat canny_output = applyCanny(img_in, thresh, kernel_size, ratio, blur_width);
+
+    vector<vector<Point> > contours;
+    vector<Vec4i> hierarchy;
+    findContours(canny_output, contours, hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE, Point(0, 0));
+
+    vector<ring_t> shapes = extractShapesFromContours(contours, areaThresh);
+
+    std::stringstream polygonString;
+    for (auto &shape : shapes) {
+        if (bg::within(point_t(x, y), shape))
+            polygonString << bg::wkt(shape) << endl;
+    }
+    valsOut->shapeStr = polygonString.str();
 }
 
 void encode(
-        uintptr_t img_in,
+        uintptr_t img_in_ptr,
         ValHolder *valsOut,
         int width,
         int height,
         int thresh = 100,
         int ratio=3,
         int kernel_size=3,
-        int blurSize=3,
-        int areaThresh=200
+        int blur_width=3,
+        int areaThresh=200,
+        bool simplify=true
                 )
 {
-    int size = width * height * 4 * sizeof(uint8_t);
-    cout << "size: " << size << endl;
-    vector<vector<Point> > contours;
-    std::stringstream polygonString;
-    vector<Vec4i> hierarchy;
-    Mat canny_output;
-    Mat src_gray;
+    cout << "width: " << width << endl;
+    cout << "height: " << height << endl;
+    Mat img_in(cv::Size(width, height), CV_8UC4, (void *) img_in_ptr, cv::Mat::AUTO_STEP);
+    Mat img = img_in;
+    if (simplify) {
+        simplifyColors(img);
+    }
 
-    Mat image(cv::Size(width, height), CV_8UC4, (void *) img_in, cv::Mat::AUTO_STEP);
-
-    /// Convert image to gray and blur it
-    processColors(image);
-    cvtColor( image, src_gray, COLOR_BGR2GRAY );
-    blur( src_gray, src_gray, Size(blurSize, blurSize) );
-
-    /// Detect edges using canny
-    Canny( src_gray, canny_output, thresh, thresh*ratio, kernel_size );
-    /// Find contours
-    findContours( canny_output, contours, hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE, Point(0, 0) );
-
+    Mat _canny_output = applyCanny(img_in, thresh, kernel_size, ratio, blur_width);
     Mat imageCannyOut;
-    Mat imageCannyOut2;
-    Mat grayOut;
+    cvtColor(_canny_output, imageCannyOut, COLOR_GRAY2RGBA);
 
-    cvtColor(src_gray, grayOut, COLOR_GRAY2RGBA);
-    cvtColor(canny_output, imageCannyOut, COLOR_GRAY2RGBA);
-    cvtColor(canny_output, imageCannyOut2, COLOR_GRAY2RGBA);
+    vector<vector<Point> > contours;
+    vector<Vec4i> hierarchy;
+    findContours(_canny_output, contours, hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE, Point(0, 0));
 
+    //Draw contours------
+    Mat contours_img = imageCannyOut.clone();
+    for( int i = 0; i< contours.size(); i++ )
+    {
+        Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255), 255 );
+        drawContours( contours_img, contours, i, color, 1, 8, hierarchy, 0, Point() );
+    }
+    //--------
+
+    //Draw hulls------
+    Mat hulls_img = imageCannyOut.clone();
     for( int i = 0; i< contours.size(); i++ )
     {
         vector<Point> hull;
         convexHull( contours[i], hull );
-        ring_t outPoly;
-
-        if(!convert_to_boost(hull, outPoly) || bg::area(outPoly) <= areaThresh ){
-            continue;
-        }
         Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255), 255 );
-        //drawContours( image, contours, i, color, 2, 8, hierarchy, 0, Point() );
-        drawContours( imageCannyOut, contours, i, color, 2, 8, hierarchy, 0, Point() );
+        drawContours( hulls_img, vector<vector<Point> >(1,hull), -1, color );
     }
+    //--------
+//
+    vector<ring_t> shapes = extractShapesFromContours(contours, areaThresh);
 
-    vector<ring_t> result;
-    extractShapes(image, result, thresh, ratio, kernel_size);
+    cout << "The amount of matches we have: " << shapes.size() << endl;
 
-    cout << "number of fragments: " << result.size() << endl;
-
-    for (auto &shape : result) {
+    std::stringstream polygonString;
+    for (auto &shape : shapes) {
         polygonString << bg::wkt(shape) << endl;
     }
 
-    cout << "number of string: " << polygonString.str().length() << endl;
-    valsOut->shapeStr = polygonString.str();
-    memcpy(valsOut->outputImage1.ptr_, grayOut.data, size);
+    size_t size = width * height * 4;
 
-    memcpy(valsOut->outputImage2.ptr_, imageCannyOut2.data, size);
+    valsOut->shapeStr = polygonString.str();
+    memcpy(valsOut->outputImage1.ptr_, contours_img.data, size);
+    memcpy(valsOut->outputImage2.ptr_, hulls_img.data, size);
+
 
     memcpy(valsOut->edgeImage.ptr_, imageCannyOut.data, size);
-    cout << "sizeout of size of: " << sizeof(size_t) << endl;
-
 }
 
 using namespace emscripten;
@@ -234,6 +246,7 @@ EMSCRIPTEN_BINDINGS(my_value_example) {
         ;
 
     emscripten::function("encode", &encode, allow_raw_pointers());
+    emscripten::function("getShapeWithPointInside", &getShapeWithPointInside, allow_raw_pointers());
     emscripten::function("getHashesForShape2", &getHashesForShape2, allow_raw_pointers());
     emscripten::function("calcMatrixFromString", &calcMatrixFromString);
     emscripten::function("getAllTheHashesForImageFromCanvas", &getAllTheHashesForImageFromCanvas);

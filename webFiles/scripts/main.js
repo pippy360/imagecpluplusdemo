@@ -6,13 +6,104 @@ let g_thresh = 100;
 let g_areaThresh = 800;
 
 
+function drawshapefromClickandseeLeft(shapeStr1) {
 
+    const can = getCleanUICanvas("clickandseeImageLeft");
+    drawPolyFull(can.ctx_ui, shapeStrToShape(shapeStr1));
+
+    drawShapeAndFragmentClickAndSee(heap_image_og, shapeStr1, 400, "clickandseeFragLeft");
+
+    drawShapeAndFragmentClickAndSee(heap_image_og, shapeStr1, 200, "clickandseeFragLeft");
+
+    drawShapeAndFragmentClickAndSee(heap_image_og, shapeStr1, 32, "clickandseeFragLeft");
+}
+
+function drawshapefromClickandseeRight(shapeStr1) {
+
+    const can = getCleanUICanvas("clickandseeImageRight");
+    drawPolyFull(can.ctx_ui, shapeStrToShape(shapeStr1));
+
+    drawShapeAndFragmentClickAndSee(heap_image_in, shapeStr1, 400, "clickandseeFragRight");
+
+    drawShapeAndFragmentClickAndSee(heap_image_in, shapeStr1, 200, "clickandseeFragRight");
+
+    drawShapeAndFragmentClickAndSee(heap_image_in, shapeStr1, 32, "clickandseeFragRight");
+}
+
+function parseClickandseeShapesLeft(shapes) {
+    var lines = shapes.split('\n');
+    const list = document.getElementById("clickandseeListLeft");
+    list.innerHTML = "";
+    for (var i = 0;i < lines.length;i++){
+
+        if (lines[i] == "")
+            continue;
+
+        let opt = lines[i];
+        let el = document.createElement("div");
+        el.innerHTML = `<div class='shapeListEl' onmouseover="drawshapefromClickandseeLeft('${opt}')" id='clickandseeShapeListElm${i}'>-----${opt}</div>`;
+        list.appendChild(el);
+    }
+}
+
+function parseClickandseeShapesRight(shapes) {
+    var lines = shapes.split('\n');
+    const list = document.getElementById("clickandseeListRight");
+    list.innerHTML = "";
+    for (var i = 0;i < lines.length;i++){
+
+        if (lines[i] == "")
+            continue;
+
+        let opt = lines[i];
+        let el = document.createElement("div");
+        el.innerHTML = `<div class='shapeListEl' onmouseover="drawshapefromClickandseeRight('${opt}')" id='clickandseeShapeListElm${i}'>-----${opt}</div>`;
+        list.appendChild(el);
+    }
+}
+
+function getShapeWithPointInsideLeft(x, y) {
+    var canvasElem = $("#shapeDemoResult_ui")[0];
+
+    module.getShapeWithPointInside(heap_image_in, g_valHolder, canvasElem.width, canvasElem.height, x, y, 100, g_ratio, g_kernelSize, g_blurWidth, g_areaThresh, true);
+
+    parseClickandseeShapesLeft(g_valHolder.shapeStr);
+}
+
+function getShapeWithPointInsideRight(x, y) {
+    var canvasElem = $("#shapeDemoResult_ui")[0];
+
+    module.getShapeWithPointInside(heap_image_og, g_valHolder, canvasElem.width, canvasElem.height, x, y, 100, g_ratio, g_kernelSize, g_blurWidth, g_areaThresh, true);
+
+    parseClickandseeShapesRight(g_valHolder.shapeStr);
+}
+
+$("#clickandseeImageLeft_ui").mousedown(function (e) {
+    var canvasElem = $("#clickandseeImageLeft_ui")[0];
+    const canvasMousePosition = getCurrentCanvasMousePosition(e, canvasElem);
+    getShapeWithPointInsideLeft(canvasMousePosition[0], canvasMousePosition[1]);
+
+    let canvasElemObj = getCleanUICanvas("clickandseeImageLeft");
+    let canvasElemCtx = canvasElemObj.ctx_ui;
+    drawline_m(canvasElemCtx, [[0, canvasMousePosition[1]], [400, canvasMousePosition[1]]], 'red');
+    drawline_m(canvasElemCtx, [[canvasMousePosition[0], 0], [canvasMousePosition[0], 400]], 'red');
+});
+
+$("#clickandseeImageRight_ui").mousedown(function (e) {
+    var canvasElem = $("#clickandseeImageRight_ui")[0];
+    const canvasMousePosition = getCurrentCanvasMousePosition(e, canvasElem);
+    getShapeWithPointInsideRight(canvasMousePosition[0], canvasMousePosition[1]);
+
+    let canvasElemObj = getCleanUICanvas("clickandseeImageRight");
+    let canvasElemCtx = canvasElemObj.ctx_ui;
+    drawline_m(canvasElemCtx, [[0, canvasMousePosition[1]], [400, canvasMousePosition[1]]], 'red');
+    drawline_m(canvasElemCtx, [[canvasMousePosition[0], 0], [canvasMousePosition[0], 400]], 'red');
+});
 
 function setAreaThresh() {
     const areaThresh = document.getElementById("areaThresh").value;
     g_areaThresh = parseInt(areaThresh);
 }
-
 
 function setRatioVal() {
     const ratioSize = document.getElementById("cannyRatio").value;
@@ -53,23 +144,50 @@ async function loadImage(src) {
     let ctx3 = canvas3.getContext('2d');
     ctx3.drawImage(img, 0, 0, ctx2.canvas.width, ctx2.canvas.height);
 
+    let clickandseeImageRightCanvas = document.getElementById('clickandseeImageRight');
+    let clickandseeImageRightCtx = clickandseeImageRightCanvas.getContext('2d');
+    clickandseeImageRightCtx.drawImage(img, 0, 0, ctx2.canvas.width, ctx2.canvas.height);
+
     const image = ctx2.getImageData(0, 0, canvas2.width, canvas2.height);
     Module.HEAP8.set(image.data, heap_image_og);
 
     draw();
     copyimagetocpp();
     var valHolder = new module.ValHolder(canvas3.width*canvas3.height*4);
-    module.encode(heap_image_og, valHolder, canvas3.width, canvas3.height, 100, g_ratio, g_kernelSize, g_blurWidth, g_areaThresh);
-    const ctx4 = document.getElementById('bluredGreyOutputImageRight').getContext('2d');
-    const ctxEdge = getCleanCanvas("canvasImgEdgeRight");
+    module.encode(heap_image_og, valHolder, canvas3.width, canvas3.height, 100, g_ratio, g_kernelSize, g_blurWidth, g_areaThresh, true);
 
-    const in1 = new Uint8ClampedArray(valHolder.outputImage1.val_);
-    const in2 = new Uint8ClampedArray(valHolder.edgeImage.val_);
-    const imageout = new ImageData(in1, canvas3.width, canvas3.height);
-    const edgeImageOut = new ImageData(in2, canvas3.width, canvas3.height);
+    const outputImage2 = new ImageData(new Uint8ClampedArray(valHolder.outputImage2.val_), canvas3.width, canvas3.height);
+    const outputImage1 = new ImageData(new Uint8ClampedArray(valHolder.outputImage1.val_), canvas3.width, canvas3.height);
+    const edgeImageOut = new ImageData(new Uint8ClampedArray(valHolder.edgeImage.val_), canvas3.width, canvas3.height);
 
-    ctx4.putImageData(imageout, 0, 0);
-    ctxEdge.ctx.putImageData(edgeImageOut, 0, 0);
+    getCleanCanvas("canvasImgEdgeContoursRight").ctx.putImageData(outputImage2, 0, 0);
+    getCleanCanvas("bluredGreyOutputImageRight").ctx.putImageData(outputImage1, 0, 0);
+    getCleanCanvas("canvasImgEdgeRight").ctx.putImageData(edgeImageOut, 0, 0);
+
+    valHolder.delete();
+}
+
+function drawShapeAndFragmentClickAndSee(imageHeap, shapeStr, shapeSize, canvasId) {
+    const zoom = 1.0/1.5;
+
+    var valHolder = new module.ValHolder(shapeSize*shapeSize*4);
+    module.getHashesForShape2(imageHeap, valHolder, shapeStr, shapeSize, zoom);
+
+    const edgeImageOut5 = new ImageData(new Uint8ClampedArray(valHolder.outputImage2.val_),
+        shapeSize, shapeSize);
+
+    const ctxOutImage200 = getCleanCanvas(canvasId + shapeSize);
+
+    ctxOutImage200.ctx.putImageData(edgeImageOut5, 0, 0);
+
+    const bval = module.calcMatrixFromString(shapeStr, shapeSize, zoom);
+    const matrix = [
+        [bval[0], bval[1], bval[2]],
+        [bval[3], bval[4], bval[5]],
+        [bval[6], bval[7], bval[8]],
+    ];
+    const transshape = applyTransformationMatrixToAllPoints(shapeStrToShape(shapeStr), matrix);
+    drawPolyFull(ctxOutImage200.ctx_ui, transshape);
     valHolder.delete();
 }
 
@@ -257,19 +375,15 @@ function copyimagetocpp() {
 
     Module.HEAP8.set(image.data, heap_image_in);
 
-    module.encode(heap_image_in, g_valHolder, canvas.width, canvas.height, 100, g_ratio, g_kernelSize, g_blurWidth, g_areaThresh);
-    const ctx2 = document.getElementById('bluredGreyOutputImage').getContext('2d');
-    const ctxEdge = getCleanCanvas("canvasImgEdge");
+    module.encode(heap_image_in, g_valHolder, canvas.width, canvas.height, 100, g_ratio, g_kernelSize, g_blurWidth, g_areaThresh, true);
 
-    const in1 = new Uint8ClampedArray(g_valHolder.outputImage1.val_);
-    const in2 = new Uint8ClampedArray(g_valHolder.edgeImage.val_);
-    const imageout = new ImageData(in1, canvas.width, canvas.height);
-    const edgeImageOut = new ImageData(in2, canvas.width, canvas.height);
+    const outputImage2 = new ImageData(new Uint8ClampedArray(g_valHolder.outputImage2.val_), canvas.width, canvas.height);
+    const outputImage1 = new ImageData(new Uint8ClampedArray(g_valHolder.outputImage1.val_), canvas.width, canvas.height);
+    const edgeImageOut = new ImageData(new Uint8ClampedArray(g_valHolder.edgeImage.val_), canvas.width, canvas.height);
 
-    ctx2.putImageData(imageout, 0, 0);
-    ctxEdge.ctx.putImageData(edgeImageOut, 0, 0);
-
-
+    getCleanCanvas("bluredGreyOutputImage").ctx.putImageData(outputImage1, 0, 0);
+    getCleanCanvas("canvasImgEdge").ctx.putImageData(edgeImageOut, 0, 0);
+    getCleanCanvas("canvasImgEdgeContoursLeft").ctx.putImageData(outputImage2, 0, 0);
 
     const shapeDemo_ui = document.getElementById('shapeDemo_ui').getContext('2d');
     parseGlobalShapes(shapeDemo_ui, g_valHolder.shapeStr);

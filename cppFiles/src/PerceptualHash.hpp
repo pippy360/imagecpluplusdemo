@@ -7,123 +7,63 @@
 #include <iomanip>
 
 #include "opencv2/opencv.hpp"
-#include "FragmentHash.h"
+#include "ImageHash.hpp"
 #include "img_hash_opencv_module/phash.hpp"
+
+//#include <opencv2/img_hash/average_hash.hpp>
+//#include <opencv2/img_hash/block_mean_hash.hpp>
+//#include <opencv2/img_hash/color_moment_hash.hpp>
+//#include <opencv2/img_hash/radial_variance_hash.hpp>
 
 using namespace std;
 
-namespace hashes{
-class PerceptualHash : public FragmentHash<vector<bool>> {
+class PerceptualHash : public ImageHash {
 private:
-    vector<bool> hash;
-    ring_t shape;
-
-    static std::string convertHashToString(vector<bool> hash) {
-        std::string ret = "";
-        int h = 0;
-        for (unsigned int i = 0; i < hash.size(); i++) {
-            if (hash[i]) {
-                h += pow(2, (i % 8));
-            }
-
-            if (i % 8 == 7) {
-                std::stringstream buffer;
-                buffer << std::hex << std::setfill('0') << std::setw(2) << h;
-                ret += buffer.str();
-                h = 0;
-            }
-        }
-        return ret;
-    }
-
-    static vector<bool> hex_str_to_hash(std::string inputString) {
-        std::vector<bool> hash;
-        int size = inputString.size() / 2;
-        for (int i = 0; i < size; i++) {
-            std::string str2 = inputString.substr(i * 2, 2);
-            if (str2.empty()) {
-                continue;
-            }
-
-            unsigned int value = 0;
-            std::stringstream SS(str2);
-            SS >> std::hex >> value;
-            for (int j = 0; j < 8; j++) {
-                bool check = !!((value >> j) & 1);
-                hash.push_back(check);
-            }
-        }
-        return hash;
-    }
-
-    static std::vector<bool> matHashToBoolArr(cv::Mat const inHash) {
-        const unsigned char *data = inHash.data;
-        std::vector<bool> v;
-        for (int i = 0; i < 8; i++) {
-            unsigned char c = data[i];
-            for (int j = 0; j < 8; j++) {
-                int shift = (8 - j) - 1;
-                bool val = ((c >> shift) & 1);
-                v.push_back(val);
-            }
-        }
-        return v;
-    }
-
     static vector<bool> computeHash(cv::Mat const input) {
         cv::Mat inHash;
-        auto algo = cv::img_hash::PHash();
-        algo.compute(input, inHash);
+        cv::img_hash::pHash(input, inHash);
         return matHashToBoolArr(inHash);
-    }
-
-    //returns hamming distance
-    static int getHashDistance(const FragmentHash<vector<bool>> &first, const FragmentHash<vector<bool>> &second) {
-        const vector<bool> hash1 = first.getHash();
-        const vector<bool> hash2 = second.getHash();
-        assert(hash1.size() == hash2.size());
-
-        int dist = 0;
-        for (unsigned int i = 0; i < hash1.size(); i++) {
-            dist += (hash1[i] != hash2[i]);
-        }
-        return dist;
     }
 
 public:
 
-    PerceptualHash()
-    {}
-
-    PerceptualHash(cv::Mat image_data):
-            FragmentHash<vector<bool>>(image_data)
+    PerceptualHash(vector<bool> hash)
     {
-        hash_ = computeHash(image_data);
+        m_hash = hash;
     }
 
-    PerceptualHash(string getHashFromString, ring_t shape):
-            FragmentHash<vector<bool>>(getHashFromString, shape)
+    PerceptualHash(cv::Mat image_data)
     {
-        hash_ = hex_str_to_hash(getHashFromString);
+        m_hash = computeHash(image_data);
+        //TODO: let's consider shortening the hash to "improve" the number of results
+        //m_hash.erase(m_hash.begin()+32, m_hash.end()-1);
     }
 
-    PerceptualHash(const PerceptualHash& that) :
-            FragmentHash(that)
-    {}
-
-    string toString() override 
+    PerceptualHash(string getHashFromString)
     {
-        return convertHashToString(hash_);
+        m_hash = hex_str_to_hash(getHashFromString);
     }
-    
-    int getHammingDistance(const FragmentHash<vector<bool>>& inHash) override {
-        return getHashDistance(*this, inHash);
-    }
-
-
 };
 
-}//end of namespace
+//
+//class PerceptualHashRotationHandler {
+//private:
+//    static vector<vector<bool > > computeHash(cv::Mat const input) {
+//        cv::Mat inHash;
+//        auto algo = cv::img_hash::ColorMomentHash::create();
+//        algo->computeForEach90DegreeRotation(input, inHash);
+//        return matHashToBoolArr(inHash);
+//    }
+//
+//public:
+//
+//    PerceptualHashRotationHandler(cv::Mat image_data)
+//    {
+//        m_hash = computeHash(image_data);
+//    }
+//};
+//
+
 #endif // perceptual_hash_h
 
 

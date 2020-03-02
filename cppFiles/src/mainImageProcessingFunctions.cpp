@@ -2,14 +2,14 @@
 #include <vector>
 #include <opencv2/opencv.hpp>
 #include <stdio.h>
-#include <iomanip>      // std::setw
 #include <math.h>       /* pow, atan2 */
 
-#include "FragmentHash.h"
-#include "ShapeAndPositionInvariantImage.hpp"
+#include "ImageHash.hpp"
 #include "boostGeometryTypes.hpp"
 #include "miscUtils.hpp"
 #include "shapeNormalise.hpp"
+#include "PerceptualHash.hpp"
+#include "mainImageProcessingFunctions.hpp"
 
 #define NUM_OF_ROTATIONS 1
 #define HASH_SIZE 8
@@ -40,7 +40,7 @@ Mat _calcMatrix(
         double output_width,
         double a,
         double b,
-        double zoomin=1) {
+        double zoomin) {
 
     double cosval = cos( rotation*PI / 180.0 );
     double sinval = sin( rotation*PI / 180.0 );
@@ -71,7 +71,7 @@ Mat _calcMatrix(
     return covertToDynamicallyAllocatedMatrix(transpose_3*transpose_scale*transpose_rot*transpose_2*transpose_1);
 }
 
-Mat calcMatrix(ring_t shape, double rotation, double output_width, double zoom=1) {
+Mat calcMatrix(ring_t shape, double rotation, double output_width, double zoom) {
     point_t p;
     ring_t transformedPoly;
     bg::centroid(shape, p);
@@ -83,13 +83,87 @@ Mat calcMatrix(ring_t shape, double rotation, double output_width, double zoom=1
     return _calcMatrix(area, -p.get<0>(), -p.get<1>(), rotation, output_width, a, b, zoom);
 }
 
+vector<pair<ring_t, ImageHash > > getAllTheHashesForImageAndShapes(Mat &imgdata, vector<ring_t> shapes, int rotations)
+{
+    vector<pair<ring_t, ImageHash> > ret(shapes.size()*rotations);
+//#pragma omp parallel for
+    for (int i = 0; i < shapes.size(); i++)
+    {
+        auto shape = shapes[i];
+        cout << "entering for shape:" << endl;
+        auto hashes = getHashesForShape(imgdata, shape, rotations);
+        for (int j =0; j < hashes.size(); j++) {
+            ret[(i*rotations) + j] = hashes[j];
+        }
+    }
+    return ret;
+}
+
+vector<pair<ring_t, ImageHash>> getAllTheHashesForImage(
+        Mat &img_in,
+        int rotations,
+        int thresh,
+        int ratio,
+        int kernel_size,
+        int blur_width,
+        int areaThresh,
+        bool simplify)
+{
+    Mat img = img_in.clone();
+    if (simplify) {
+        simplifyColors(img);
+    }
+
+    Mat canny_output = applyCanny(img, thresh, kernel_size, ratio, blur_width);
+
+    vector<vector<Point> > contours;
+    vector<Vec4i> hierarchy;
+    findContours(canny_output, contours, hierarchy, RETR_LIST, CHAIN_APPROX_SIMPLE, Point(0, 0));
+
+    vector<ring_t> shapes = extractShapesFromContours(contours, areaThresh);
+    std::cout << "Inside cpp code the extracted shapes: " << shapes.size() << std::endl;
+    return getAllTheHashesForImageAndShapes(img_in, shapes, rotations);
+}
+
+vector<pair<ring_t, ImageHash>> getHashesForShape(const cv::Mat& input_image,
+                                                         const ring_t& shape,
+                                                         int numRotations,
+                                                         int output_width)
+{
+    auto ret = vector<pair<ring_t, ImageHash>>();
+    ring_t transformedPoly;
+    point_t p;
+    bg::centroid(shape, p);
+    bg::strategy::transform::translate_transformer<double, 2, 2> translate(-p.get<0>(), -p.get<1>());
+    bg::transform(shape, transformedPoly, translate);
+    auto [a, b] = getAandB(transformedPoly);
+    double area = bg::area(transformedPoly);
+    for (unsigned int i = 0; i < numRotations; i++)
+    {
+        double rotation = ((double) i)*(360.0/(double)numRotations);
+//        std::cout << "rotation: " << rotation << std::endl;
+        Mat m = _calcMatrix(area, -p.get<0>(), -p.get<1>(), rotation, output_width, a, b);
+
+        Mat outputImage(output_width, output_width, CV_8UC3, Scalar(0, 0, 0));
+        warpAffine(input_image, outputImage, m, outputImage.size());
+
+        auto calculatedHash = PerceptualHash(outputImage);
+//        cout << calculatedHash << endl;
+//        imshow("image", outputImage);
+//        waitKey(0);
+
+        ret.push_back(std::make_pair(shape, calculatedHash));
+    }
+    return ret;
+}
+
 Mat applyCanny(
         Mat &imgdata,
-        int thresh=100,
-        int kernel_size=3,
-        int ratio=3,
-        int blur_width=6
-                )
+        int thresh,
+        int kernel_size,
+        int ratio,
+        int blur_width
+        )
 {
     Mat canny_output;
     Mat src_gray;
@@ -101,14 +175,13 @@ Mat applyCanny(
 
     /// Detect edges using canny
 //    Canny( src_gray_blur, canny_output, thresh, thresh*ratio, kernel_size );
-    Canny( src_gray_blur, canny_output, 100, 100*2, 3 );
+    Canny( src_gray_blur, canny_output, thresh, thresh*ratio, ratio );
     return canny_output;
 }
 
 vector<ring_t> extractShapesFromContours(
         vector<vector<Point> > contours,
-        int areaThresh=200
-                )
+        int areaThresh)
 {
     vector<ring_t> result;
     vector<vector<Point> > hull( contours.size() );

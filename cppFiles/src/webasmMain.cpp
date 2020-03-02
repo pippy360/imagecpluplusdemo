@@ -11,10 +11,8 @@
 #include "boostGeometryTypes.hpp"
 #include "mainImageProcessingFunctions.hpp"
 
-#include "PerceptualHash.hpp"
-#include "PerceptualHash_Fast.hpp"
-
 #include "shapeNormalise.hpp"
+//#include "ImageHash.hpp"
 
 using namespace cv;
 
@@ -92,8 +90,10 @@ std::string getAllTheHashesForImageFromCanvas(uintptr_t img_in, int rotation,
                                               int blur_width
                                               )
 {
+    std::cout << "getAllTheHashesForImageFromCanvas called" << std::endl;
+
     Mat image(cv::Size(400, 400), CV_8UC4, (void *) img_in, cv::Mat::AUTO_STEP);
-    auto vec = getAllTheHashesForImage<hashes::PerceptualHash>(
+    auto vec = getAllTheHashesForImage(
         image,
         rotation,
         thresh,

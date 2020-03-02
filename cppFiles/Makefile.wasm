@@ -4,16 +4,16 @@
 # -O3 -s WASM=1  -s DISABLE_EXCEPTION_CATCHING=2   -s TOTAL_MEMORY=149880832  -s ASSERTIONS=1  -s EXTRA_EXPORTED_RUNTIME_METHODS='["cwrap"]' --bind
 
 CC=emcc
-CFLAGS=-I./externalDependencies/ -g -std=c++17 -I/usr/local/opt/opencv/include/opencv4/ -O3 -s WASM=1 \
+CFLAGS=-I./externalDependencies/ -I. -O2 -g --profiling -std=c++17 -I/usr/local/opt/opencv/include/opencv4/ -O3 -s WASM=1 \
     -s TOTAL_MEMORY=149880832  -s ASSERTIONS=1 \
     -s EXTRA_EXPORTED_RUNTIME_METHODS='["cwrap"]' --bind
 
 cppdemo: webasmMain.o \
       shapeNormalise.o \
-      PHash_Fast.o \
-      mainImageProcessingFunctions.o \
-      phash.o
-	$(CC) $(CFLAGS) ./lib/libopencv* webasmMain.o phash.o PHash_Fast.o mainImageProcessingFunctions.o shapeNormalise.o -o ../webFiles/wasmLibs/cppdemo.js
+      phash.o \
+      ImageHash.o \
+      mainImageProcessingFunctions.o
+	$(CC) $(CFLAGS) ./lib/libopencv* webasmMain.o ImageHash.o phash.o mainImageProcessingFunctions.o shapeNormalise.o -o ../webFiles/wasmLibs/cppdemo.js
 
 mainImageProcessingFunctions.o: ./src/mainImageProcessingFunctions.cpp ./src/mainImageProcessingFunctions.hpp
 	$(CC) $(CFLAGS) -c ./src/mainImageProcessingFunctions.cpp
@@ -21,8 +21,8 @@ mainImageProcessingFunctions.o: ./src/mainImageProcessingFunctions.cpp ./src/mai
 phash.o: ./src/img_hash_opencv_module/phash.cpp
 	$(CC) $(CFLAGS) -c ./src/img_hash_opencv_module/phash.cpp
 
-PHash_Fast.o: ./src/img_hash_opencv_module/PHash_Fast.cpp
-	$(CC) $(CFLAGS) -c ./src/img_hash_opencv_module/PHash_Fast.cpp
+ImageHash.o: ./src/ImageHash.cpp
+	$(CC) $(CFLAGS) -c ./src/ImageHash.cpp
 
 webasmMain.o: ./src/webasmMain.cpp ./src/mainImageProcessingFunctions.hpp
 	$(CC) $(CFLAGS) -c ./src/webasmMain.cpp

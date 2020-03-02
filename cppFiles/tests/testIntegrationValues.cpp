@@ -3,10 +3,10 @@
 
 #include <gtest/gtest.h>
 
-#include "boostGeometryTypes.hpp"
-#include "miscUtils.hpp"
+#include <src/boostGeometryTypes.hpp>
+#include <src/miscUtils.hpp>
 
-#include "shapeNormalise.hpp"
+#include "src/shapeNormalise.hpp"
 
 //The brute force approach will only approximate the correct value
 //so we just check if it's close
@@ -16,7 +16,7 @@
 //FIXME: explain
 #define ALLOWED_ERROR_MORE_ACCURATE 0.0000001
 
-#include "shapeNormalise.cpp"
+#include "src/shapeNormalise.cpp"
 
 double bruteForcePointEquationCommon(point_t p1, point_t p2, double (*func)(double x, double y)) {
     double x1 = p1.get<0>();

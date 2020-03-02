@@ -12,12 +12,15 @@ add_subdirectory("./externalDependencies/hiredis/")
 
 add_executable(
         runtests
-        src/shapeNormalise.cpp
-        src/testIntegrationValues.cpp
+#        src/shapeNormalise.cpp
+        tests/testIntegrationValues.cpp
         src/img_hash_opencv_module/phash.cpp
-        src/img_hash_opencv_module/PHash_Fast.cpp
+#        src/img_hash_opencv_module/PHash_Fast.cpp
         src/utils.hpp
         src/mainImageProcessingFunctions.cpp
+        tests/hashtests.cpp
+        src/ImageHash.cpp
+#        src/imghash/phash.cpp
 )
 
 add_executable(
@@ -28,9 +31,11 @@ add_executable(
 #        src/canny.h
         src/main.cc
         src/img_hash_opencv_module/phash.cpp
-        src/img_hash_opencv_module/PHash_Fast.cpp
+#        src/img_hash_opencv_module/PHash_Fast.cpp
         src/utils.hpp
         src/mainImageProcessingFunctions.cpp
+        src/ImageHash.cpp
+#        src/imghash/phash.cpp
 )
 
 target_include_directories(runtests PUBLIC "." ./externalDependencies googletest/googletest/include/ ${JPEG_INCLUDE_DIR} ${OpenCV_INCLUDE_DIRS})

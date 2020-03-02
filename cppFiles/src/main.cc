@@ -4,8 +4,6 @@
 #include <stdio.h>      /* printf, scanf, puts, NULL */
 #include <stdlib.h>     /* srand, rand */
 
-#include "PerceptualHash.hpp"
-
 #include "mainImageProcessingFunctions.hpp"
 #include <boost/program_options.hpp>
 #include <iostream>
@@ -21,7 +19,7 @@ void addAllHashesToRedis(string imagePath) {
     //    auto loadedImage = cv::imread("/Users/tmurphy/git/image/imagecpluplusdemo/webFiles/images/richandmalty.jpg");
     auto loadedImage = cv::imread(imagePath);
 
-    auto hashTrianglePairs = getAllTheHashesForImage<hashes::PerceptualHash>(loadedImage, 20);
+    auto hashTrianglePairs = getAllTheHashesForImage(loadedImage, 20);
 
     redisContext *c;
     redisReply *reply;
@@ -52,7 +50,7 @@ void addAllHashesToRedis(string imagePath) {
 
 int findMatchingHashInRedis(string imageName) {
     auto img = cv::imread(imageName);
-    auto hashTrianglePairs = getAllTheHashesForImage<hashes::PerceptualHash>(img);
+    auto hashTrianglePairs = getAllTheHashesForImage(img);
 
     redisContext *c;
     redisReply *reply;

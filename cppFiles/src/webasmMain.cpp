@@ -142,10 +142,12 @@ void getShapeWithPointInside(
     Mat img_in(cv::Size(width, height), CV_8UC4, (void *) img_in_ptr, cv::Mat::AUTO_STEP);
     Mat img = img_in.clone();
     if (simplify) {
-        simplifyColors(img);
+//        simplifyColors(img);
     }
 
-    Mat canny_output = applyCanny(img, thresh, kernel_size, ratio, blur_width);
+    Mat src_gray;
+    cvtColor( img, src_gray, COLOR_BGRA2GRAY );//FIXME: detect and assert
+    Mat canny_output = applyCanny(src_gray, thresh, kernel_size, ratio, blur_width);
 
     vector<vector<Point> > contours;
     vector<Vec4i> hierarchy;
@@ -179,10 +181,13 @@ void encode(
     Mat img_in(cv::Size(width, height), CV_8UC4, (void *) img_in_ptr, cv::Mat::AUTO_STEP);
     Mat img = img_in.clone();
     if (simplify) {
-        simplifyColors(img);
+//        simplifyColors(img);
     }
 
-    Mat _canny_output = applyCanny(img_in, thresh, kernel_size, ratio, blur_width);
+    Mat src_gray;
+    cvtColor( img, src_gray, COLOR_BGRA2GRAY );//FIXME: detect and assert
+
+    Mat _canny_output = applyCanny(src_gray, thresh, kernel_size, ratio, blur_width);
     Mat imageCannyOut;
     cvtColor(_canny_output, imageCannyOut, COLOR_GRAY2RGBA);
 

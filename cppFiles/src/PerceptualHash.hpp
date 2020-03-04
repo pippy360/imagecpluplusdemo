@@ -34,6 +34,8 @@ public:
 
     PerceptualHash(cv::Mat image_data)
     {
+        //assert this here because to make sure we're not taking a performance hit by using a non-black and white image
+        assert(image_data.type() == CV_8U);
         m_hash = computeHash(image_data);
         //TODO: let's consider shortening the hash to "improve" the number of results
         //m_hash.erase(m_hash.begin()+32, m_hash.end()-1);

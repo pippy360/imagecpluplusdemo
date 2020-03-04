@@ -8,13 +8,13 @@
 TEST(HashTest, testFixedValueOpencv) {
     //assert some predefined values
 
-    const cv::Mat rickandmortyImage = cv::imread("../webFiles/images/richandmalty.jpg");
+    const cv::Mat rickandmortyImage = cv::imread("../webFiles/images/richandmalty.jpg", cv::IMREAD_GRAYSCALE);
     assert(rickandmortyImage.data);
 
-    const cv::Mat rickandmortyImage400px = cv::imread("../webFiles/images/richandmalty400px.png");
+    const cv::Mat rickandmortyImage400px = cv::imread("../webFiles/images/richandmalty400px.png", cv::IMREAD_GRAYSCALE);
     assert(rickandmortyImage400px.data);
 
-    const cv::Mat basicshapes = cv::imread("../webFiles/images/basicshapes.png");
+    const cv::Mat basicshapes = cv::imread("../webFiles/images/basicshapes.png", cv::IMREAD_GRAYSCALE);
     assert(basicshapes.data);
 
     {

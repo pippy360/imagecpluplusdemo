@@ -24,12 +24,12 @@ Mat _calcMatrix(
         double b,
         double zoomin=1);
 
-static vector<pair<ring_t, ImageHash>> getHashesForShape(const cv::Mat& input_image,
+vector<pair<ring_t, ImageHash>> getHashesForShape(const cv::Mat& input_image,
                                           const ring_t& shape,
                                           int numRotations=360,
                                           int output_width=32);
 
-static vector<pair<ring_t, ImageHash > > getAllTheHashesForImageAndShapes(Mat &imgdata, vector<ring_t> shapes,
+vector<pair<ring_t, ImageHash > > getAllTheHashesForImageAndShapes(Mat &imgdata, vector<ring_t> shapes,
         int rotations=360);
 
 Mat applyCanny(
@@ -45,10 +45,10 @@ vector<ring_t> extractShapesFromContours(
         int areaThresh=200
                 );
 
-void simplifyColors(Mat& img);
+//void simplifyColors(Mat& img);
 
 vector<pair<ring_t, ImageHash>> getAllTheHashesForImage(
-        Mat &img_in,
+        Mat img_in,
         int rotations=360,
         int thresh=100,
         int ratio=3,

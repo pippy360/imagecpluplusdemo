@@ -100,7 +100,7 @@ vector<pair<ring_t, ImageHash > > getAllTheHashesForImageAndShapes(Mat &imgdata,
 }
 
 vector<pair<ring_t, ImageHash>> getAllTheHashesForImage(
-        Mat &img_in,
+        Mat img_in,
         int rotations,
         int thresh,
         int ratio,
@@ -109,12 +109,20 @@ vector<pair<ring_t, ImageHash>> getAllTheHashesForImage(
         int areaThresh,
         bool simplify)
 {
-    Mat img = img_in.clone();
-    if (simplify) {
-        simplifyColors(img);
+    Mat grayImg;
+    if(img_in.type() == CV_8UC3)
+    {
+        cv::cvtColor(img_in, grayImg, COLOR_BGR2GRAY);
     }
-
-    Mat canny_output = applyCanny(img, thresh, kernel_size, ratio, blur_width);
+    else if(img_in.type() == CV_8UC4)
+    {
+        cv::cvtColor(img_in, grayImg, COLOR_BGRA2GRAY);
+    }
+    else
+    {
+        grayImg = img_in;
+    }
+    Mat canny_output = applyCanny(grayImg, thresh, kernel_size, ratio, blur_width);
 
     vector<vector<Point> > contours;
     vector<Vec4i> hierarchy;
@@ -122,7 +130,7 @@ vector<pair<ring_t, ImageHash>> getAllTheHashesForImage(
 
     vector<ring_t> shapes = extractShapesFromContours(contours, areaThresh);
     std::cout << "Inside cpp code the extracted shapes: " << shapes.size() << std::endl;
-    return getAllTheHashesForImageAndShapes(img_in, shapes, rotations);
+    return getAllTheHashesForImageAndShapes(grayImg, shapes, rotations);
 }
 
 vector<pair<ring_t, ImageHash>> getHashesForShape(const cv::Mat& input_image,
@@ -158,7 +166,7 @@ vector<pair<ring_t, ImageHash>> getHashesForShape(const cv::Mat& input_image,
 }
 
 Mat applyCanny(
-        Mat &imgdata,
+        Mat &src_gray,
         int thresh,
         int kernel_size,
         int ratio,
@@ -166,16 +174,13 @@ Mat applyCanny(
         )
 {
     Mat canny_output;
-    Mat src_gray;
     Mat src_gray_blur;
-
+    assert(src_gray.type() == CV_8U);
     /// Convert image to gray and blur it
-    cvtColor( imgdata, src_gray, COLOR_BGR2GRAY );
     blur( src_gray, src_gray_blur, Size(blur_width, blur_width) );
 
     /// Detect edges using canny
-//    Canny( src_gray_blur, canny_output, thresh, thresh*ratio, kernel_size );
-    Canny( src_gray_blur, canny_output, thresh, thresh*ratio, ratio );
+    Canny( src_gray_blur, canny_output, thresh, thresh*ratio, kernel_size );
     return canny_output;
 }
 
@@ -203,27 +208,29 @@ vector<ring_t> extractShapesFromContours(
     return result;
 }
 
-inline uchar reduceVal(const uchar val)
-{
-//    if (val < 64) return 0;
-    if (val < 128) return 0;
-    return 255;
-}
+//inline uchar reduceVal(const uchar val)
+//{
+////    if (val < 64) return 0;
+//    if (val < 128) return 0;
+//    return 255;
+//}
 
+//FIXME: consider adding this back in
 void simplifyColors(Mat& img)
 {
-    uchar* pixelPtr = img.data;
-    for (int i = 0; i < img.rows; i++)
-    {
-        for (int j = 0; j < img.cols; j++)
-        {
-            const int pi = i*img.cols*4 + j*4;
-            pixelPtr[pi + 0] = reduceVal(pixelPtr[pi + 0]); // B
-            pixelPtr[pi + 1] = reduceVal(pixelPtr[pi + 1]); // G
-            pixelPtr[pi + 2] = reduceVal(pixelPtr[pi + 2]); // R
-//            pixelPtr[pi + 3] = reduceVal(pixelPtr[pi + 3]); // A
-        }
-    }
+    return;
+//    uchar* pixelPtr = img.data;
+//    for (int i = 0; i < img.rows; i++)
+//    {
+//        for (int j = 0; j < img.cols; j++)
+//        {
+//            const int pi = i*img.cols*4 + j*4;
+//            pixelPtr[pi + 0] = reduceVal(pixelPtr[pi + 0]); // B
+//            pixelPtr[pi + 1] = reduceVal(pixelPtr[pi + 1]); // G
+//            pixelPtr[pi + 2] = reduceVal(pixelPtr[pi + 2]); // R
+////            pixelPtr[pi + 3] = reduceVal(pixelPtr[pi + 3]); // A
+//        }
+//    }
 }
 
 

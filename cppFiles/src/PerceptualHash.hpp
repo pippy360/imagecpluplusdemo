@@ -19,7 +19,7 @@ using namespace std;
 
 class PerceptualHash : public ImageHash {
 private:
-    static vector<bool> computeHash(cv::Mat const input) {
+    static uint64_t computeHash(cv::Mat const input) {
         cv::Mat inHash;
         cv::img_hash::pHash(input, inHash);
         return matHashToBoolArr(inHash);
@@ -27,7 +27,7 @@ private:
 
 public:
 
-    PerceptualHash(vector<bool> hash)
+    PerceptualHash(uint64_t hash)
     {
         m_hash = hash;
     }

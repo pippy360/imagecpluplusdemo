@@ -12,36 +12,14 @@ ImageHash *computeHash(cv::Mat &imageData, enum HashType hashType) {
     return nullptr;
 }
 
-std::vector<bool> ImageHash::matHashToBoolArr(cv::Mat const inHash) {
-    const unsigned char *data = inHash.data;
-    std::vector<bool> v;
-    for (int i = 0; i < 8; i++) {
-        unsigned char c = data[i];
-        for (int j = 0; j < 8; j++) {
-            int shift = (8 - j) - 1;
-            bool val = ((c >> shift) & 1);
-            v.push_back(val);
-        }
-    }
-    return v;
+uint64_t ImageHash::matHashToBoolArr(cv::Mat const inHash) {
+    return *(inHash.ptr<uint64_t>(0));
 }
 
-vector<bool> ImageHash::hex_str_to_hash(std::string inputString) {
-    std::vector<bool> hash;
-    int size = inputString.size() / 2;
-    for (int i = 0; i < size; i++) {
-        std::string str2 = inputString.substr(i * 2, 2);
-        if (str2.empty()) {
-            continue;
-        }
-
-        unsigned int value = 0;
-        std::stringstream SS(str2);
-        SS >> std::hex >> value;
-        for (int j = 0; j < 8; j++) {
-            bool check = !!((value >> j) & 1);
-            hash.push_back(check);
-        }
-    }
+uint64_t ImageHash::hex_str_to_hash(std::string inputString) {
+    uint64_t hash;
+    std::stringstream ss;
+    ss << std::hex << inputString;
+    ss >> hash;
     return hash;
 }

@@ -14,43 +14,33 @@ class ImageHash
 {
 private:
 
-    static std::string convertHashToString(vector<bool> hash) {
-        std::string ret = "";
-        int h = 0;
-        for (unsigned int i = 0; i < hash.size(); i++) {
-            if (hash[i]) {
-                h += pow(2, (i % 8));
-            }
+    static std::string convertHashToString(uint64_t hash) {
+        std::stringstream stream;
+        stream << std::hex << hash;
+        return stream.str();
+    }
 
-            if (i % 8 == 7) {
-                std::stringstream buffer;
-                buffer << std::hex << std::setfill('0') << std::setw(2) << h;
-                ret += buffer.str();
-                h = 0;
-            }
+    static unsigned int bitCount(uint64_t value) {
+        unsigned int count = 0;
+        while (value > 0) {           // until all bits are zero
+            if ((value & 1) == 1)     // check lower bit
+                count++;
+            value >>= 1;              // shift bits, removing lower bit
         }
-        return ret;
+        return count;
     }
 
     //returns hamming distance
     static int getHashDistance(const ImageHash &first, const ImageHash &second) {
-        const vector<bool> hash1 = first.m_hash;
-        const vector<bool> hash2 = second.m_hash;
-        assert(hash1.size() == hash2.size());
-
-        int dist = 0;
-        for (unsigned int i = 0; i < hash1.size(); i++) {
-            dist += (hash1[i] != hash2[i]);
-        }
-        return dist;
+        return bitCount(first.m_hash ^ second.m_hash);
     }
 protected:
 
-    vector<bool> m_hash;
+    uint64_t m_hash;
 
-    vector<bool> hex_str_to_hash(std::string inputString);
+    uint64_t hex_str_to_hash(std::string inputString);
 
-    static std::vector<bool> matHashToBoolArr(cv::Mat const inHash);
+    static uint64_t matHashToBoolArr(cv::Mat const inHash);
 
 public:
 

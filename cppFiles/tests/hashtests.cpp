@@ -19,7 +19,7 @@ TEST(HashTest, testFixedValueOpencv) {
 
     {
         PerceptualHash hash(rickandmortyImage);
-        EXPECT_STREQ("d20569f1ce8d5b9c", hash.toString().c_str());
+        EXPECT_STREQ("39dab1738f96a04b", hash.toString().c_str());
     }
 
     {
@@ -29,7 +29,7 @@ TEST(HashTest, testFixedValueOpencv) {
 
         PerceptualHash hash(rickandmortyImage400px);
 //        EXPECT_STREQ("d20569f1ce8d5b9c", hash.toString().c_str());
-        EXPECT_STREQ("d20569f18e8f5b9c", hash.toString().c_str());
+        EXPECT_STREQ("39daf1718f96a04b", hash.toString().c_str());
     }
 
     {

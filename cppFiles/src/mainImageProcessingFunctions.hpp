@@ -47,13 +47,26 @@ vector<ring_t> extractShapesFromContours(
 
 //void simplifyColors(Mat& img);
 
+/*
+ *
+ * //FIXME: force common config
+ *
+ *
+ * let g_blurWidth = 3;
+let g_kernelSize = 3;
+let g_ratio = 3;
+let g_thresh = 100;
+let g_areaThresh = 200;
+ *
+ * */
+
 vector<pair<ring_t, ImageHash>> getAllTheHashesForImage(
         Mat img_in,
         int rotations=360,
         int thresh=100,
         int ratio=3,
         int kernel_size=3,
-        int blur_width=6,
+        int blur_width=3,
         int areaThresh=200,
         bool simplify=true
 );

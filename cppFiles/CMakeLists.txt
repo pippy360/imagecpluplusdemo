@@ -21,6 +21,7 @@ add_executable(
         tests/hashtests.cpp
         src/ImageHash.cpp
 #        src/imghash/phash.cpp
+        tests/accuracytest2.cpp
 )
 
 add_executable(

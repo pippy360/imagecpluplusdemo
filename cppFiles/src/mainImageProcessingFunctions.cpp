@@ -83,14 +83,14 @@ Mat calcMatrix(ring_t shape, double rotation, double output_width, double zoom) 
     return _calcMatrix(area, -p.get<0>(), -p.get<1>(), rotation, output_width, a, b, zoom);
 }
 
-vector<pair<ring_t, ImageHash > > getAllTheHashesForImageAndShapes(Mat &imgdata, vector<ring_t> shapes, int rotations)
+vector<pair<ring_t, ImageHash>> getAllTheHashesForImageAndShapes(Mat &imgdata, vector<ring_t> shapes, int rotations)
 {
-    vector<pair<ring_t, ImageHash> > ret(shapes.size()*rotations);
+    vector<pair<ring_t, ImageHash>> ret(shapes.size()*rotations);
 //#pragma omp parallel for
     for (int i = 0; i < shapes.size(); i++)
     {
         auto shape = shapes[i];
-        cout << "entering for shape:" << endl;
+//        cout << "entering for shape:" << endl;
         auto hashes = getHashesForShape(imgdata, shape, rotations);
         for (int j =0; j < hashes.size(); j++) {
             ret[(i*rotations) + j] = hashes[j];

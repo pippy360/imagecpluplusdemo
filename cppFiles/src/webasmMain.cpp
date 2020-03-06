@@ -108,6 +108,7 @@ std::string getAllTheHashesForImageFromCanvas(uintptr_t img_in, int rotation,
     polygonString << "{ ";
 //    for (auto &v: vec) {
     for (int i = 0; i < vec.size(); i++) {
+        //FIXME: we need to check that no two hashes are the same, otherwise we can create invalid json
         auto v = vec[i];
         auto [shape, hash] = v;
         if (i > 0)

@@ -83,9 +83,9 @@ Mat calcMatrix(ring_t shape, double rotation, double output_width, double zoom) 
     return _calcMatrix(area, -p.get<0>(), -p.get<1>(), rotation, output_width, a, b, zoom);
 }
 
-vector<pair<ring_t, ImageHash>> getAllTheHashesForImageAndShapes(Mat &imgdata, vector<ring_t> shapes, int rotations)
+vector<pair<ring_t, uint64_t>> getAllTheHashesForImageAndShapes(Mat &imgdata, vector<ring_t> shapes, int rotations)
 {
-    vector<pair<ring_t, ImageHash>> ret(shapes.size()*rotations);
+    vector<pair<ring_t, uint64_t>> ret(shapes.size()*rotations*4);
 //#pragma omp parallel for
     for (int i = 0; i < shapes.size(); i++)
     {
@@ -99,7 +99,7 @@ vector<pair<ring_t, ImageHash>> getAllTheHashesForImageAndShapes(Mat &imgdata, v
     return ret;
 }
 
-vector<pair<ring_t, ImageHash>> getAllTheHashesForImage(
+vector<pair<ring_t, uint64_t>> getAllTheHashesForImage(
         Mat img_in,
         int rotations,
         int thresh,
@@ -133,12 +133,12 @@ vector<pair<ring_t, ImageHash>> getAllTheHashesForImage(
     return getAllTheHashesForImageAndShapes(grayImg, shapes, rotations);
 }
 
-vector<pair<ring_t, ImageHash>> getHashesForShape(const cv::Mat& input_image,
+vector<pair<ring_t, uint64_t>> getHashesForShape(const cv::Mat& input_image,
                                                          const ring_t& shape,
                                                          int numRotations,
                                                          int output_width)
 {
-    auto ret = vector<pair<ring_t, ImageHash>>();
+    auto ret = vector<pair<ring_t, uint64_t >>();
     ring_t transformedPoly;
     point_t p;
     bg::centroid(shape, p);

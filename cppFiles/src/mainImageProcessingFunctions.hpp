@@ -24,12 +24,12 @@ Mat _calcMatrix(
         double b,
         double zoomin=1);
 
-vector<pair<ring_t, ImageHash>> getHashesForShape(const cv::Mat& input_image,
+vector<pair<ring_t, uint64_t>> getHashesForShape(const cv::Mat& input_image,
                                           const ring_t& shape,
                                           int numRotations=360,
                                           int output_width=32);
 
-vector<pair<ring_t, ImageHash > > getAllTheHashesForImageAndShapes(Mat &imgdata, vector<ring_t> shapes,
+vector<pair<ring_t, uint64_t>> getAllTheHashesForImageAndShapes(Mat &imgdata, vector<ring_t> shapes,
         int rotations=360);
 
 Mat applyCanny(
@@ -60,7 +60,7 @@ let g_areaThresh = 200;
  *
  * */
 
-vector<pair<ring_t, ImageHash>> getAllTheHashesForImage(
+vector<pair<ring_t, uint64_t>> getAllTheHashesForImage(
         Mat img_in,
         int rotations=360,
         int thresh=100,

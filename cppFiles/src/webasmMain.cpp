@@ -114,7 +114,7 @@ std::string getAllTheHashesForImageFromCanvas(uintptr_t img_in, int rotation,
         if (i > 0)
             polygonString << ",";
         polygonString << "\"";
-        polygonString << hash.toString();
+        polygonString << ImageHash::convertHashToString(hash);
         polygonString << "\" : \"";
         polygonString << bg::wkt(shape);
         polygonString << "\"";

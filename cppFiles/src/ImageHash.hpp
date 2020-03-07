@@ -14,12 +14,6 @@ class ImageHash
 {
 private:
 
-    static std::string convertHashToString(uint64_t hash) {
-        std::stringstream stream;
-        stream << std::hex << hash;
-        return stream.str();
-    }
-
     static unsigned int bitCount(uint64_t value) {
         unsigned int count = 0;
         while (value > 0) {           // until all bits are zero
@@ -43,6 +37,12 @@ protected:
     static uint64_t matHashToBoolArr(cv::Mat const inHash);
 
 public:
+
+    static std::string convertHashToString(uint64_t hash) {
+        std::stringstream stream;
+        stream << std::hex << hash;
+        return stream.str();
+    }
 
     string toString() {
         return convertHashToString(m_hash);

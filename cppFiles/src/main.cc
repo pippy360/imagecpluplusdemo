@@ -41,7 +41,7 @@ void addAllHashesToRedis(string imagePath) {
     int count = 0;
     for (auto &hashTriangle : hashTrianglePairs) {
         string redisEntry = convertToRedisEntryJson(imagePath, hashTriangle.first);
-        redisCommand(c, "SADD %s %s", hashTriangle.second.toString().c_str(), redisEntry.c_str());
+        redisCommand(c, "SADD %s %s", ImageHash::convertHashToString(hashTriangle.second).c_str(), redisEntry.c_str());
 
         count++;
     }
@@ -78,7 +78,7 @@ int findMatchingHashInRedis(string imageName) {
         unsigned int j = 0;
         for(;i < hashTrianglePairs.size() && j < batchSize; j++, i++){
             auto hashTriangle = hashTrianglePairs[i];
-            redisAppendCommand(c,"SMEMBERS %s", hashTriangle.second.toString().c_str());
+            redisAppendCommand(c,"SMEMBERS %s", ImageHash::convertHashToString(hashTriangle.second).c_str());
         }
 
         for(; j > 0; j--){

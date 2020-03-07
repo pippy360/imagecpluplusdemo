@@ -6,6 +6,37 @@
 
 #define PI 3.14159265
 
+TEST(AccuracyTest, testGetHashesForShape) {
+    cv::Mat rickandmortyImage = cv::imread("../webFiles/images/richandmalty.jpg", cv::IMREAD_GRAYSCALE);
+    assert(rickandmortyImage.data);
+
+    int rotations=360,
+            thresh=100,
+            ratio=3,
+            kernel_size=3,
+            blur_width=3,
+            areaThresh=200,
+            output_width=32;
+
+    Mat grayImg = convertToGrey(rickandmortyImage);
+    vector<ring_t> shapes = extractShapes(thresh, ratio, kernel_size, blur_width, areaThresh, grayImg, shapes);
+
+    auto shape = shapes[0];
+
+    point_t p;
+    bg::centroid(shape, p);
+    auto [a, b] = getAandBWrapper(shape, p);
+    double area = bg::area(shape);
+
+    auto ret = vector<pair<ring_t, uint64_t >>();
+    handleForRotation(grayImg, shape, output_width, ret, p, a, b, area, 1);
+    assert(ret.size() == 4);
+    EXPECT_STREQ("ffea7faaaaa2b20b", ImageHash::convertHashToString(ret[0].second).c_str());
+    EXPECT_STREQ("feea76a8fb80fd2b", ImageHash::convertHashToString(ret[1].second).c_str());
+    EXPECT_STREQ("feea7ba8fba8fba1", ImageHash::convertHashToString(ret[2].second).c_str());
+    EXPECT_STREQ("ffe8fba2fea8e8a1", ImageHash::convertHashToString(ret[3].second).c_str());
+}
+
 int rescounts[] = {
         23040,
         270,
@@ -413,12 +444,12 @@ TEST(AccuracyTest, testRotatedAndResults) {
     cv::Mat rickandmortyImage = cv::imread("../webFiles/images/richandmalty.jpg", cv::IMREAD_GRAYSCALE);
     assert(rickandmortyImage.data);
 
-    vector<pair<ring_t, ImageHash>> res = getAllTheHashesForImage(rickandmortyImage);
+    vector<pair<ring_t, uint64_t>> res = getAllTheHashesForImage(rickandmortyImage);
     std::map<std::string,ring_t> mtmap;
     for (auto &r : res) {
 
         //FIXME: assert( map.find(r.second.toString()) == map.end() );
-        mtmap[r.second.toString()] = r.first;
+        mtmap[ImageHash::convertHashToString(r.second)] = r.first;
     }
     //something........
 
@@ -446,10 +477,10 @@ TEST(AccuracyTest, testRotatedAndResults) {
         cv::Mat m = covertToDynamicallyAllocatedMatrix(transpose_3*transpose_rot*transpose_1);
         cv::warpAffine(rickandmortyImage, r, m, r.size());
 
-        vector<pair<ring_t, ImageHash>> res = getAllTheHashesForImage(r);
+        vector<pair<ring_t, uint64_t>> res = getAllTheHashesForImage(r);
         int count = 0;
         for (auto &r : res) {
-            if ( mtmap.count(r.second.toString()) > 0 ) {
+            if ( mtmap.count(ImageHash::convertHashToString(r.second)) > 0 ) {
 //                std::cout << "found" << r.second.toString() << std::endl;
                 count++;
             }
@@ -466,3 +497,4 @@ TEST(AccuracyTest, testRotatedAndResults) {
 
     }
 }
+

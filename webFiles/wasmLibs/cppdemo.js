@@ -639,8 +639,8 @@ var wasmMemory;
 // In the wasm backend, we polyfill the WebAssembly object,
 // so this creates a (non-native-wasm) table for us.
 var wasmTable = new WebAssembly.Table({
-  'initial': 1819,
-  'maximum': 1819 + 0,
+  'initial': 1774,
+  'maximum': 1774 + 0,
   'element': 'anyfunc'
 });
 
@@ -1241,11 +1241,11 @@ function updateGlobalBufferAndViews(buf) {
 }
 
 var STATIC_BASE = 1024,
-    STACK_BASE = 5990992,
+    STACK_BASE = 5989296,
     STACKTOP = STACK_BASE,
-    STACK_MAX = 748112,
-    DYNAMIC_BASE = 5990992,
-    DYNAMICTOP_PTR = 747952;
+    STACK_MAX = 746416,
+    DYNAMIC_BASE = 5989296,
+    DYNAMICTOP_PTR = 746256;
 
 assert(STACK_BASE % 16 === 0, 'stack must start aligned');
 assert(DYNAMIC_BASE % 16 === 0, 'heap must start aligned');
@@ -1769,7 +1769,7 @@ var ASM_CONSTS = {
 
 
 
-// STATICTOP = STATIC_BASE + 747088;
+// STATICTOP = STATIC_BASE + 745392;
 /* global initializers */  __ATINIT__.push({ func: function() { ___wasm_call_ctors() } });
 
 
@@ -6046,7 +6046,7 @@ var ASM_CONSTS = {
     }
 
   function _emscripten_get_sbrk_ptr() {
-      return 747952;
+      return 746256;
     }
 
   function _emscripten_memcpy_big(dest, src, num) {
@@ -7143,12 +7143,6 @@ var dynCall_viijii = Module["dynCall_viijii"] = function() {
   assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
   assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
   return Module["asm"]["dynCall_viijii"].apply(null, arguments)
-};
-
-var dynCall_diii = Module["dynCall_diii"] = function() {
-  assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
-  assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
-  return Module["asm"]["dynCall_diii"].apply(null, arguments)
 };
 
 var dynCall_dii = Module["dynCall_dii"] = function() {

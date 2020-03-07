@@ -61,7 +61,7 @@ namespace img_hash
 CV_EXPORTS_W void pHash(cv::InputArray inputArr,
                         cv::OutputArray outputArr);
 
-class CV_EXPORTS_W PHash : public ImgHashBase
+class CV_EXPORTS_W PHash
 {
 public:
     CV_WRAP ~PHash();
@@ -71,8 +71,9 @@ public:
          type should be CV_8UC4, CV_8UC3, CV_8UC1.
         @param outputArr hash of the image
     */
-    CV_WRAP virtual void compute(cv::InputArray inputArr,
-                                 cv::OutputArray outputArr);
+    CV_WRAP static uint64_t compute(cv::InputArray inputArr);
+
+    static std::vector<uint64_t> compute_fast(const _InputArray &inputArr);
 
     /** @brief Compare the hash value between inOne and inTwo
         @param hashOne Hash value one
@@ -96,6 +97,7 @@ private:
     cv::Mat grayImg;
     cv::Mat resizeImg;
     cv::Mat topLeftDCT;
+
 };
 
 //! @}

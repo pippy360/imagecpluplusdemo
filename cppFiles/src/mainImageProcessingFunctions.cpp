@@ -100,16 +100,7 @@ vector<pair<ring_t, uint64_t>> getAllTheHashesForImageAndShapes(Mat &imgdata, ve
     return ret;
 }
 
-vector<pair<ring_t, uint64_t>> getAllTheHashesForImage(
-        Mat img_in,
-        int rotations,
-        int thresh,
-        int ratio,
-        int kernel_size,
-        int blur_width,
-        int areaThresh,
-        bool simplify)
-{
+Mat convertToGrey(Mat img_in) {
     Mat grayImg;
     if(img_in.type() == CV_8UC3)
     {
@@ -123,15 +114,62 @@ vector<pair<ring_t, uint64_t>> getAllTheHashesForImage(
     {
         grayImg = img_in;
     }
+    return grayImg;
+}
+
+vector<ring_t> extractShapes(int thresh, int ratio, int kernel_size, int blur_width, int areaThresh, Mat &grayImg,
+                             vector<ring_t> &shapes)
+{
     Mat canny_output = applyCanny(grayImg, thresh, kernel_size, ratio, blur_width);
 
     vector<vector<Point> > contours;
     vector<Vec4i> hierarchy;
     findContours(canny_output, contours, hierarchy, RETR_LIST, CHAIN_APPROX_SIMPLE, Point(0, 0));
+    return extractShapesFromContours(contours, areaThresh);
+}
 
-    vector<ring_t> shapes = extractShapesFromContours(contours, areaThresh);
+vector<pair<ring_t, uint64_t>> getAllTheHashesForImage(
+        Mat img_in,
+        int rotations,
+        int thresh,
+        int ratio,
+        int kernel_size,
+        int blur_width,
+        int areaThresh,
+        bool simplify)
+{
+    Mat grayImg = convertToGrey(img_in);
+    vector<ring_t> shapes = extractShapes(thresh, ratio, kernel_size, blur_width, areaThresh, grayImg, shapes);
+
     std::cout << "Inside cpp code the extracted shapes: " << shapes.size() << std::endl;
     return getAllTheHashesForImageAndShapes(grayImg, shapes, rotations);
+}
+
+std::tuple<double, double> getAandBWrapper(const ring_t& shape, point_t centroid) {
+    bg::strategy::transform::translate_transformer<double, 2, 2> translate(-centroid.get<0>(), -centroid.get<1>());
+    ring_t transformedPoly;
+    bg::transform(shape, transformedPoly, translate);
+    return getAandB(transformedPoly);
+}
+
+
+void handleForRotation(const Mat &input_image, const ring_t &shape, int output_width,
+                              vector<pair<ring_t, uint64_t>> &ret, const point_t centroid, double a,
+                              double b, double area, unsigned int _rotation_in) {
+    for (unsigned int j = 0; j < 4; j++) {
+        double rotation = _rotation_in + (90*j);
+//        std::cout << "rotation: " << rotation << std::endl;
+        Mat m = _calcMatrix(area, -centroid.get<0>(), -centroid.get<1>(), rotation, output_width, a, b);
+
+        Mat outputImage(output_width, output_width, CV_8UC3, Scalar(0, 0, 0));
+        warpAffine(input_image, outputImage, m, outputImage.size());
+
+        uint64_t calculatedHash = img_hash::PHash::compute(outputImage);
+//        imshow("image", outputImage);
+//        waitKey(0);
+
+        ret.push_back(make_pair(shape, calculatedHash));
+    }
 }
 
 vector<pair<ring_t, uint64_t>> getHashesForShape(const cv::Mat& input_image,
@@ -139,29 +177,14 @@ vector<pair<ring_t, uint64_t>> getHashesForShape(const cv::Mat& input_image,
                                                          int numRotations,
                                                          int output_width)
 {
-    auto ret = vector<pair<ring_t, uint64_t >>();
-    ring_t transformedPoly;
     point_t p;
+    auto ret = vector<pair<ring_t, uint64_t >>();
     bg::centroid(shape, p);
-    bg::strategy::transform::translate_transformer<double, 2, 2> translate(-p.get<0>(), -p.get<1>());
-    bg::transform(shape, transformedPoly, translate);
-    auto [a, b] = getAandB(transformedPoly);
-    double area = bg::area(transformedPoly);
-    for (unsigned int i = 0; i < numRotations; i++)
+    auto [a, b] = getAandBWrapper(shape, p);
+    double area = bg::area(shape);
+    for (unsigned int i = 0; i < 90; i++)
     {
-        double rotation = ((double) i)*(360.0/(double)numRotations);
-//        std::cout << "rotation: " << rotation << std::endl;
-        Mat m = _calcMatrix(area, -p.get<0>(), -p.get<1>(), rotation, output_width, a, b);
-
-        Mat outputImage(output_width, output_width, CV_8UC3, Scalar(0, 0, 0));
-        warpAffine(input_image, outputImage, m, outputImage.size());
-
-        auto calculatedHash = PerceptualHash(outputImage);
-//        cout << calculatedHash << endl;
-//        imshow("image", outputImage);
-//        waitKey(0);
-
-        ret.push_back(std::make_pair(shape, calculatedHash));
+        handleForRotation(input_image, shape, output_width, ret, p, a, b, area, i);
     }
     return ret;
 }
@@ -186,7 +209,7 @@ Mat applyCanny(
 }
 
 vector<ring_t> extractShapesFromContours(
-        vector<vector<Point> > contours,
+        vector<vector<Point>> contours,
         int areaThresh)
 {
     vector<ring_t> result;

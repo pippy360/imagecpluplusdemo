@@ -53,14 +53,39 @@ namespace cv{
 
         }
 
-        void PHash::compute(cv::InputArray inputArr,
-                            cv::OutputArray outputArr)
+        uint64_t handledct(Mat topLeftDCT_l) {
+            topLeftDCT_l.at<float>(0, 0) = 0;
+            float const imgMean = static_cast<float>(mean(topLeftDCT_l)[0]);
+            Mat bitsImg_l;
+            cv::compare(topLeftDCT_l, imgMean, bitsImg_l, CMP_GT);
+            //why not just divide by imgMean?
+            bitsImg_l /= 255;
+            Mat hash;
+            hash.create(1, 8, CV_8U);
+            uchar *hash_ptr = hash.ptr<uchar>(0);
+
+            uchar const *bits_ptr = bitsImg_l.ptr<uchar>(0);
+            std::bitset<8> bits;
+            for(int i = 0, j = 0; i != bitsImg_l.total(); ++j)
+            {
+                for(int k = 0; k != 8; ++k)
+                {
+                    //avoid warning C4800, casting do not work
+                    bits[k] = bits_ptr[i++] != 0;
+                }
+                hash_ptr[j] = static_cast<uchar>(bits.to_ulong());
+            }
+
+            return *(hash.ptr<uint64_t>(0));
+        }
+
+        uint64_t PHash::compute(cv::InputArray inputArr)
         {
             cv::Mat const input = inputArr.getMat();
             CV_Assert(input.type() == CV_8UC4 ||
                       input.type() == CV_8UC3 ||
                       input.type() == CV_8U);
-
+            Mat resizeImg, grayImg, grayFImg, dctImg, topLeftDCT;
             cv::resize(input, resizeImg, cv::Size(32,32));
             if(input.type() == CV_8UC3)
             {
@@ -78,26 +103,116 @@ namespace cv{
             grayImg.convertTo(grayFImg, CV_32F);
             cv::dct(grayFImg, dctImg);
             dctImg(cv::Rect(0, 0, 8, 8)).copyTo(topLeftDCT);
-            topLeftDCT.at<float>(0, 0) = 0;
-            float const imgMean = static_cast<float>(cv::mean(topLeftDCT)[0]);
+            return handledct(topLeftDCT);
+        }
 
-            cv::compare(topLeftDCT, imgMean, bitsImg, CMP_GT);
-            bitsImg /= 255;
-            outputArr.create(1, 8, CV_8U);
-            cv::Mat hash = outputArr.getMat();
-            uchar *hash_ptr = hash.ptr<uchar>(0);
-            uchar const *bits_ptr = bitsImg.ptr<uchar>(0);
-            std::bitset<8> bits;
-            for(size_t i = 0, j = 0; i != bitsImg.total(); ++j)
-            {
-                for(size_t k = 0; k != 8; ++k)
-                {
-                    //avoid warning C4800, casting do not work
-                    bits[k] = bits_ptr[i++] != 0;
+        void static rowSignFlip(Mat in) {
+            for (int j = 0; j < 8; j += 2) {
+                for (int i = 0; i < 8; i++) {
+                    in.at<float>(j+1, i) *= -1;
                 }
-                hash_ptr[j] = static_cast<uchar>(bits.to_ulong());
             }
         }
+
+        void static colSignFlip(Mat in) {
+            for (int j = 0; j < 8; j += 2) {
+                for (int i = 0; i < 8; i++) {
+                    in.at<float>(i,j+1) *= -1;
+                }
+            }
+        }
+
+        std::vector<uint64_t> PHash::compute_fast(cv::InputArray inputArr)
+        {
+            cv::Mat const input = inputArr.getMat();
+            CV_Assert(input.type() == CV_8UC4 ||
+                      input.type() == CV_8UC3 ||
+                      input.type() == CV_8U);
+            Mat resizeImg, grayImg, grayFImg, dctImg, topLeftDCT;
+            cv::resize(input, resizeImg, cv::Size(32,32));
+            if(input.type() == CV_8UC3)
+            {
+                cv::cvtColor(resizeImg, grayImg, CV_BGR2GRAY);
+            }
+            else if(input.type() == CV_8UC4)
+            {
+                cv::cvtColor(resizeImg, grayImg, CV_BGRA2GRAY);
+            }
+            else
+            {
+                grayImg = resizeImg;
+            }
+
+            grayImg.convertTo(grayFImg, CV_32F);
+            cv::dct(grayFImg, dctImg);
+            dctImg(cv::Rect(0, 0, 8, 8)).copyTo(topLeftDCT);
+            std::vector<uint64_t> res;
+            res.push_back(handledct(topLeftDCT));
+            rowSignFlip(topLeftDCT);
+//            res.push_back(handledct(topLeftDCT));
+            colSignFlip(topLeftDCT);
+            res.push_back(handledct(topLeftDCT));
+            rowSignFlip(topLeftDCT);
+//            res.push_back(handledct(topLeftDCT));
+
+            transpose(topLeftDCT, topLeftDCT);
+
+            res.push_back(handledct(topLeftDCT));
+            rowSignFlip(topLeftDCT);
+//            res.push_back(handledct(topLeftDCT));
+            colSignFlip(topLeftDCT);
+            res.push_back(handledct(topLeftDCT));
+            rowSignFlip(topLeftDCT);
+//            res.push_back(handledct(topLeftDCT));
+
+            return res;
+        }
+
+//        void PHash::compute(cv::InputArray inputArr,
+//                            cv::OutputArray outputArr)
+//        {
+//            cv::Mat const input = inputArr.getMat();
+//            CV_Assert(input.type() == CV_8UC4 ||
+//                      input.type() == CV_8UC3 ||
+//                      input.type() == CV_8U);
+//
+//            cv::resize(input, resizeImg, cv::Size(32,32));
+//            if(input.type() == CV_8UC3)
+//            {
+//                cv::cvtColor(resizeImg, grayImg, CV_BGR2GRAY);
+//            }
+//            else if(input.type() == CV_8UC4)
+//            {
+//                cv::cvtColor(resizeImg, grayImg, CV_BGRA2GRAY);
+//            }
+//            else
+//            {
+//                grayImg = resizeImg;
+//            }
+//
+//            grayImg.convertTo(grayFImg, CV_32F);
+//            cv::dct(grayFImg, dctImg);
+//            dctImg(cv::Rect(0, 0, 8, 8)).copyTo(topLeftDCT);
+//            topLeftDCT.at<float>(0, 0) = 0;
+//            float const imgMean = static_cast<float>(cv::mean(topLeftDCT)[0]);
+//
+//            cv::compare(topLeftDCT, imgMean, bitsImg, CMP_GT);
+//            bitsImg /= 255;
+//            outputArr.create(1, 8, CV_8U);
+//            cv::Mat hash = outputArr.getMat();
+//            uchar *hash_ptr = hash.ptr<uchar>(0);
+//            uchar const *bits_ptr = bitsImg.ptr<uchar>(0);
+//            std::bitset<8> bits;
+//            for(size_t i = 0, j = 0; i != bitsImg.total(); ++j)
+//            {
+//                for(size_t k = 0; k != 8; ++k)
+//                {
+//                    //avoid warning C4800, casting do not work
+//                    bits[k] = bits_ptr[i++] != 0;
+//                }
+//                hash_ptr[j] = static_cast<uchar>(bits.to_ulong());
+//            }
+//        }
 
         double PHash::compare(cv::InputArray hashOne,
                               cv::InputArray hashTwo) const
@@ -115,10 +230,9 @@ namespace cv{
             return "PHash";
         }
 
-        void pHash(cv::InputArray inputArr,
-                   cv::OutputArray outputArr)
+        uint64_t pHash(cv::InputArray inputArr)
         {
-            PHash().compute(inputArr, outputArr);
+            return PHash::compute(inputArr);
         }
 
     }

@@ -29,6 +29,11 @@ vector<pair<ring_t, uint64_t>> getHashesForShape(const cv::Mat& input_image,
                                           int numRotations=360,
                                           int output_width=32);
 
+Mat convertToGrey(Mat img_in);
+
+vector<ring_t> extractShapes(int thresh, int ratio, int kernel_size, int blur_width, int areaThresh, Mat &grayImg,
+                             vector<ring_t> &shapes);
+
 vector<pair<ring_t, uint64_t>> getAllTheHashesForImageAndShapes(Mat &imgdata, vector<ring_t> shapes,
         int rotations=360);
 
@@ -70,5 +75,13 @@ vector<pair<ring_t, uint64_t>> getAllTheHashesForImage(
         int areaThresh=200,
         bool simplify=true
 );
+
+
+//only in this header file for testing
+std::tuple<double, double> getAandBWrapper(const ring_t& shape, point_t centroid);
+
+void handleForRotation(const Mat &input_image, const ring_t &shape, int output_width,
+                       vector<pair<ring_t, uint64_t>> &ret, const point_t centroid, double a,
+                       double b, double area, unsigned int _rotation_in);
 
 #endif//mainImageProcessingFunctions_cpp

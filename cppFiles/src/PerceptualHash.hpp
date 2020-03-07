@@ -19,10 +19,10 @@ using namespace std;
 
 class PerceptualHash : public ImageHash {
 private:
-    static uint64_t computeHash(cv::Mat const input) {
-        cv::Mat inHash;
-        cv::img_hash::pHash(input, inHash);
-        return matHashToBoolArr(inHash);
+    static vector<uint64_t> computeHash(cv::Mat const input) {
+        vector<uint64_t> res;
+        res.push_back(cv::img_hash::PHash::compute(input));
+        return res;
     }
 
 public:
@@ -43,7 +43,7 @@ public:
     {
         //assert this here because to make sure we're not taking a performance hit by using a non-black and white image
         assert(image_data.type() == CV_8U);
-        m_hash = computeHash(image_data);
+        m_hash = computeHash(image_data)[0];
         //TODO: let's consider shortening the hash to "improve" the number of results
         //m_hash.erase(m_hash.begin()+32, m_hash.end()-1);
     }

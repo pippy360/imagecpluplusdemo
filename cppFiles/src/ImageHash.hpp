@@ -30,13 +30,13 @@ private:
     }
 protected:
 
-    uint64_t m_hash;
 
     uint64_t hex_str_to_hash(std::string inputString);
 
     static uint64_t matHashToBoolArr(cv::Mat const inHash);
 
 public:
+    uint64_t m_hash;
 
     static std::string convertHashToString(uint64_t hash) {
         std::stringstream stream;

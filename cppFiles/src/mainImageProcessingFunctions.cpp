@@ -152,10 +152,9 @@ std::tuple<double, double> getAandBWrapper(const ring_t& shape, point_t centroid
     return getAandB(transformedPoly);
 }
 
-
 void handleForRotation(const Mat &input_image, const ring_t &shape, int output_width,
-                              vector<pair<ring_t, uint64_t>> &ret, const point_t centroid, double a,
-                              double b, double area, unsigned int _rotation_in) {
+                       vector<pair<ring_t, uint64_t>> &ret, const point_t centroid, double a,
+                       double b, double area, unsigned int _rotation_in) {
     for (unsigned int j = 0; j < 4; j++) {
         double rotation = _rotation_in + (90*j);
 //        std::cout << "rotation: " << rotation << std::endl;
@@ -169,6 +168,41 @@ void handleForRotation(const Mat &input_image, const ring_t &shape, int output_w
 //        waitKey(0);
 
         ret.push_back(make_pair(shape, calculatedHash));
+    }
+}
+
+void handleForRotation2(const Mat &input_image, const ring_t &shape, int output_width,
+                              vector<pair<ring_t, uint64_t>> &ret, const point_t centroid, double a,
+                              double b, double area, unsigned int _rotation_in) {
+//    for (unsigned int j = 0; j < 4; j++) {
+//        double rotation = _rotation_in + (90*j);
+////        std::cout << "rotation: " << rotation << std::endl;
+//        Mat m = _calcMatrix(area, -centroid.get<0>(), -centroid.get<1>(), rotation, output_width, a, b);
+//
+//        Mat outputImage(output_width, output_width, CV_8UC3, Scalar(0, 0, 0));
+//        warpAffine(input_image, outputImage, m, outputImage.size());
+//
+//        uint64_t calculatedHash = img_hash::PHash::compute(outputImage);
+////        imshow("image", outputImage);
+////        waitKey(0);
+//
+//        ret.push_back(make_pair(shape, calculatedHash));
+//    }
+
+        double rotation = _rotation_in;
+//        std::cout << "rotation: " << rotation << std::endl;
+        Mat m = _calcMatrix(area, -centroid.get<0>(), -centroid.get<1>(), rotation, output_width, a, b);
+
+        Mat outputImage(output_width, output_width, CV_8UC3, Scalar(0, 0, 0));
+        warpAffine(input_image, outputImage, m, outputImage.size());
+
+    {
+        vector<uint64_t> calculatedHashs = img_hash::PHash::compute_fast(outputImage);
+//        imshow("image", outputImage);
+//        waitKey(0);
+
+        for (auto h : calculatedHashs)
+            ret.push_back(make_pair(shape, h));
     }
 }
 

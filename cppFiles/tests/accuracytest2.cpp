@@ -28,13 +28,34 @@ TEST(AccuracyTest, testGetHashesForShape) {
     auto [a, b] = getAandBWrapper(shape, p);
     double area = bg::area(shape);
 
-    auto ret = vector<pair<ring_t, uint64_t >>();
-    handleForRotation(grayImg, shape, output_width, ret, p, a, b, area, 1);
-    assert(ret.size() == 4);
-    EXPECT_STREQ("ffea7faaaaa2b20b", ImageHash::convertHashToString(ret[0].second).c_str());
-    EXPECT_STREQ("feea76a8fb80fd2b", ImageHash::convertHashToString(ret[1].second).c_str());
-    EXPECT_STREQ("feea7ba8fba8fba1", ImageHash::convertHashToString(ret[2].second).c_str());
-    EXPECT_STREQ("ffe8fba2fea8e8a1", ImageHash::convertHashToString(ret[3].second).c_str());
+    std::cout << "HERE...." << std::endl;
+
+    {
+        auto ret = vector<pair<ring_t, uint64_t >>();
+//        handleForRotation(grayImg, shape, output_width, ret, p, a, b, area, 1);
+        handleForRotation2(grayImg, shape, output_width, ret, p, a, b, area, 1);
+        assert(ret.size() == 4);
+        EXPECT_STREQ("ffea7faaaaa2b20b", ImageHash::convertHashToString(ret[0].second).c_str());
+        EXPECT_STREQ("feea76a8fb80fd2b", ImageHash::convertHashToString(ret[1].second).c_str());
+        EXPECT_STREQ("feea7ba8fba8fba1", ImageHash::convertHashToString(ret[2].second).c_str());
+        EXPECT_STREQ("ffe8fba2fea8e8a1", ImageHash::convertHashToString(ret[3].second).c_str());
+    }
+
+    std::cout << "HERE...." << std::endl;
+
+    {
+        auto ret = vector<pair<ring_t, uint64_t >>();
+        handleForRotation(grayImg, shape, output_width, ret, p, a, b, area, 1);
+//        handleForRotation2(grayImg, shape, output_width, ret, p, a, b, area, 1);
+        assert(ret.size() == 4);
+        EXPECT_STREQ("ffea7faaaaa2b20b", ImageHash::convertHashToString(ret[0].second).c_str());
+        EXPECT_STREQ("feea76a8fb80fd2b", ImageHash::convertHashToString(ret[1].second).c_str());
+        EXPECT_STREQ("feea7ba8fba8fba1", ImageHash::convertHashToString(ret[2].second).c_str());
+        EXPECT_STREQ("ffe8fba2fea8e8a1", ImageHash::convertHashToString(ret[3].second).c_str());
+    }
+
+    std::cout << "HERE...." << std::endl;
+
 }
 
 int rescounts[] = {

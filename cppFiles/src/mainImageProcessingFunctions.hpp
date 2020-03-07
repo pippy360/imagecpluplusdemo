@@ -84,4 +84,8 @@ void handleForRotation(const Mat &input_image, const ring_t &shape, int output_w
                        vector<pair<ring_t, uint64_t>> &ret, const point_t centroid, double a,
                        double b, double area, unsigned int _rotation_in);
 
+void handleForRotation2(const Mat &input_image, const ring_t &shape, int output_width,
+                       vector<pair<ring_t, uint64_t>> &ret, const point_t centroid, double a,
+                       double b, double area, unsigned int _rotation_in);
+
 #endif//mainImageProcessingFunctions_cpp

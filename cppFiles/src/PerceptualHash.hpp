@@ -27,6 +27,13 @@ private:
 
 public:
 
+    static vector<uint64_t> computeHash_fast(cv::Mat const input) {
+        vector<uint64_t> res;
+        for (auto hash : cv::img_hash::PHash::compute_fast(input))
+            res.push_back(hash);
+        return res;
+    }
+
     PerceptualHash(uint64_t hash)
     {
         m_hash = hash;

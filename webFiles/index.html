@@ -166,8 +166,8 @@
           transition: transform 0s ease, -webkit-transform 0s ease;
       }
       .imgThumbForSelection {
-          width: 200px;
-          height: 200px;
+          width: 80px;
+          height: 80px;
       }
 
     </style>
@@ -184,14 +184,29 @@
     </div>
     <div class="rightSide" style="">
         <div>
-            <div style="float: left">
+            <div style="">
                 <canvas id="canvasImg" height="400px" width="400px" style="max-width: 400px"></canvas>
             </div>
-            <div style="float: left; max-width: 620px">
-                <img src="images/basicshapes.png"           onclick="loadImage(this.src)" class="imgThumbForSelection">
-                <img src="images/IMG_20191024_130833.jpg"   onclick="loadImage(this.src)" class="imgThumbForSelection">
-                <img src="images/richandmalty.jpg"          onclick="loadImage(this.src)" class="imgThumbForSelection">
-                <img src="images/richandmalty400px.png"     onclick="loadImage(this.src)" class="imgThumbForSelection">
+            <div style="max-width: 620px">
+                <span>
+                    <img src="images/basicshapes.png"           onclick="loadImage(this.src)" class="imgThumbForSelection">
+                </span>
+                <span>
+                    <img src="images/IMG_20191024_130833.jpg"   onclick="loadImage(this.src)" class="imgThumbForSelection">
+                </span>
+                <span>
+                    <img src="images/richandmalty.jpg"          onclick="loadImage(this.src)" class="imgThumbForSelection">
+                </span>
+                <span>
+                    <img src="images/richandmalty400px.png"     onclick="loadImage(this.src)" class="imgThumbForSelection">
+                </span>
+                <span>
+                    <img src="images/Total_Rickall.webp"     onclick="loadImage(this.src)" class="imgThumbForSelection">
+                </span>
+                <span>
+                    <img src="images/googlelogo.webp"     onclick="loadImage(this.src)" class="imgThumbForSelection">
+                </span>
+
             </div>
         </div>
         <div class="buttonsWrapper">
@@ -285,6 +300,68 @@
             </span>
             <input type="text" style="width: 40px; display: inline-block" onchange="setAreaThresh()" min="1" max="1000" value="600" id="areaThresh">
         </div>
+
+        <div>
+            <p>Results</p>
+            <div class="clearfix">
+                <div id="shapelist2" style="max-width: 300px; height: 400px; overflow: scroll; float: left">
+                    <pre>shape list goes here...</pre>
+                </div>
+                <div class="canvasWrapper" style="float: left">
+                    <canvas id="shapeDemoResult" class="canvasInline" width="400" height="400"></canvas>
+                    <canvas id="shapeDemoResult_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
+                </div>
+                <div class="canvasWrapper" style="float: left">
+                    <canvas id="shapeDemoResult2" class="canvasInline" width="400" height="400"></canvas>
+                    <canvas id="shapeDemoResult2_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
+                </div>
+            </div>
+            <div id="carouselExampleControls2" style="width: 804px;" class="carousel slide" data-interval="false" data-ride="carousel">
+                <div class="carousel-inner">
+                    <div class="carousel-item active">
+                        <div class="canvasWrapper" style="float: left">
+                            <canvas id="canvasImgFrag2" class="canvasInline" width="400" height="400"></canvas>
+                            <canvas id="canvasImgFrag2_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
+                        </div>
+                        <div class="canvasWrapper" style="float: left">
+                            <canvas id="canvasImgFrag2Right" class="canvasInline" width="400" height="400"></canvas>
+                            <canvas id="canvasImgFrag2Right_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
+                        </div>
+                    </div>
+                    <div class="carousel-item">
+                        <div class="canvasWrapper" style="float: left">
+                            <canvas id="canvasImgFrag2002" class="canvasInline" width="200" height="200" style="width: 400px;height: 400px"></canvas>
+                            <canvas id="canvasImgFrag2002_ui" class="canvasInline canvasUILayer" width="200" height="200" style="width: 400px;height: 400px"></canvas>
+                        </div>
+                        <div class="canvasWrapper" style="float: left">
+                            <canvas id="canvasImgFrag2002Right" class="canvasInline" width="200" height="200" style="width: 400px;height: 400px"></canvas>
+                            <canvas id="canvasImgFrag2002Right_ui" class="canvasInline canvasUILayer" width="200" height="200" style="width: 400px;height: 400px"></canvas>
+                        </div>
+                    </div>
+                    <div class="carousel-item">
+                        <div class="canvasWrapper" style="float: left">
+                            <canvas id="canvasImgFrag322" class="canvasInline" width="32" height="32" style="width: 400px;height: 400px"></canvas>
+                            <canvas id="canvasImgFrag322_ui" class="canvasInline canvasUILayer" width="32" height="32" style="width: 400px;height: 400px"></canvas>
+                        </div>
+                        <div class="canvasWrapper" style="float: left">
+                            <canvas id="canvasImgFrag322Right" class="canvasInline" width="32" height="32" style="width: 400px;height: 400px"></canvas>
+                            <canvas id="canvasImgFrag322Right_ui" class="canvasInline canvasUILayer" width="32" height="32" style="width: 400px;height: 400px"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <a class="carousel-control-prev" href="#carouselExampleControls2" role="button" data-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="sr-only">Previous</span>
+                </a>
+                <a class="carousel-control-next" href="#carouselExampleControls2" role="button" data-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="sr-only">Next</span>
+                </a>
+
+            </div>
+        </div>
+
+
         <div class="clearfix largeCanvas">
             <div class="canvasWrapper" style="float: left">
                 <canvas id="canvasImgEdgeHullValidLeft" class="canvasInline" width="400" height="400"></canvas>
@@ -382,65 +459,6 @@
                     <span class="sr-only">Previous</span>
                 </a>
                 <a class="carousel-control-next" href="#carouselclickandseeOutputFragments" role="button" data-slide="next">
-                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                    <span class="sr-only">Next</span>
-                </a>
-
-            </div>
-        </div>
-        <div>
-            <p>Results</p>
-            <div class="clearfix">
-                <div id="shapelist2" style="max-width: 300px; height: 400px; overflow: scroll; float: left">
-                    <pre>shape list goes here...</pre>
-                </div>
-                <div class="canvasWrapper" style="float: left">
-                    <canvas id="shapeDemoResult" class="canvasInline" width="400" height="400"></canvas>
-                    <canvas id="shapeDemoResult_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
-                </div>
-                <div class="canvasWrapper" style="float: left">
-                    <canvas id="shapeDemoResult2" class="canvasInline" width="400" height="400"></canvas>
-                    <canvas id="shapeDemoResult2_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
-                </div>
-            </div>
-            <div id="carouselExampleControls2" style="width: 804px;" class="carousel slide" data-interval="false" data-ride="carousel">
-                <div class="carousel-inner">
-                    <div class="carousel-item active">
-                        <div class="canvasWrapper" style="float: left">
-                            <canvas id="canvasImgFrag2" class="canvasInline" width="400" height="400"></canvas>
-                            <canvas id="canvasImgFrag2_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
-                        </div>
-                        <div class="canvasWrapper" style="float: left">
-                            <canvas id="canvasImgFrag2Right" class="canvasInline" width="400" height="400"></canvas>
-                            <canvas id="canvasImgFrag2Right_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
-                        </div>
-                    </div>
-                    <div class="carousel-item">
-                        <div class="canvasWrapper" style="float: left">
-                            <canvas id="canvasImgFrag2002" class="canvasInline" width="200" height="200" style="width: 400px;height: 400px"></canvas>
-                            <canvas id="canvasImgFrag2002_ui" class="canvasInline canvasUILayer" width="200" height="200" style="width: 400px;height: 400px"></canvas>
-                        </div>
-                        <div class="canvasWrapper" style="float: left">
-                            <canvas id="canvasImgFrag2002Right" class="canvasInline" width="200" height="200" style="width: 400px;height: 400px"></canvas>
-                            <canvas id="canvasImgFrag2002Right_ui" class="canvasInline canvasUILayer" width="200" height="200" style="width: 400px;height: 400px"></canvas>
-                        </div>
-                    </div>
-                    <div class="carousel-item">
-                        <div class="canvasWrapper" style="float: left">
-                            <canvas id="canvasImgFrag322" class="canvasInline" width="32" height="32" style="width: 400px;height: 400px"></canvas>
-                            <canvas id="canvasImgFrag322_ui" class="canvasInline canvasUILayer" width="32" height="32" style="width: 400px;height: 400px"></canvas>
-                        </div>
-                        <div class="canvasWrapper" style="float: left">
-                            <canvas id="canvasImgFrag322Right" class="canvasInline" width="32" height="32" style="width: 400px;height: 400px"></canvas>
-                            <canvas id="canvasImgFrag322Right_ui" class="canvasInline canvasUILayer" width="32" height="32" style="width: 400px;height: 400px"></canvas>
-                        </div>
-                    </div>
-                </div>
-                <a class="carousel-control-prev" href="#carouselExampleControls2" role="button" data-slide="prev">
-                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                    <span class="sr-only">Previous</span>
-                </a>
-                <a class="carousel-control-next" href="#carouselExampleControls2" role="button" data-slide="next">
                     <span class="carousel-control-next-icon" aria-hidden="true"></span>
                     <span class="sr-only">Next</span>
                 </a>

@@ -6,7 +6,46 @@
 
 #define PI 3.14159265
 
-TEST(AccuracyTest, testGetHashesForShape) {
+TEST(AccuracyTest, testMatches) {
+    cv::Mat rickandmortyImage = cv::imread("../webFiles/images/richandmalty.jpg", cv::IMREAD_GRAYSCALE);
+    assert(rickandmortyImage.data);
+
+    //something........
+
+    for (int i = 0; i < 10; i++) {
+        cv::Mat r = rickandmortyImage.clone();
+
+        double rotation = i;
+        double cosval = cos( rotation*PI / 180.0 );
+        double sinval = sin( rotation*PI / 180.0 );
+        double transx = r.cols;
+        double transy = r.rows;
+
+        cv::Matx33d transpose_1(1.0, 0.0, -transx/2.0,
+                                0.0, 1.0, -transy/2.0,
+                                0.0, 0.0, 1.0);
+
+        cv::Matx33d transpose_rot(cosval, -sinval, 0,
+                                  sinval, cosval, 0,
+                                  0.0, 0.0, 1.0);
+
+        cv::Matx33d transpose_3(1.0, 0.0, transx/2.0,
+                                0.0, 1.0, transy/2.0,
+                                0.0, 0.0, 1.0);
+
+        cv::Mat m = covertToDynamicallyAllocatedMatrix(transpose_3*transpose_rot*transpose_1);
+        cv::warpAffine(rickandmortyImage, r, m, r.size());
+//        cv::imshow("here", r);
+//        cv::waitKey(0);
+        //now hash it and see how many shapes we get
+        //and in the next test check for matches
+        //just force the number of shapes
+        auto matches = findMatches(rickandmortyImage, r);
+        std::cout << matches.size() << std::endl;
+    }
+}
+
+TEST(AccuracyTest, DISABLED_testGetHashesForShape) {
     cv::Mat rickandmortyImage = cv::imread("../webFiles/images/richandmalty.jpg", cv::IMREAD_GRAYSCALE);
     assert(rickandmortyImage.data);
 
@@ -19,7 +58,7 @@ TEST(AccuracyTest, testGetHashesForShape) {
             output_width=32;
 
     Mat grayImg = convertToGrey(rickandmortyImage);
-    vector<ring_t> shapes = extractShapes(thresh, ratio, kernel_size, blur_width, areaThresh, grayImg, shapes);
+    vector<ring_t> shapes = extractShapes(thresh, ratio, kernel_size, blur_width, areaThresh, grayImg);
 
     auto shape = shapes[0];
 
@@ -460,7 +499,7 @@ TEST(AccuracyTest, testRotated) {
     }
 }
 
-TEST(AccuracyTest, testRotatedAndResults) {
+TEST(AccuracyTest, DISABLED_testRotatedAndResults) {
 
     cv::Mat rickandmortyImage = cv::imread("../webFiles/images/richandmalty.jpg", cv::IMREAD_GRAYSCALE);
     assert(rickandmortyImage.data);

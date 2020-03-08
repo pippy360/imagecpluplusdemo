@@ -14,20 +14,7 @@ class ImageHash
 {
 private:
 
-    static unsigned int bitCount(uint64_t value) {
-        unsigned int count = 0;
-        while (value > 0) {           // until all bits are zero
-            if ((value & 1) == 1)     // check lower bit
-                count++;
-            value >>= 1;              // shift bits, removing lower bit
-        }
-        return count;
-    }
 
-    //returns hamming distance
-    static int getHashDistance(const ImageHash &first, const ImageHash &second) {
-        return bitCount(first.m_hash ^ second.m_hash);
-    }
 protected:
 
 
@@ -37,6 +24,18 @@ protected:
 
 public:
     uint64_t m_hash;
+
+
+    static unsigned int bitCount(uint64_t i) {
+        i = i - ((i >> 1) & 0x5555555555555555);
+        i = (i & 0x3333333333333333) + ((i >> 2) & 0x3333333333333333);
+        return (((i + (i >> 4)) & 0xF0F0F0F0F0F0F0F) * 0x101010101010101) >> 56;
+    }
+
+    //returns hamming distance
+    static int getHashDistance(const ImageHash &first, const ImageHash &second) {
+        return bitCount(first.m_hash ^ second.m_hash);
+    }
 
     static std::string convertHashToString(uint64_t hash) {
         std::stringstream stream;

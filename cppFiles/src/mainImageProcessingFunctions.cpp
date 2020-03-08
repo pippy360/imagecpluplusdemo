@@ -11,6 +11,12 @@
 #include "PerceptualHash.hpp"
 #include "mainImageProcessingFunctions.hpp"
 
+#include <algorithm>
+#include <chrono>
+#include <iostream>
+using namespace std;
+using namespace std::chrono;
+
 #define NUM_OF_ROTATIONS 1
 #define HASH_SIZE 8
 #define FRAGMENT_WIDTH 60*.86
@@ -117,8 +123,7 @@ Mat convertToGrey(Mat img_in) {
     return grayImg;
 }
 
-vector<ring_t> extractShapes(int thresh, int ratio, int kernel_size, int blur_width, int areaThresh, Mat &grayImg,
-                             vector<ring_t> &shapes)
+vector<ring_t> extractShapes(int thresh, int ratio, int kernel_size, int blur_width, int areaThresh, Mat &grayImg)
 {
     Mat canny_output = applyCanny(grayImg, thresh, kernel_size, ratio, blur_width);
 
@@ -139,10 +144,52 @@ vector<pair<ring_t, uint64_t>> getAllTheHashesForImage(
         bool simplify)
 {
     Mat grayImg = convertToGrey(img_in);
-    vector<ring_t> shapes = extractShapes(thresh, ratio, kernel_size, blur_width, areaThresh, grayImg, shapes);
+    vector<ring_t> shapes = extractShapes(thresh, ratio, kernel_size, blur_width, areaThresh, grayImg);
 
     std::cout << "Inside cpp code the extracted shapes: " << shapes.size() << std::endl;
     return getAllTheHashesForImageAndShapes(grayImg, shapes, rotations);
+}
+
+using namespace std::chrono;
+
+static void *prevImg;
+vector<pair<ring_t, uint64_t>> g_imghashes;
+
+vector<tuple<ring_t, ring_t, uint64_t, uint64_t>> findMatches(
+        Mat img_in,
+        Mat img_in2,
+        int thresh,
+        int ratio,
+        int kernel_size,
+        int blur_width,
+        int areaThresh)
+{
+
+    //FIXME: this doesn't check if the data changed!!
+    // use cached results
+    if (prevImg != img_in.data) {
+        prevImg = img_in.data;
+        Mat grayImg = convertToGrey(img_in);
+        vector<ring_t> shapes = extractShapes(thresh, ratio, kernel_size, blur_width, areaThresh, grayImg);
+
+        g_imghashes = getAllTheHashesForImageAndShapes(grayImg, shapes, 360);
+    }
+
+    Mat grayImg2 = convertToGrey(img_in2);
+    vector<ring_t> shapes2 = extractShapes(thresh, ratio, kernel_size, blur_width, areaThresh, grayImg2);
+
+    auto img2hashes = getAllTheHashesForImageAndShapes(grayImg2, shapes2, 1);
+
+    vector<tuple<ring_t, ring_t, uint64_t, uint64_t>> res;
+    for (auto h : g_imghashes) {
+        for (auto h2 : img2hashes) {
+            if( ImageHash::bitCount(h.second ^ h2.second) < 5 ) {
+                res.push_back(std::tie(h.first, h2.first , h.second, h2.second));
+            }
+        }
+    }
+
+    return res;
 }
 
 std::tuple<double, double> getAandBWrapper(const ring_t& shape, point_t centroid) {
@@ -155,20 +202,19 @@ std::tuple<double, double> getAandBWrapper(const ring_t& shape, point_t centroid
 void handleForRotation(const Mat &input_image, const ring_t &shape, int output_width,
                        vector<pair<ring_t, uint64_t>> &ret, const point_t centroid, double a,
                        double b, double area, unsigned int _rotation_in) {
-    for (unsigned int j = 0; j < 4; j++) {
-        double rotation = _rotation_in + (90*j);
+    double rotation = _rotation_in;
 //        std::cout << "rotation: " << rotation << std::endl;
-        Mat m = _calcMatrix(area, -centroid.get<0>(), -centroid.get<1>(), rotation, output_width, a, b);
+    Mat m = _calcMatrix(area, -centroid.get<0>(), -centroid.get<1>(), rotation, output_width, a, b);
 
-        Mat outputImage(output_width, output_width, CV_8UC3, Scalar(0, 0, 0));
-        warpAffine(input_image, outputImage, m, outputImage.size());
+    Mat outputImage(output_width, output_width, CV_8UC3, Scalar(0, 0, 0));
+    warpAffine(input_image, outputImage, m, outputImage.size());
 
-        uint64_t calculatedHash = img_hash::PHash::compute(outputImage);
+    uint64_t calculatedHash = img_hash::PHash::compute(outputImage);
 //        imshow("image", outputImage);
 //        waitKey(0);
 
-        ret.push_back(make_pair(shape, calculatedHash));
-    }
+    ret.push_back(make_pair(shape, calculatedHash));
+
 }
 
 void handleForRotation2(const Mat &input_image, const ring_t &shape, int output_width,
@@ -216,7 +262,7 @@ vector<pair<ring_t, uint64_t>> getHashesForShape(const cv::Mat& input_image,
     bg::centroid(shape, p);
     auto [a, b] = getAandBWrapper(shape, p);
     double area = bg::area(shape);
-    for (unsigned int i = 0; i < 90; i++)
+    for (unsigned int i = 0; i < numRotations; i++)
     {
         handleForRotation(input_image, shape, output_width, ret, p, a, b, area, i);
     }

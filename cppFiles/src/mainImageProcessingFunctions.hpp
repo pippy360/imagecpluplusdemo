@@ -26,16 +26,15 @@ Mat _calcMatrix(
 
 vector<pair<ring_t, uint64_t>> getHashesForShape(const cv::Mat& input_image,
                                           const ring_t& shape,
-                                          int numRotations=360,
+                                          int numRotations,
                                           int output_width=32);
 
 Mat convertToGrey(Mat img_in);
 
-vector<ring_t> extractShapes(int thresh, int ratio, int kernel_size, int blur_width, int areaThresh, Mat &grayImg,
-                             vector<ring_t> &shapes);
+vector<ring_t> extractShapes(int thresh, int ratio, int kernel_size, int blur_width, int areaThresh, Mat &grayImg);
 
 vector<pair<ring_t, uint64_t>> getAllTheHashesForImageAndShapes(Mat &imgdata, vector<ring_t> shapes,
-        int rotations=360);
+        int rotations);
 
 Mat applyCanny(
         Mat &imgdata,
@@ -87,5 +86,14 @@ void handleForRotation(const Mat &input_image, const ring_t &shape, int output_w
 void handleForRotation2(const Mat &input_image, const ring_t &shape, int output_width,
                        vector<pair<ring_t, uint64_t>> &ret, const point_t centroid, double a,
                        double b, double area, unsigned int _rotation_in);
+
+vector<tuple<ring_t, ring_t, uint64_t, uint64_t>> findMatches(
+        Mat img_in,
+        Mat img_in2,
+        int thresh=100,
+        int ratio=3,
+        int kernel_size=3,
+        int blur_width=3,
+        int areaThresh=200);
 
 #endif//mainImageProcessingFunctions_cpp

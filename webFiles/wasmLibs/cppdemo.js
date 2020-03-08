@@ -1793,9 +1793,12 @@ function createWasm() {
     wasmModule = module;
     // Instantiation is synchronous in pthreads and we assert on run dependencies.
     if (!ENVIRONMENT_IS_PTHREAD) {
-      // PTHREAD_POOL_DELAY_LOAD==1 (or no preloaded pool in use): do not wait up for the Workers to
-      // instantiate the Wasm module, but proceed with main() immediately.
-      removeRunDependency('wasm-instantiate');
+      var numWorkersToLoad = PThread.unusedWorkers.length;
+      PThread.unusedWorkers.forEach(function(w) { PThread.loadWasmModuleToWorker(w, function() {
+        // PTHREAD_POOL_DELAY_LOAD==0: we wanted to synchronously wait until the Worker pool
+        // has loaded up. If all Workers have finished loading up the Wasm Module, proceed with main()
+        if (!--numWorkersToLoad) removeRunDependency('wasm-instantiate');
+      })});
     }
   }
    // we can't run yet (except in a pthread, where we have a custom sync instantiator)
@@ -1992,6 +1995,11 @@ function _emscripten_asm_const_iii(code, sigPtr, argbuf) {
       },initMainThreadBlock:function() {
         if (ENVIRONMENT_IS_PTHREAD) return;
   
+        var pthreadPoolSize = 1;
+        // Start loading up the Worker pool, if requested.
+        for(var i = 0; i < pthreadPoolSize; ++i) {
+          PThread.allocateUnusedWorker();
+        }
   
         // In asm.js we do not need to wait for Wasm Module to compile on the main thread, so can load
         // up each Worker immediately. (in asm.js mode ignore PTHREAD_POOL_DELAY_LOAD altogether for

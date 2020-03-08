@@ -4,7 +4,7 @@
 # -O3 -s WASM=1  -s DISABLE_EXCEPTION_CATCHING=2   -s TOTAL_MEMORY=149880832  -s ASSERTIONS=1  -s EXTRA_EXPORTED_RUNTIME_METHODS='["cwrap"]' --bind
 
 CC=emcc
-CFLAGS=-I./externalDependencies/ -I. -O2 -g --profiling -std=c++17 -I/usr/local/opt/opencv/include/opencv4/ -O3 -s WASM=1 \
+CFLAGS=-I./externalDependencies/ -I. -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=1 -Wl,--no-check-features  -O2 -g --profiling -std=c++17 -I/usr/local/opt/opencv/include/opencv4/ -O3 -s WASM=1 \
     -s TOTAL_MEMORY=149880832  -s ASSERTIONS=1 \
     -s EXTRA_EXPORTED_RUNTIME_METHODS='["cwrap"]' --bind
 

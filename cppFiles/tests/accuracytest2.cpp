@@ -6,6 +6,20 @@
 
 #define PI 3.14159265
 
+int g_testmatches[] = {
+        178,
+        25,
+        30,
+        42,
+        32,
+        22,
+        39,
+        22,
+        29,
+        9
+
+};
+
 TEST(AccuracyTest, testMatches) {
     cv::Mat rickandmortyImage = cv::imread("../webFiles/images/richandmalty.jpg", cv::IMREAD_GRAYSCALE);
     assert(rickandmortyImage.data);
@@ -42,6 +56,7 @@ TEST(AccuracyTest, testMatches) {
         //just force the number of shapes
         auto matches = findMatches(rickandmortyImage, r);
         std::cout << matches.size() << std::endl;
+        EXPECT_EQ(g_testmatches[i], matches.size());
     }
 }
 

@@ -1,0 +1,600 @@
+<!doctype html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+      <style>
+          .canvasInline {
+              display: inline-block;
+              float: left;
+              position: absolute;
+
+          }
+          .canvasWrapper {
+              display: block;
+              position: relative;
+              width: 402px;
+              height: 402px;
+          }
+          .linebreak {
+              margin: auto;
+              width: 1650px;
+              align-content: center;
+          }
+          .frag {
+              width: 126px;
+              height: 126px;
+          }
+          canvas {
+              border: 1px solid black;
+          }
+          .buttonsWrapper {
+              max-width: 300px;
+          }
+          .buttonsWrapper label {
+              display: block;
+          }
+          .largeCanvas canvas {
+              width: 800px;
+              height: 800px;
+          }
+          .largeCanvas .canvasWrapper {
+              width: 800px;
+              height: 800px;
+          }
+          .canvasUILayer {
+              opacity: .3;
+          }
+      </style>
+
+    <title>Emscripten-Generated Code</title>
+    <style>
+      body {
+        font-family: arial;
+        margin: 0;
+        padding: none;
+      }
+
+      .emscripten { padding-right: 0; margin-left: auto; margin-right: auto; display: block; }
+      div.emscripten { text-align: center; }      
+      div.emscripten_border { border: 1px solid black; }
+      /* the canvas *must not* have any border or padding, or mouse coords will be wrong */
+      canvas.emscripten { border: 0px none; background-color: black; }
+
+      #emscripten_logo {
+        display: inline-block;
+        margin: 0;
+      }
+
+      .spinner {
+        height: 30px;
+        width: 30px;
+        margin: 0;
+        margin-top: 20px;
+        margin-left: 20px;
+        display: inline-block;
+        vertical-align: top;
+
+        -webkit-animation: rotation .8s linear infinite;
+        -moz-animation: rotation .8s linear infinite;
+        -o-animation: rotation .8s linear infinite;
+        animation: rotation 0.8s linear infinite;
+
+        border-left: 5px solid rgb(235, 235, 235);
+        border-right: 5px solid rgb(235, 235, 235);
+        border-bottom: 5px solid rgb(235, 235, 235);
+        border-top: 5px solid rgb(120, 120, 120);
+        
+        border-radius: 100%;
+        background-color: rgb(189, 215, 46);
+      }
+
+      @-webkit-keyframes rotation {
+        from {-webkit-transform: rotate(0deg);}
+        to {-webkit-transform: rotate(360deg);}
+      }
+      @-moz-keyframes rotation {
+        from {-moz-transform: rotate(0deg);}
+        to {-moz-transform: rotate(360deg);}
+      }
+      @-o-keyframes rotation {
+        from {-o-transform: rotate(0deg);}
+        to {-o-transform: rotate(360deg);}
+      }
+      @keyframes rotation {
+        from {transform: rotate(0deg);}
+        to {transform: rotate(360deg);}
+      }
+
+      #status {
+        display: inline-block;
+        vertical-align: top;
+        margin-top: 30px;
+        margin-left: 20px;
+        font-weight: bold;
+        color: rgb(120, 120, 120);
+      }
+
+      #progress {
+        height: 20px;
+        width: 300px;
+      }
+
+      #controls {
+        display: inline-block;
+        float: right;
+        vertical-align: top;
+        margin-top: 30px;
+        margin-right: 20px;
+      }
+
+      #output {
+        width: 100%;
+        height: 200px;
+        margin: 0 auto;
+        margin-top: 10px;
+        border-left: 0px;
+        border-right: 0px;
+        padding-left: 0px;
+        padding-right: 0px;
+        display: block;
+        background-color: black;
+        color: white;
+        font-family: 'Lucida Console', Monaco, monospace;
+        outline: none;
+      }
+
+      #shapelist{
+          overflow: scroll;
+          height: 200px;
+          width: 600px;
+          border: 1px solid black;
+      }
+      .shapeListEl{
+          width: 100px;
+          border: 1px solid black;
+      }
+      .shapeListEl:hover{
+          background-color: grey;
+      }
+      .carousel-inner .carousel-item {
+          transition: -webkit-transform 0s ease;
+          transition: transform 0s ease;
+          transition: transform 0s ease, -webkit-transform 0s ease;
+      }
+      .imgThumbForSelection {
+          width: 80px;
+          height: 80px;
+      }
+
+    </style>
+  </head>
+  <body>
+
+
+    <div class="alert alert-info">
+        <div class="spinner" id='spinner'></div>
+        <div class="emscripten" id="status">Downloading...</div>
+        <div class="emscripten">
+            <progress value="0" max="100" id="progress" hidden=1></progress>
+        </div>
+    </div>
+    <div class="rightSide" style="">
+        <div>
+            <div style="">
+                <canvas id="canvasImg" height="400px" width="400px" style="max-width: 400px"></canvas>
+            </div>
+            <div style="max-width: 620px">
+                <span>
+                    <img src="images/basicshapes.png"           onclick="loadImage(this.src)" class="imgThumbForSelection">
+                </span>
+                <span>
+                    <img src="images/IMG_20191024_130833.jpg"   onclick="loadImage(this.src)" class="imgThumbForSelection">
+                </span>
+                <span>
+                    <img src="images/richandmalty.jpg"          onclick="loadImage(this.src)" class="imgThumbForSelection">
+                </span>
+                <span>
+                    <img src="images/richandmalty400px.png"     onclick="loadImage(this.src)" class="imgThumbForSelection">
+                </span>
+                <span>
+                    <img src="images/Total_Rickall.webp"     onclick="loadImage(this.src)" class="imgThumbForSelection">
+                </span>
+                <span>
+                    <img src="images/googlelogo.webp"     onclick="loadImage(this.src)" class="imgThumbForSelection">
+                </span>
+
+            </div>
+        </div>
+        <div class="buttonsWrapper">
+            <div class="buttonsInner">
+              <span data-toggle="buttons" class="btn-group">
+                  <label id="translateButton" class="btn btn-secondary active"
+                         onclick="setCurrnetOperation(enum_TransformationOperation.TRANSLATE)">
+                      <input type="radio" name="options" autocomplete="off" checked>Move</input>
+                  </label>
+                  <label class="btn btn-secondary"
+                         onclick="setCurrnetOperation(enum_TransformationOperation.NON_UNIFORM_SCALE)">
+                      <input type="radio" name="options" autocomplete="off">Directional Scale</input>
+                  </label>
+                  <label class="btn btn-secondary"
+                         onclick="setCurrnetOperation(enum_TransformationOperation.UNIFORM_SCALE)">
+                      <input type="radio" name="options" autocomplete="off">Uniform Scale</input>
+                  </label>
+                  <label class="btn btn-secondary" onclick="setCurrnetOperation(enum_TransformationOperation.ROTATE)">
+                      <input type="radio" name="options" autocomplete="off">Rotate</input>
+                  </label>
+                  <label class="btn btn-secondary" onclick="setCurrnetOperation(enum_TransformationOperation.SKEW_X)">
+                      <input type="radio" name="options" autocomplete="off">Skew/Shear X</input>
+                  </label>
+                  <label class="btn btn-secondary" onclick="setCurrnetOperation(enum_TransformationOperation.SKEW_Y)">
+                      <input type="radio" name="options" autocomplete="off">Skew/Shear Y</input>
+                  </label>
+                    <button type="button" style="margin-bottom: 8px;" class="alert-danger btn btn-secondary"
+                            onclick="reset()">Reset</button>
+              </span>
+            </div>
+        </div>
+        <div class="clearfix">
+            <div id="shapelist" style="max-width: 300px; height: 400px; float: left">
+                <pre>shape list goes here...</pre>
+            </div>
+            <div class="canvasWrapper" style="float: left">
+                <canvas id="shapeDemo" class="canvasInline" width="400" height="400"></canvas>
+                <canvas id="shapeDemo_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
+            </div>
+            <div class="canvasWrapper" style="float: left">
+                <canvas id="shapeDemo2" class="canvasInline" width="400" height="400"></canvas>
+                <canvas id="shapeDemo2_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
+            </div>
+        </div>
+        <div id="carouselExampleControls" style="width: 402px; display: none" class="carousel slide" data-interval="false" data-ride="carousel">
+            <div class="carousel-inner">
+                <div class="carousel-item active">
+                    <div class="canvasWrapper" style="float: left">
+                        <canvas id="canvasImgFrag" class="canvasInline" width="400" height="400"></canvas>
+                        <canvas id="canvasImgFrag_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <div class="canvasWrapper" style="float: left">
+                        <canvas id="canvasImgFrag200" class="canvasInline" width="200" height="200" style="width: 400px;height: 400px"></canvas>
+                        <canvas id="canvasImgFrag200_ui" class="canvasInline canvasUILayer" width="200" height="200" style="width: 400px;height: 400px"></canvas>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <div class="canvasWrapper" style="float: left">
+                        <canvas id="canvasImgFrag32" class="canvasInline" width="32" height="32" style="width: 400px;height: 400px"></canvas>
+                        <canvas id="canvasImgFrag32_ui" class="canvasInline canvasUILayer" width="32" height="32" style="width: 400px;height: 400px"></canvas>
+                    </div>
+                </div>
+            </div>
+            <a class="carousel-control-prev" href="#carouselExampleControls" role="button" data-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="sr-only">Previous</span>
+            </a>
+            <a class="carousel-control-next" href="#carouselExampleControls" role="button" data-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="sr-only">Next</span>
+            </a>
+        </div>
+        <div style="max-width: 800px;">
+            <span>
+                blur size:
+            </span>
+            <input type="text" style="width: 40px; display: inline-block" onchange="setBlurVal()" min="1" max="40" value="3" id="cannyBlurSize">
+
+            <span>
+                kernel size:
+            </span>
+            <input type="text" style="width: 40px; display: inline-block" onchange="setKernelVal()" min="1" max="7" value="3" id="cannyKernelSize">
+            <span>
+                ratio size:
+            </span>
+            <input type="text" style="width: 40px; display: inline-block" onchange="setRatioVal()" min="1" max="100" value="3" id="cannyRatio">
+            <span>
+                Area threshold:
+            </span>
+            <input type="text" style="width: 40px; display: inline-block" onchange="setAreaThresh()" min="1" max="1000" value="600" id="areaThresh">
+        </div>
+
+        <div>
+            <p>Results</p>
+            <div class="clearfix">
+                <div id="shapelist2" style="max-width: 300px; height: 400px; overflow: scroll; float: left">
+                    <pre>shape list goes here...</pre>
+                </div>
+                <div class="canvasWrapper" style="float: left">
+                    <canvas id="shapeDemoResult" class="canvasInline" width="400" height="400"></canvas>
+                    <canvas id="shapeDemoResult_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
+                </div>
+                <div class="canvasWrapper" style="float: left">
+                    <canvas id="shapeDemoResult2" class="canvasInline" width="400" height="400"></canvas>
+                    <canvas id="shapeDemoResult2_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
+                </div>
+            </div>
+            <div id="carouselExampleControls2" style="width: 804px;" class="carousel slide" data-interval="false" data-ride="carousel">
+                <div class="carousel-inner">
+                    <div class="carousel-item active">
+                        <div class="canvasWrapper" style="float: left">
+                            <canvas id="canvasImgFrag2" class="canvasInline" width="400" height="400"></canvas>
+                            <canvas id="canvasImgFrag2_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
+                        </div>
+                        <div class="canvasWrapper" style="float: left">
+                            <canvas id="canvasImgFrag2Right" class="canvasInline" width="400" height="400"></canvas>
+                            <canvas id="canvasImgFrag2Right_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
+                        </div>
+                    </div>
+                    <div class="carousel-item">
+                        <div class="canvasWrapper" style="float: left">
+                            <canvas id="canvasImgFrag2002" class="canvasInline" width="200" height="200" style="width: 400px;height: 400px"></canvas>
+                            <canvas id="canvasImgFrag2002_ui" class="canvasInline canvasUILayer" width="200" height="200" style="width: 400px;height: 400px"></canvas>
+                        </div>
+                        <div class="canvasWrapper" style="float: left">
+                            <canvas id="canvasImgFrag2002Right" class="canvasInline" width="200" height="200" style="width: 400px;height: 400px"></canvas>
+                            <canvas id="canvasImgFrag2002Right_ui" class="canvasInline canvasUILayer" width="200" height="200" style="width: 400px;height: 400px"></canvas>
+                        </div>
+                    </div>
+                    <div class="carousel-item">
+                        <div class="canvasWrapper" style="float: left">
+                            <canvas id="canvasImgFrag322" class="canvasInline" width="32" height="32" style="width: 400px;height: 400px"></canvas>
+                            <canvas id="canvasImgFrag322_ui" class="canvasInline canvasUILayer" width="32" height="32" style="width: 400px;height: 400px"></canvas>
+                        </div>
+                        <div class="canvasWrapper" style="float: left">
+                            <canvas id="canvasImgFrag322Right" class="canvasInline" width="32" height="32" style="width: 400px;height: 400px"></canvas>
+                            <canvas id="canvasImgFrag322Right_ui" class="canvasInline canvasUILayer" width="32" height="32" style="width: 400px;height: 400px"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <a class="carousel-control-prev" href="#carouselExampleControls2" role="button" data-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="sr-only">Previous</span>
+                </a>
+                <a class="carousel-control-next" href="#carouselExampleControls2" role="button" data-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="sr-only">Next</span>
+                </a>
+
+            </div>
+        </div>
+
+
+        <div class="clearfix largeCanvas">
+            <div class="canvasWrapper" style="float: left">
+                <canvas id="canvasImgEdgeHullValidLeft" class="canvasInline" width="400" height="400"></canvas>
+                <canvas id="canvasImgEdgeHullValidLeft_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
+            </div>
+            <div class="canvasWrapper" style="float: left">
+                <canvas id="canvasImgEdgeHullValidRight" class="canvasInline" width="400" height="400"></canvas>
+                <canvas id="canvasImgEdgeHullValidRight_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
+            </div>
+        </div>
+        <div class="clearfix largeCanvas">
+            <div class="canvasWrapper" style="float: left">
+                <canvas id="canvasImgEdgeContoursLeft" class="canvasInline" width="400" height="400"></canvas>
+                <canvas id="canvasImgEdgeContoursLeft_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
+            </div>
+            <div class="canvasWrapper" style="float: left">
+                <canvas id="canvasImgEdgeContoursRight" class="canvasInline" width="400" height="400"></canvas>
+                <canvas id="canvasImgEdgeContoursRight_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
+            </div>
+        </div>
+        <div class="clearfix largeCanvas">
+            <div class="canvasWrapper" style="float: left">
+                <canvas id="bluredGreyOutputImage" class="canvasInline" width="400" height="400"></canvas>
+                <canvas id="bluredGreyOutputImage_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
+            </div>
+            <div class="canvasWrapper" style="float: left">
+                <canvas id="bluredGreyOutputImageRight" class="canvasInline" width="400" height="400"></canvas>
+                <canvas id="bluredGreyOutputImageRight_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
+            </div>
+        </div>
+        <div class="clearfix largeCanvas">
+            <div class="canvasWrapper" style="float: left">
+                <canvas id="canvasImgEdge" class="canvasInline" width="400" height="400"></canvas>
+                <canvas id="canvasImgEdge_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
+            </div>
+            <div class="canvasWrapper" style="float: left">
+                <canvas id="canvasImgEdgeRight" class="canvasInline" width="400" height="400"></canvas>
+                <canvas id="canvasImgEdgeRight_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
+            </div>
+        </div>
+        <div>
+            <p>Click and see hashes</p>
+            <div class="clearfix">
+                <div id="clickandseeListLeft" style="max-width: 300px; height: 400px; overflow: scroll; float: left">
+                    <pre>shape list goes here...</pre>
+                </div>
+                <div class="canvasWrapper" style="border: 3px solid red; float: left">
+                    <canvas id="clickandseeImageLeft" class="canvasInline" width="400" height="400"></canvas>
+                    <canvas id="clickandseeImageLeft_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
+                </div>
+                <div class="canvasWrapper" style="float: left">
+                    <canvas id="clickandseeImageRight" class="canvasInline" width="400" height="400"></canvas>
+                    <canvas id="clickandseeImageRight_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
+                </div>
+                <div id="clickandseeListRight" style="max-width: 300px; height: 400px; overflow: scroll; float: left">
+                    <pre>shape list goes here...</pre>
+                </div>
+
+            </div>
+            <div id="carouselclickandseeOutputFragments" style="width: 804px;" class="carousel slide" data-interval="false" data-ride="carousel">
+                <div class="carousel-inner">
+                    <div class="carousel-item active">
+                        <div class="canvasWrapper" style="float: left">
+                            <canvas id="clickandseeFragLeft400" class="canvasInline" width="400" height="400"></canvas>
+                            <canvas id="clickandseeFragLeft400_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
+                        </div>
+                        <div class="canvasWrapper" style="float: left">
+                            <canvas id="clickandseeFragRight400" class="canvasInline" width="400" height="400"></canvas>
+                            <canvas id="clickandseeFragRight400_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
+                        </div>
+                    </div>
+                    <div class="carousel-item">
+                        <div class="canvasWrapper" style="float: left">
+                            <canvas id="clickandseeFragLeft200" class="canvasInline" width="200" height="200" style="width: 400px;height: 400px"></canvas>
+                            <canvas id="clickandseeFragLeft200_ui" class="canvasInline canvasUILayer" width="200" height="200" style="width: 400px;height: 400px"></canvas>
+                        </div>
+                        <div class="canvasWrapper" style="float: left">
+                            <canvas id="clickandseeFragRight200" class="canvasInline" width="200" height="200" style="width: 400px;height: 400px"></canvas>
+                            <canvas id="clickandseeFragRight200_ui" class="canvasInline canvasUILayer" width="200" height="200" style="width: 400px;height: 400px"></canvas>
+                        </div>
+                    </div>
+                    <div class="carousel-item">
+                        <div class="canvasWrapper" style="float: left">
+                            <canvas id="clickandseeFragLeft32" class="canvasInline" width="32" height="32" style="width: 400px;height: 400px"></canvas>
+                            <canvas id="clickandseeFragLeft32_ui" class="canvasInline canvasUILayer" width="32" height="32" style="width: 400px;height: 400px"></canvas>
+                        </div>
+                        <div class="canvasWrapper" style="float: left">
+                            <canvas id="clickandseeFragRight32" class="canvasInline" width="32" height="32" style="width: 400px;height: 400px"></canvas>
+                            <canvas id="clickandseeFragRight32_ui" class="canvasInline canvasUILayer" width="32" height="32" style="width: 400px;height: 400px"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <a class="carousel-control-prev" href="#carouselclickandseeOutputFragments" role="button" data-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="sr-only">Previous</span>
+                </a>
+                <a class="carousel-control-next" href="#carouselclickandseeOutputFragments" role="button" data-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="sr-only">Next</span>
+                </a>
+
+            </div>
+        </div>
+
+    </div>
+
+
+
+  </body>
+
+  <!-- Optional JavaScript -->
+  <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+  <script src="scripts/jquery.min.js"></script>
+  <script src="scripts/bootstrap.min.js" integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k" crossorigin="anonymous"></script>
+
+  <script src="scripts/math.min.js"></script>
+  <script src="scripts/matrixMaths.js"></script>
+  <script src="scripts/common.js"></script>
+  <script src="scripts/drawWrappers.js"></script>
+  <script src="scripts/matrixMaths.js"></script>
+  <script src="scripts/polygonFuncs.js"></script>
+  <script src="scripts/transformOperations.js"></script>
+
+  <script type='text/javascript'>
+      let api;
+      let module;
+      let heap_image_in;
+      let heap_image_og;
+      let g_valHolder;
+      var statusElement = document.getElementById('status');
+      var progressElement = document.getElementById('progress');
+      var spinnerElement = document.getElementById('spinner');
+
+      var Module = {
+          preRun: [],
+          postRun: [],
+          print: (function() {
+              return function(text) {
+                  if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
+                  // These replacements are necessary if you render to raw HTML
+                  //text = text.replace(/&/g, "&amp;");
+                  //text = text.replace(/</g, "&lt;");
+                  //text = text.replace(/>/g, "&gt;");
+                  //text = text.replace('\n', '<br>', 'g');
+                  console.log(text);
+              };
+          })(),
+          printErr: function(text) {
+              if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
+              console.error(text);
+          },
+          canvas: (function() {
+              return null;
+          })(),
+          setStatus: function(text) {
+              if (!Module.setStatus.last) Module.setStatus.last = { time: Date.now(), text: '' };
+              if (text === Module.setStatus.last.text) return;
+              var m = text.match(/([^(]+)\((\d+(\.\d+)?)\/(\d+)\)/);
+              var now = Date.now();
+              if (m && now - Module.setStatus.last.time < 30) return; // if this is a progress update, skip it if too soon
+              Module.setStatus.last.time = now;
+              Module.setStatus.last.text = text;
+              if (m) {
+                  text = m[1];
+                  progressElement.value = parseInt(m[2])*100;
+                  progressElement.max = parseInt(m[4])*100;
+                  progressElement.hidden = false;
+                  spinnerElement.hidden = false;
+              } else {
+                  progressElement.value = null;
+                  progressElement.max = null;
+                  progressElement.hidden = true;
+                  if (!text) spinnerElement.style.display = 'none';
+              }
+              statusElement.innerHTML = text;
+          },
+          totalDependencies: 0,
+          monitorRunDependencies: function(left) {
+              this.totalDependencies = Math.max(this.totalDependencies, left);
+              Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies-left) + '/' + this.totalDependencies + ')' : 'All downloads complete.');
+          }
+      };
+      Module.setStatus('Downloading...');
+      window.onerror = function(event) {
+          // TODO: do not warn on ok events like simulating an infinite loop or exitStatus
+          Module.setStatus('Exception thrown, see JavaScript console');
+          spinnerElement.style.display = 'none';
+          Module.setStatus = function(text) {
+              if (text) Module.printErr('[post-exception status] ' + text);
+          };
+      };
+
+
+  </script>
+  <script async type="text/javascript" src="wasmLibs/cppdemo.js"></script>
+  <script src="scripts/main.js" ></script>
+  <script>
+      byteArrayToLong = function(/*byte[]*/byteArray) {
+          var value = 0;
+          for ( var i = byteArray.length - 1; i >= 0; i--) {
+//        for ( var i = 0; i < byteArray.length; i++) {
+              value = (value * 256) + byteArray[i];
+          }
+
+          return value;
+      };
+      Module.onRuntimeInitialized = async _ => {
+          module = Module;
+
+          const canvas = document.getElementById('shapeDemo');
+
+          heap_image_in = module._malloc(canvas.width * canvas.height * 4);
+          heap_image_og = module._malloc(canvas.width * canvas.height * 4);
+
+          g_valHolder = new module.ValHolder(canvas.width*canvas.height*4);
+          api = {
+              create_buffer: Module.create_buffer,
+
+          };
+          //     create_buffer_zero:     Module.cwrap('create_buffer_zero', 'number', ['number', 'number']),
+          //     destroy_buffer:         Module.cwrap('destroy_buffer', '', ['number']),
+          //     encode:                 Module.cwrap('encode', 'number', ['number', 'number', 'number']),
+          //     getShapeString:         Module.cwrap('getShapeString', 'String', ['number']),
+          //     getImageEdgeImage:      Module.cwrap('getImageEdgeImage', 'number', ['number']),
+          //     getImageOut1:           Module.cwrap('getImageOut1', 'number', ['number']),
+          //     getImageOut2:           Module.cwrap('getImageOut2', 'number', ['number']),
+          //     getImageOut3:           Module.cwrap('getImageOut3', 'number', ['number']),
+          //     getImageOut4:           Module.cwrap('getImageOut4', 'number', ['number']),
+          //   };
+          main(Module);
+      };
+
+  </script>
+</html>
+
+

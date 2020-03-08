@@ -83,6 +83,51 @@ void getHashesForShape2(uintptr_t img_in, ValHolder *valsOut, string shapeStr, i
     memcpy(valsOut->outputImage2.ptr_, outputImage.data, output_width*output_width*4);
 }
 
+
+
+std::string findMatchesForImageFromCanvas(uintptr_t img_in, uintptr_t img_in2, int rotation,
+    int thresh,
+    int ratio,
+    int kernel_size,
+    int blur_width,
+    bool flush_cache)
+{
+    std::cout << "findMatchesForImageFromCanvas called" << std::endl;
+
+    Mat image(cv::Size(400, 400), CV_8UC4, (void *) img_in, cv::Mat::AUTO_STEP);
+    Mat image2(cv::Size(400, 400), CV_8UC4, (void *) img_in2, cv::Mat::AUTO_STEP);
+    auto vec = findMatches(
+            image,
+            image2,
+            thresh,
+            ratio,
+            kernel_size,
+            blur_width,
+            200,//int areaThresh=200
+            flush_cache
+    );
+    cout << vec.size() << endl;
+    std::stringstream polygonString;
+    polygonString << "{ ";
+//    for (auto &v: vec) {
+    for (int i = 0; i < vec.size(); i++) {
+        //FIXME: we need to check that no two hashes are the same, otherwise we can create invalid json
+        auto v = vec[i];
+        auto [shape1, shape2, hash1, hash2] = v;
+        if (i > 0)
+            polygonString << ",";
+        polygonString << "\"";
+        polygonString << ImageHash::convertHashToString(hash1);
+        polygonString << "\" : [\"";
+        polygonString << bg::wkt(shape1);
+        polygonString << "\", \"";
+        polygonString << bg::wkt(shape2);
+        polygonString << "\"]";
+    }
+    polygonString << "} ";
+    return polygonString.str();
+}
+
 std::string getAllTheHashesForImageFromCanvas(uintptr_t img_in, int rotation,
                                               int thresh,
                                               int ratio,
@@ -281,4 +326,5 @@ EMSCRIPTEN_BINDINGS(my_value_example) {
     emscripten::function("getHashesForShape2", &getHashesForShape2, allow_raw_pointers());
     emscripten::function("calcMatrixFromString", &calcMatrixFromString);
     emscripten::function("getAllTheHashesForImageFromCanvas", &getAllTheHashesForImageFromCanvas);
+    emscripten::function("findMatchesForImageFromCanvas", &findMatchesForImageFromCanvas);
 }

@@ -25,9 +25,10 @@ Mat _calcMatrix(
         double zoomin=1);
 
 vector<pair<ring_t, uint64_t>> getHashesForShape(const cv::Mat& input_image,
-                                          const ring_t& shape,
-                                          int numRotations,
-                                          int output_width=32);
+                                                const ring_t& shape,
+                                                int numRotations,
+                                                int rotationJump,
+                                                int output_width=32);
 
 Mat convertToGrey(Mat img_in);
 
@@ -94,6 +95,7 @@ vector<tuple<ring_t, ring_t, uint64_t, uint64_t>> findMatches(
         int ratio=3,
         int kernel_size=3,
         int blur_width=3,
-        int areaThresh=200);
+        int areaThresh=200,
+        bool flushCache=true);
 
 #endif//mainImageProcessingFunctions_cpp

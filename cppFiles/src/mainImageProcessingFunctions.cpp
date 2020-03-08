@@ -89,7 +89,10 @@ Mat calcMatrix(ring_t shape, double rotation, double output_width, double zoom) 
     return _calcMatrix(area, -p.get<0>(), -p.get<1>(), rotation, output_width, a, b, zoom);
 }
 
-vector<pair<ring_t, uint64_t>> getAllTheHashesForImageAndShapes(Mat &imgdata, vector<ring_t> shapes, int rotations)
+vector<pair<ring_t, uint64_t>> getAllTheHashesForImageAndShapes(Mat &imgdata,
+        vector<ring_t> shapes,
+        int rotations,
+        int rotationJump)
 {
 //    vector<pair<ring_t, uint64_t>> ret(shapes.size()*rotations*4);
     vector<pair<ring_t, uint64_t>> ret;
@@ -98,7 +101,7 @@ vector<pair<ring_t, uint64_t>> getAllTheHashesForImageAndShapes(Mat &imgdata, ve
     {
         auto shape = shapes[i];
 //        cout << "entering for shape:" << endl;
-        auto hashes = getHashesForShape(imgdata, shape, rotations);
+        auto hashes = getHashesForShape(imgdata, shape, rotations, rotationJump);
         for (int j =0; j < hashes.size(); j++) {
             ret.push_back(hashes[j]);
         }
@@ -147,7 +150,7 @@ vector<pair<ring_t, uint64_t>> getAllTheHashesForImage(
     vector<ring_t> shapes = extractShapes(thresh, ratio, kernel_size, blur_width, areaThresh, grayImg);
 
     std::cout << "Inside cpp code the extracted shapes: " << shapes.size() << std::endl;
-    return getAllTheHashesForImageAndShapes(grayImg, shapes, rotations);
+    return getAllTheHashesForImageAndShapes(grayImg, shapes, rotations, 1);
 }
 
 using namespace std::chrono;
@@ -162,23 +165,24 @@ vector<tuple<ring_t, ring_t, uint64_t, uint64_t>> findMatches(
         int ratio,
         int kernel_size,
         int blur_width,
-        int areaThresh)
+        int areaThresh,
+        bool flushCache)
 {
 
     //FIXME: this doesn't check if the data changed!!
     // use cached results
-    if (prevImg != img_in.data) {
+    if (flushCache) {
         prevImg = img_in.data;
         Mat grayImg = convertToGrey(img_in);
         vector<ring_t> shapes = extractShapes(thresh, ratio, kernel_size, blur_width, areaThresh, grayImg);
 
-        g_imghashes = getAllTheHashesForImageAndShapes(grayImg, shapes, 360);
+        g_imghashes = getAllTheHashesForImageAndShapes(grayImg, shapes, 360, 2);
     }
 
     Mat grayImg2 = convertToGrey(img_in2);
     vector<ring_t> shapes2 = extractShapes(thresh, ratio, kernel_size, blur_width, areaThresh, grayImg2);
 
-    auto img2hashes = getAllTheHashesForImageAndShapes(grayImg2, shapes2, 1);
+    auto img2hashes = getAllTheHashesForImageAndShapes(grayImg2, shapes2, 1, 1);
 
     vector<tuple<ring_t, ring_t, uint64_t, uint64_t>> res;
     for (auto h : g_imghashes) {
@@ -255,6 +259,7 @@ void handleForRotation2(const Mat &input_image, const ring_t &shape, int output_
 vector<pair<ring_t, uint64_t>> getHashesForShape(const cv::Mat& input_image,
                                                          const ring_t& shape,
                                                          int numRotations,
+                                                         int rotationJump,
                                                          int output_width)
 {
     point_t p;
@@ -262,7 +267,7 @@ vector<pair<ring_t, uint64_t>> getHashesForShape(const cv::Mat& input_image,
     bg::centroid(shape, p);
     auto [a, b] = getAandBWrapper(shape, p);
     double area = bg::area(shape);
-    for (unsigned int i = 0; i < numRotations; i++)
+    for (unsigned int i = 0; i < numRotations; i += rotationJump)
     {
         handleForRotation(input_image, shape, output_width, ret, p, a, b, area, i);
     }

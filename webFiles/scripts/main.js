@@ -4,7 +4,7 @@ let g_kernelSize = 3;
 let g_ratio = 3;
 let g_thresh = 100;
 let g_areaThresh = 200;
-
+let g_flushCache = true;
 
 function drawshapefromClickandseeLeft(shapeStr1) {
 
@@ -123,6 +123,7 @@ function setKernelVal() {
 }
 
 async function loadImage(src) {
+    g_flushCache = true;
     g_img.src = src;
     // Load image
     const imgBlob = await fetch(src).then(resp => resp.blob());
@@ -306,28 +307,27 @@ function drawshapefromlist(index, shapeStr) {
 }
 
 function findMatches() {
-    var db = module.getAllTheHashesForImageFromCanvas(
+//std::string findMatchesForImageFromCanvas(uintptr_t img_in, uintptr_t img_in2, int rotation,
+//     int thresh,
+//     int ratio,
+//     int kernel_size,
+//     int blur_width)
+
+    var db = module.findMatchesForImageFromCanvas(
         heap_image_og,
-        360,
-        g_thresh,
-        g_ratio,
-        g_kernelSize,
-        g_blurWidth
-    );
-    var check = module.getAllTheHashesForImageFromCanvas(
         heap_image_in,
         360,
         g_thresh,
         g_ratio,
         g_kernelSize,
-        g_blurWidth
+        g_blurWidth,
+        g_flushCache
     );
+    g_flushCache = false;
 
     let dbObj = JSON.parse(db);
-    let checkObj = JSON.parse(check);
 
     console.log(dbObj);
-    console.log(checkObj);
 
     const list = document.getElementById('shapelist2');
     list.innerHTML = "";
@@ -335,13 +335,10 @@ function findMatches() {
     for (var i = 0; i < keys.length; i++)
     {
         var key = keys[i];
-        if (checkObj[key] !== undefined) {
-            let opt = checkObj[key];
-            let opt2 = dbObj[key];
-            let el = document.createElement("div");
-            el.innerHTML = `<div class='shapeListEl' onmouseover="drawshapefromResult('${opt}', '${opt2}')" id='shapeListEl${i}'>${opt}</div>`;
-            list.appendChild(el);
-        }
+        let opt = dbObj[key];
+        let el = document.createElement("div");
+        el.innerHTML = `<div class='shapeListEl' onmouseover="drawshapefromResult('${opt[1]}', '${opt[0]}')" id='shapeListEl${i}'>${i}</div>`;
+        list.appendChild(el);
     }
 
 }

@@ -150,6 +150,24 @@ function setKernelVal() {
     g_kernelSize = parseInt(kernelSize);
 }
 
+function updateLookupCanvasHeap() {
+    const lookupCanvas = getCanvas('lookupCanvas');
+    const image = lookupCanvas.ctx.getImageData(0, 0,
+        lookup_canvas_wasm_heap.width,
+        lookup_canvas_wasm_heap.height);
+
+    Module.HEAP8.set(image.data, lookup_canvas_wasm_heap.ptr);
+}
+
+function updateDatabaseCanvasHeap() {
+    const databaseCanvas = getCanvas('databaseCanvas');
+    const image = databaseCanvas.ctx.getImageData(0, 0,
+        canvas_inserted_in_database_wasm_heap.width,
+        canvas_inserted_in_database_wasm_heap.height);
+
+    Module.HEAP8.set(image.data, canvas_inserted_in_database_wasm_heap.ptr);
+}
+
 async function loadImage(src) {
     g_flushCache = true;
     g_img.src = src;
@@ -165,50 +183,17 @@ async function loadImage(src) {
     ctx.drawImage(img, 0, 0);
 
     //const image = ctx.getImageData(0, 0, img.width, img.height);
-    let ctx2 = document.getElementById('databaseCanvas').getContext('2d');
-    ctx2.drawImage(img, 0, 0);
+    const databaseCanvas = getCleanCanvas('databaseCanvas');
+    databaseCanvas.ctx.drawImage(img, 0, 0);
 
-    let ctx3 = document.getElementById('shapeDemoResult2').getContext('2d');
-    ctx3.drawImage(img, 0, 0);
+    const lookupCanvas = getCleanCanvas('lookupCanvas');
+    lookupCanvas.ctx.drawImage(img, 0, 0);
 
-    let clickandseeImageRightCanvas = document.getElementById('clickandseeImageRight');
-    let clickandseeImageRightCtx = clickandseeImageRightCanvas.getContext('2d');
-    clickandseeImageRightCtx.drawImage(img, 0, 0);
-
-    const image = ctx2.getImageData(0, 0, ctx2.canvas.width, ctx2.canvas.height);
-    Module.HEAP8.set(image.data, canvas_inserted_in_database_wasm_heap.ptr);
+    updateLookupCanvasHeap();
+    updateDatabaseCanvasHeap();
 
     draw();
-    copyimagetocpp();
-
-    let width = canvas_inserted_in_database_wasm_heap.width;
-    let height = canvas_inserted_in_database_wasm_heap.height;
-
-    var valHolder = new module.ValHolder(width*height*4);
-    module.encode(
-        canvas_inserted_in_database_wasm_heap.ptr,
-        width,
-        height,
-        valHolder,
-        100,
-        g_ratio,
-        g_kernelSize,
-        g_blurWidth,
-        g_areaThresh
-    );
-
-
-    const outputImage3 = new ImageData(new Uint8ClampedArray(valHolder.outputImage3.val_), width, height);
-    const outputImage2 = new ImageData(new Uint8ClampedArray(valHolder.outputImage2.val_), width, height);
-    const outputImage1 = new ImageData(new Uint8ClampedArray(valHolder.outputImage1.val_), width, height);
-    const edgeImageOut = new ImageData(new Uint8ClampedArray(valHolder.edgeImage.val_), width, height);
-
-    getCleanCanvas("canvasImgEdgeHullValidRight").ctx.putImageData(outputImage3, 0, 0);
-    getCleanCanvas("canvasImgEdgeContoursRight").ctx.putImageData(outputImage2, 0, 0);
-    getCleanCanvas("bluredGreyOutputImageRight").ctx.putImageData(outputImage1, 0, 0);
-    getCleanCanvas("canvasImgEdgeRight").ctx.putImageData(edgeImageOut, 0, 0);
-
-    valHolder.delete();
+    // loadEdgeImages();
 }
 
 function drawShapeAndFragmentClickAndSee(imageHeap, width, height, shapeStr, shapeSize, canvasId) {
@@ -263,10 +248,10 @@ function drawShapeAndFragment(imageHeap, width, height, shapeStr, shapeSize, can
 
 function drawshapefromResult(shapeStr1, shapeStr2) {
 
-    const can = getCleanUICanvas("shapeDemoResult");
+    const can = getCleanUICanvas("lookupCanvas");
     drawPolyFull(can.ctx_ui, shapeStrToShape(shapeStr1));
 
-    const ctxEdge = getCleanUICanvas("shapeDemoResult2");
+    const ctxEdge = getCleanUICanvas("databaseCanvas");
     drawPolyFull(ctxEdge.ctx_ui, shapeStrToShape(shapeStr2));
 
     const zoom = 1.0/1.5;
@@ -409,7 +394,7 @@ function findMatches() {
         g_blurWidth,
         g_flushCache
     );
-    g_flushCache = false;
+    // g_flushCache = false;//FIXME: we should cache the database on
 
     let dbObj = JSON.parse(db);
 
@@ -452,15 +437,14 @@ function parseGlobalShapes(ctx, shapes) {
     }
 }
 
-function copyimagetocpp() {
+//FIXME: rename
+function loadEdgeImages() {
+
+    // Wasm heap must already have the canvases loaded in memory
 
     const lookupCanvas = getCanvas('lookupCanvas');
     const width = lookup_canvas_wasm_heap.width;
     const height = lookup_canvas_wasm_heap.height;
-    const image = lookupCanvas.ctx.getImageData(
-        0, 0, width, height);
-
-    Module.HEAP8.set(image.data, lookup_canvas_wasm_heap.ptr);
 
     var valHolder = new module.ValHolder(lookup_canvas_wasm_heap.width*lookup_canvas_wasm_heap.height*4);
 
@@ -488,6 +472,6 @@ function copyimagetocpp() {
 
 function main() {
     loadImage(g_img.src);
-    copyimagetocpp();
+    // loadEdgeImages();
 }
 

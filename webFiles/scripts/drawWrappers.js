@@ -102,7 +102,7 @@ function drawImageWithTransformations(ctx, img, mat, offset) {
 
     ctx.save();
     canvasTransform(ctx, mat);
-    ctx.drawImage(img, offset[0], offset[1], ctx.canvas.width, ctx.canvas.height);
+    ctx.drawImage(img, offset[0], offset[1]);
     ctx.restore();
 }
 
@@ -125,15 +125,4 @@ function drawPoint_m(interactiveCanvasContext, point, colour, width) {
     interactiveCanvasContext.rect(point[0], point[1], width, width);
     interactiveCanvasContext.closePath();
     interactiveCanvasContext.stroke();
-}
-
-function drawImageWithTransformations_seg(ctx, img, mat) {
-    ctx.imageSmoothingEnabled = true;
-    ctx.webkitImageSmoothingEnabled = true;
-    ctx.mozImageSmoothingEnabled = true;
-
-    ctx.save();
-    canvasTransform(ctx, mat);
-    ctx.drawImage(img, 0, 0, 400, 400);
-    ctx.restore();
 }

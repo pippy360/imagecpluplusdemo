@@ -59,7 +59,6 @@ public:
 RNG rng(12345);
 
 emscripten::val calcMatrixFromString(string shapeStr, int output_width=400, double zoom=1) {
-
     ring_t shape;
     bg::read_wkt(shapeStr, shape);
     Mat m = calcMatrix(shape, 0, output_width, zoom);
@@ -67,35 +66,35 @@ emscripten::val calcMatrixFromString(string shapeStr, int output_width=400, doub
     return emscripten::val(emscripten::typed_memory_view(9, (double *)m.data));
 }
 
-void getHashesForShape2(uintptr_t img_in, ValHolder *valsOut, string shapeStr, int output_width=400, double zoom=1)
+void getImageFragmentFromShape(uintptr_t img_in, int width, int height, ValHolder *valsOut, string shapeStr, int output_width=400, double zoom=1)
 {
     point_t p;
     ring_t transformedPoly;
-
     ring_t shape;
+
     bg::read_wkt(shapeStr, shape);
+
     Mat m = calcMatrix(shape, 0, output_width, zoom);
 
     Mat outputImage(output_width, output_width, CV_8UC3, Scalar(0, 0, 0));
-    Mat image(cv::Size(400, 400), CV_8UC4, (void *) img_in, cv::Mat::AUTO_STEP);
+    Mat image(cv::Size(width, height), CV_8UC4, (void *) img_in, cv::Mat::AUTO_STEP);
 
     warpAffine(image, outputImage, m, outputImage.size());
     memcpy(valsOut->outputImage2.ptr_, outputImage.data, output_width*output_width*4);
 }
 
-
-
-std::string findMatchesForImageFromCanvas(uintptr_t img_in, uintptr_t img_in2, int rotation,
-    int thresh,
-    int ratio,
-    int kernel_size,
-    int blur_width,
-    bool flush_cache)
+std::string findMatchesForImageFromCanvas(
+        uintptr_t img_in, int img_in_width, int img_in_height,
+        uintptr_t img_in2, int img_in2_width, int img_in2_height,
+        int rotation,
+        int thresh,
+        int ratio,
+        int kernel_size,
+        int blur_width,
+        bool flush_cache)
 {
-    std::cout << "findMatchesForImageFromCanvas called" << std::endl;
-
-    Mat image(cv::Size(400, 400), CV_8UC4, (void *) img_in, cv::Mat::AUTO_STEP);
-    Mat image2(cv::Size(400, 400), CV_8UC4, (void *) img_in2, cv::Mat::AUTO_STEP);
+    Mat image(cv::Size(img_in_width, img_in_height), CV_8UC4, (void *) img_in, cv::Mat::AUTO_STEP);
+    Mat image2(cv::Size(img_in2_width, img_in2_height), CV_8UC4, (void *) img_in2, cv::Mat::AUTO_STEP);
     auto vec = findMatches(
             image,
             image2,
@@ -107,37 +106,40 @@ std::string findMatchesForImageFromCanvas(uintptr_t img_in, uintptr_t img_in2, i
             flush_cache
     );
     cout << vec.size() << endl;
+    std::cout << "findMatchesForImageFromCanvas called, with this many matches: " << vec.size() << std::endl;
+
     std::stringstream polygonString;
     polygonString << "{ ";
-//    for (auto &v: vec) {
+
     for (int i = 0; i < vec.size(); i++) {
-        //FIXME: we need to check that no two hashes are the same, otherwise we can create invalid json
         auto v = vec[i];
+        //FIXME: we need to check that no two hashes are the same, otherwise we can create invalid json
         auto [shape1, shape2, hash1, hash2] = v;
-        if (i > 0)
+        if (i > 0) {
             polygonString << ",";
-        polygonString << "\"";
-        polygonString << ImageHash::convertHashToString(hash1);
-        polygonString << "\" : [\"";
-        polygonString << bg::wkt(shape1);
-        polygonString << "\", \"";
-        polygonString << bg::wkt(shape2);
-        polygonString << "\"]";
+        }
+
+        polygonString << "\"" << ImageHash::convertHashToString(hash1)
+                << "\" : [\"" << bg::wkt(shape1) << "\", \"" << bg::wkt(shape2) << "\"]";
     }
     polygonString << "} ";
     return polygonString.str();
 }
 
-std::string getAllTheHashesForImageFromCanvas(uintptr_t img_in, int rotation,
-                                              int thresh,
-                                              int ratio,
-                                              int kernel_size,
-                                              int blur_width
-                                              )
+std::string getAllTheHashesForImageFromCanvas(
+        uintptr_t img_in,
+        int width,
+        int height,
+        int rotation,
+        int thresh,
+        int ratio,
+        int kernel_size,
+        int blur_width
+)
 {
     std::cout << "getAllTheHashesForImageFromCanvas called" << std::endl;
 
-    Mat image(cv::Size(400, 400), CV_8UC4, (void *) img_in, cv::Mat::AUTO_STEP);
+    Mat image(cv::Size(width, height), CV_8UC4, (void *) img_in, cv::Mat::AUTO_STEP);
     auto vec = getAllTheHashesForImage(
         image,
         rotation,
@@ -148,21 +150,17 @@ std::string getAllTheHashesForImageFromCanvas(uintptr_t img_in, int rotation,
             );
 
     //FIXME: rotate the image here rather than doing it for each fragment later
-
     std::stringstream polygonString;
     polygonString << "{ ";
-//    for (auto &v: vec) {
     for (int i = 0; i < vec.size(); i++) {
-        //FIXME: we need to check that no two hashes are the same, otherwise we can create invalid json
         auto v = vec[i];
+        //FIXME: we need to check that no two hashes are the same, otherwise we can create invalid json
         auto [shape, hash] = v;
-        if (i > 0)
+        if (i > 0) {
             polygonString << ",";
-        polygonString << "\"";
-        polygonString << ImageHash::convertHashToString(hash);
-        polygonString << "\" : \"";
-        polygonString << bg::wkt(shape);
-        polygonString << "\"";
+        }
+
+        polygonString << "\"" << ImageHash::convertHashToString(hash) << "\" : \"" << bg::wkt(shape) << "\"" << endl;
     }
     polygonString << "} ";
     return polygonString.str();
@@ -170,32 +168,27 @@ std::string getAllTheHashesForImageFromCanvas(uintptr_t img_in, int rotation,
 
 
 
-void getShapeWithPointInside(
+string getShapeWithPointInside(
         uintptr_t img_in_ptr,
-        ValHolder *valsOut,
         int width,
         int height,
         double x,
         double y,
-        int thresh = 100,
-        int ratio=3,
-        int kernel_size=3,
-        int blur_width=3,
-        int areaThresh=200,
-        bool simplify=true
+        int thresh,
+        int ratio,
+        int kernel_size,
+        int blur_width,
+        int areaThresh
                 )
 {
     Mat img_in(cv::Size(width, height), CV_8UC4, (void *) img_in_ptr, cv::Mat::AUTO_STEP);
     Mat img = img_in.clone();
-    if (simplify) {
-//        simplifyColors(img);
-    }
 
     Mat src_gray;
     cvtColor( img, src_gray, COLOR_BGRA2GRAY );//FIXME: detect and assert
     Mat canny_output = applyCanny(src_gray, thresh, kernel_size, ratio, blur_width);
 
-    vector<vector<Point> > contours;
+    vector<vector<Point>> contours;
     vector<Vec4i> hierarchy;
     findContours(canny_output, contours, hierarchy, RETR_LIST, CHAIN_APPROX_SIMPLE, Point(0, 0));
 
@@ -206,29 +199,23 @@ void getShapeWithPointInside(
         if (bg::within(point_t(x, y), shape))
             polygonString << bg::wkt(shape) << endl;
     }
-    valsOut->shapeStr = polygonString.str();
+    return polygonString.str();
 }
 
 void encode(
         uintptr_t img_in_ptr,
-        ValHolder *valsOut,
         int width,
         int height,
+        ValHolder *valsOut,
         int thresh = 100,
         int ratio=3,
         int kernel_size=3,
         int blur_width=3,
-        int areaThresh=200,
-        bool simplify=true
+        int areaThresh=200
                 )
 {
-    cout << "width: " << width << " height: " << height << endl;
-
     Mat img_in(cv::Size(width, height), CV_8UC4, (void *) img_in_ptr, cv::Mat::AUTO_STEP);
     Mat img = img_in.clone();
-    if (simplify) {
-//        simplifyColors(img);
-    }
 
     Mat src_gray;
     cvtColor( img, src_gray, COLOR_BGRA2GRAY );//FIXME: detect and assert
@@ -268,13 +255,11 @@ void encode(
         convexHull( contours[i], hull );
         Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255), 255 );
         ring_t outPoly;
-        cout << "convert_to_boost about to be called: " << endl;
         if (!convert_to_boost(hull, outPoly)) {
             continue;
         }
 
         if (bg::area(outPoly) <= areaThresh){
-            cout << "passed area" << endl;
             failed_area++;
             continue;
         }
@@ -323,7 +308,7 @@ EMSCRIPTEN_BINDINGS(my_value_example) {
 
     emscripten::function("encode", &encode, allow_raw_pointers());
     emscripten::function("getShapeWithPointInside", &getShapeWithPointInside, allow_raw_pointers());
-    emscripten::function("getHashesForShape2", &getHashesForShape2, allow_raw_pointers());
+    emscripten::function("getImageFragmentFromShape", &getImageFragmentFromShape, allow_raw_pointers());
     emscripten::function("calcMatrixFromString", &calcMatrixFromString);
     emscripten::function("getAllTheHashesForImageFromCanvas", &getAllTheHashesForImageFromCanvas);
     emscripten::function("findMatchesForImageFromCanvas", &findMatchesForImageFromCanvas);

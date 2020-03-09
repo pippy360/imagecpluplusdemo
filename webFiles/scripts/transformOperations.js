@@ -1,7 +1,7 @@
 //include Jquery
 //include matrixMath
 
-const INTERACTIVE_CANVAS_OVERLAY_ID = "shapeDemo_ui";
+const INTERACTIVE_CANVAS_OVERLAY_ID = "lookupCanvas_ui";
 
 const enum_TransformationOperation = {
     TRANSLATE: 1,
@@ -492,16 +492,16 @@ function draw(pageMousePosition) {
     const appliedTransformationsMat = g_transformState.appliedTransformationsMat;
     let transMat = matrixMultiply(appliedTransformationsMat, temporaryAppliedTransformations);
 
-    const c_shapeDemo = getCleanCanvas("shapeDemo");
+    const c_lookupCanvas = getCleanCanvas("lookupCanvas");
     const c_shapeDemo2 = getCleanCanvas("shapeDemoResult");
     const c_clickandseeImageLeft = getCleanCanvas("clickandseeImageLeft");
 
-    drawImageWithTransformations(c_shapeDemo.ctx, g_img, transMat);
+    drawImageWithTransformations(c_lookupCanvas.ctx, g_img, transMat);
     drawImageWithTransformations(c_clickandseeImageLeft.ctx, g_img, transMat);
     drawImageWithTransformations(c_shapeDemo2.ctx, g_img, transMat);
 
-    drawline_m(c_shapeDemo.ctx_ui, [[0, 200], [400, 200]], 'red');
-    drawline_m(c_shapeDemo.ctx_ui, [[200, 0], [200, 400]], 'red');
+    drawline_m(c_lookupCanvas.ctx_ui, [[0, 200], [400, 200]], 'red');
+    drawline_m(c_lookupCanvas.ctx_ui, [[200, 0], [200, 400]], 'red');
 
     //drawRotationEffect(pageMousePosition);
 }

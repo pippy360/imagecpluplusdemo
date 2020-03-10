@@ -11,8 +11,11 @@
 function _getCanvas(id, cleanBase, cleanUI) {
     let c = document.getElementById(id);
     let ctx = c.getContext("2d");
-    if (cleanBase)
+    if (cleanBase) {
         ctx.clearRect(0, 0, c.width, c.height);
+        ctx.fillStyle = "white";
+        ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    }
     let c_ui = document.getElementById(id + "_ui");
     let ctx_ui = c_ui.getContext("2d");
     if (cleanUI)

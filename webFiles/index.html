@@ -18,6 +18,27 @@
               position: relative;
               /*height: 402px;*/
           }
+          .canvasFragment {
+              width: 402px;
+              height: 402px;
+              float: left;
+          }
+          .tab-content .canvasWrapperRight{
+              width: 600px;
+              height: 600px;
+          }
+          .tab-content .canvasWrapperRight canvas{
+              width: 600px;
+              height: 600px;
+          }
+          .tab-content .canvasWrapperLeft{
+              width: 600px;
+              height: 600px;
+          }
+          .tab-content .canvasWrapperLeft canvas{
+              width: 600px;
+              height: 600px;
+          }
           .linebreak {
               margin: auto;
               width: 1650px;
@@ -28,7 +49,8 @@
               height: 126px;
           }
           canvas {
-              border: 1px solid black;
+              border: 1px solid rgba(0,0,0,.12);
+              margin: 5px;
           }
           .buttonsWrapper {
               max-width: 300px;
@@ -41,15 +63,14 @@
               height: 800px;
           }
           .largeCanvas .canvasWrapper {
-              width: 800px;
-              height: 800px;
+              /*width: 800px;*/
+              /*height: 800px;*/
           }
           .canvasUILayer {
-              opacity: .3;
           }
       </style>
 
-    <title>Emscripten-Generated Code</title>
+    <title>Image matching</title>
     <style>
       body {
         font-family: arial;
@@ -149,18 +170,18 @@
           display: inline-block;
           overflow: scroll;
           height: 200px;
-          width: 600px;
-          border: 1px solid black;
+          width: 300px;
       }
       #shapelist{
           display: inline-block;
           overflow: scroll;
           height: 200px;
-          width: 600px;
           border: 1px solid black;
       }
       .shapeListEl{
-          border: 1px solid black;
+          border-bottom: 1px solid black;
+          text-align: center;
+          padding: 6px;
       }
       .shapeListEl:hover{
           background-color: grey;
@@ -187,131 +208,188 @@
             <progress value="0" max="100" id="progress" hidden=1></progress>
         </div>
     </div>
-    <div class="rightSide" style="">
-        <div>
-            <div style="">
-                <canvas id="canvasImg" height="400px" width="400px" style="max-width: 400px"></canvas>
-            </div>
-            <div style="max-width: 620px">
-                <span>
-                    <img src="images/basicshapes.png"           onclick="loadImage(this.src)" class="imgThumbForSelection">
-                </span>
-                <span>
-                    <img src="images/IMG_20191024_130833.jpg"   onclick="loadImage(this.src)" class="imgThumbForSelection">
-                </span>
-                <span>
-                    <img src="images/richandmalty.jpg"          onclick="loadImage(this.src)" class="imgThumbForSelection">
-                </span>
-                <span>
-                    <img src="images/richandmalty400px.png"     onclick="loadImage(this.src)" class="imgThumbForSelection">
-                </span>
-                <span>
-                    <img src="images/Total_Rickall.webp"        onclick="loadImage(this.src)" class="imgThumbForSelection">
-                </span>
-                <span>
-                    <img src="images/googlelogo.webp"           onclick="loadImage(this.src)" class="imgThumbForSelection">
-                </span>
+    <div>
+        <div class="topPageDemoContainer clearfix" style="width: 1600px">
+            <div style="float: left">
+                <div style="max-height: 400px; overflow: scroll">
+                    <div>transformations</div>
+                    <hr>
+                    <div class="buttonsWrapper">
+                        <div class="buttonsInner">
+                      <span role="group" style="width: 100%"  class="btn-group-vertical" >
+                          <button id="translateButton" class="btn btn-secondary active"
+                                  onclick="setCurrnetOperation(enum_TransformationOperation.TRANSLATE)">
+                              Move
+                          </button>
+                          <button class="btn btn-secondary"
+                                  onclick="setCurrnetOperation(enum_TransformationOperation.NON_UNIFORM_SCALE)">
+                              Directional Stretch
+                          </button>
+                          <button class="btn btn-secondary"
+                                  onclick="setCurrnetOperation(enum_TransformationOperation.UNIFORM_SCALE)">
+                              Uniform Scale
+                          </button>
+                          <button class="btn btn-secondary" onclick="setCurrnetOperation(enum_TransformationOperation.ROTATE)">
+                              Rotate
+                          </button>
+                          <button class="btn btn-secondary" onclick="setCurrnetOperation(enum_TransformationOperation.SKEW_X)">
+                              Skew/Shear X
+                          </button>
+                          <button class="btn btn-secondary" onclick="setCurrnetOperation(enum_TransformationOperation.SKEW_Y)">
+                              Skew/Shear Y
+                          </button>
+                            <button type="button" style="margin-bottom: 8px;" class="alert-danger btn btn-secondary"
+                                    onclick="reset()">Reset</button>
+                      </span>
+                        </div>
+                    </div>
+                    <div>parameters</div>
+                    <hr>
+                    <div style="max-width: 200px;">
+                    <span>
+                        blur size:
+                    </span>
+                        <input type="text" style="width: 40px; display: inline-block" onchange="setBlurVal()" min="1" max="40" value="3" id="cannyBlurSize">
 
-            </div>
-        </div>
-        <div class="buttonsWrapper">
-            <div class="buttonsInner">
-              <span data-toggle="buttons" class="btn-group">
-                  <label id="translateButton" class="btn btn-secondary active"
-                         onclick="setCurrnetOperation(enum_TransformationOperation.TRANSLATE)">
-                      <input type="radio" name="options" autocomplete="off" checked>Move</input>
-                  </label>
-                  <label class="btn btn-secondary"
-                         onclick="setCurrnetOperation(enum_TransformationOperation.NON_UNIFORM_SCALE)">
-                      <input type="radio" name="options" autocomplete="off">Directional Stretch</input>
-                  </label>
-                  <label class="btn btn-secondary"
-                         onclick="setCurrnetOperation(enum_TransformationOperation.UNIFORM_SCALE)">
-                      <input type="radio" name="options" autocomplete="off">Uniform Scale</input>
-                  </label>
-                  <label class="btn btn-secondary" onclick="setCurrnetOperation(enum_TransformationOperation.ROTATE)">
-                      <input type="radio" name="options" autocomplete="off">Rotate</input>
-                  </label>
-                  <label class="btn btn-secondary" onclick="setCurrnetOperation(enum_TransformationOperation.SKEW_X)">
-                      <input type="radio" name="options" autocomplete="off">Skew/Shear X</input>
-                  </label>
-                  <label class="btn btn-secondary" onclick="setCurrnetOperation(enum_TransformationOperation.SKEW_Y)">
-                      <input type="radio" name="options" autocomplete="off">Skew/Shear Y</input>
-                  </label>
-                    <button type="button" style="margin-bottom: 8px;" class="alert-danger btn btn-secondary"
-                            onclick="reset()">Reset</button>
-              </span>
-            </div>
-        </div>
-        <div class="clearfix">
-            <div id="shapelist" style="max-width: 300px; height: 600px;">
-                <pre>shape list goes here...</pre>
-            </div>
-            <div class="canvasWrapper clearfix" style="width: 800px; height: 600px">
-                <canvas id="lookupCanvas" class="canvasInline" width="800" height="600"></canvas>
-                <canvas id="lookupCanvas_ui" class="canvasInline canvasUILayer" width="800" height="600"></canvas>
-            </div>
-            <div class="canvasWrapper clearfix" style="width: 1000px; height: 600px">
-                <canvas id="databaseCanvas" class="canvasInline" width="1000" height="600"></canvas>
-                <canvas id="databaseCanvas_ui" class="canvasInline canvasUILayer" width="1000" height="600"></canvas>
-            </div>
-        </div>
-        <div id="carouselExampleControls" style="width: 402px; display: none" class="carousel slide" data-interval="false" data-ride="carousel">
-            <div class="carousel-inner">
-                <div class="carousel-item active">
-                    <div class="canvasWrapper" style="float: left">
-                        <canvas id="canvasImgFrag" class="canvasInline" width="400" height="400"></canvas>
-                        <canvas id="canvasImgFrag_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
+                        <span>
+                        kernel size:
+                    </span>
+                        <input type="text" style="width: 40px; display: inline-block" onchange="setKernelVal()" min="1" max="7" value="3" id="cannyKernelSize">
+                        <span>
+                        ratio size:
+                    </span>
+                        <input type="text" style="width: 40px; display: inline-block" onchange="setRatioVal()" min="1" max="100" value="3" id="cannyRatio">
+                        <span>
+                        Area threshold:
+                    </span>
+                        <input type="text" style="width: 40px; display: inline-block" onchange="setAreaThresh()" min="1" max="1000" value="600" id="areaThresh">
                     </div>
                 </div>
-                <div class="carousel-item">
-                    <div class="canvasWrapper" style="float: left">
-                        <canvas id="canvasImgFrag200" class="canvasInline" width="200" height="200" style="width: 400px;height: 400px"></canvas>
-                        <canvas id="canvasImgFrag200_ui" class="canvasInline canvasUILayer" width="200" height="200" style="width: 400px;height: 400px"></canvas>
-                    </div>
-                </div>
-                <div class="carousel-item">
-                    <div class="canvasWrapper" style="float: left">
-                        <canvas id="canvasImgFrag32" class="canvasInline" width="32" height="32" style="width: 400px;height: 400px"></canvas>
-                        <canvas id="canvasImgFrag32_ui" class="canvasInline canvasUILayer" width="32" height="32" style="width: 400px;height: 400px"></canvas>
-                    </div>
+                <div>results</div>
+                <hr>
+                <div id="shapelist2" style="max-width: 300px; height: 400px; overflow: scroll">
+                    <pre>shape list goes here...</pre>
                 </div>
             </div>
-            <a class="carousel-control-prev" href="#carouselExampleControls" role="button" data-slide="prev">
-                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                <span class="sr-only">Previous</span>
-            </a>
-            <a class="carousel-control-next" href="#carouselExampleControls" role="button" data-slide="next">
-                <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                <span class="sr-only">Next</span>
-            </a>
-        </div>
-        <div style="max-width: 800px;">
-            <span>
-                blur size:
-            </span>
-            <input type="text" style="width: 40px; display: inline-block" onchange="setBlurVal()" min="1" max="40" value="3" id="cannyBlurSize">
 
-            <span>
-                kernel size:
-            </span>
-            <input type="text" style="width: 40px; display: inline-block" onchange="setKernelVal()" min="1" max="7" value="3" id="cannyKernelSize">
-            <span>
-                ratio size:
-            </span>
-            <input type="text" style="width: 40px; display: inline-block" onchange="setRatioVal()" min="1" max="100" value="3" id="cannyRatio">
-            <span>
-                Area threshold:
-            </span>
-            <input type="text" style="width: 40px; display: inline-block" onchange="setAreaThresh()" min="1" max="1000" value="600" id="areaThresh">
+            <div style="float: left">
+                <div style="float: left">
+                    <ul class="nav nav-tabs">
+                        <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#home">Main</a></li>
+                        <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#home_1">Shapes</a></li>
+                        <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#menu1">Shapes W/ Excluded</a></li>
+                        <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#menu2">Contours</a></li>
+                        <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#menu3">Edge Image</a></li>
+                    </ul>
+                    <div class="tab-content">
+                        <div id="home" class="tab-pane active">
+                            <div class="clearfix">
+                                <div class="canvasWrapper canvasWrapperLeft" width="600" height="600">
+                                    <canvas id="lookupCanvas" class="canvasInline" width="600" height="600"></canvas>
+                                    <canvas id="lookupCanvas_ui" class="canvasInline canvasUILayer" width="600" height="600"></canvas>
+                                </div>
+                                <div class="canvasWrapper canvasWrapperRight" width="600" height="600">
+                                    <canvas id="databaseCanvas" class="canvasInline" width="600" height="600"></canvas>
+                                    <canvas id="databaseCanvas_ui" class="canvasInline canvasUILayer" width="600" height="600"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="home_1" class="tab-pane">
+                            <div class="clearfix">
+                                <div class="canvasWrapper canvasWrapperLeft" width="600" height="600">
+                                    <canvas id="canvasImgEdgeHullValidLeft" class="canvasInline" width="600" height="600"></canvas>
+                                    <canvas id="canvasImgEdgeHullValidLeft_ui" class="canvasInline canvasUILayer" width="600" height="600"></canvas>
+                                </div>
+                                <div class="canvasWrapper canvasWrapperRight" width="600" height="600">
+                                    <canvas id="canvasImgEdgeHullValidRight" class="canvasInline" width="600" height="600"></canvas>
+                                    <canvas id="canvasImgEdgeHullValidRight_ui" class="canvasInline canvasUILayer" width="600" height="600"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="menu1" class="tab-pane">
+                            <div class="clearfix">
+                                <div class="canvasWrapper canvasWrapperLeft" width="600" height="600">
+                                    <canvas id="canvasImgEdgeContoursLeft" class="canvasInline" width="600" height="600"></canvas>
+                                    <canvas id="canvasImgEdgeContoursLeft_ui" class="canvasInline canvasUILayer" width="600" height="600"></canvas>
+                                </div>
+                                <div class="canvasWrapper canvasWrapperRight" width="600" height="600">
+                                    <canvas id="canvasImgEdgeContoursRight" class="canvasInline" width="600" height="600"></canvas>
+                                    <canvas id="canvasImgEdgeContoursRight_ui" class="canvasInline canvasUILayer" width="600" height="600"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="menu2" class="tab-pane">
+                            <div class="clearfix">
+                                <div class="canvasWrapper canvasWrapperLeft" width="600" height="600">
+                                    <canvas id="contoursImageLeft" class="canvasInline" width="600" height="600"></canvas>
+                                    <canvas id="contoursImageLeft_ui" class="canvasInline canvasUILayer" width="600" height="600"></canvas>
+                                </div>
+                                <div class="canvasWrapper canvasWrapperRight" width="600" height="600">
+                                    <canvas id="contoursImageRight" class="canvasInline" width="600" height="600"></canvas>
+                                    <canvas id="contoursImageRight_ui" class="canvasInline canvasUILayer" width="600" height="600"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="menu3" class="tab-pane">
+                            <div class="clearfix">
+                                <div class="canvasWrapper canvasWrapperLeft" width="600" height="600">
+                                    <canvas id="canvasEdgeImageLeft" class="canvasInline" width="600" height="600"></canvas>
+                                    <canvas id="canvasEdgeImageLeft_ui" class="canvasInline canvasUILayer" width="600" height="600"></canvas>
+                                </div>
+                                <div class="canvasWrapper canvasWrapperRight" width="600" height="600">
+                                    <canvas id="canvasEdgeImageRight" class="canvasInline" width="600" height="600"></canvas>
+                                    <canvas id="canvasEdgeImageRight_ui" class="canvasInline canvasUILayer" width="600" height="600"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div style="">
+                    <span>
+                        <img src="images/basicshapes.png"           onclick="loadImage(this.src)" class="imgThumbForSelection">
+                    </span>
+                        <span>
+                        <img src="images/IMG_20191024_130833.jpg"   onclick="loadImage(this.src)" class="imgThumbForSelection">
+                    </span>
+                        <span>
+                        <img src="images/richandmalty.jpg"          onclick="loadImage(this.src)" class="imgThumbForSelection">
+                    </span>
+                        <span>
+                        <img src="images/richandmalty400px.png"     onclick="loadImage(this.src)" class="imgThumbForSelection">
+                    </span>
+                        <span>
+                        <img src="images/Total_Rickall.webp"        onclick="loadImage(this.src)" class="imgThumbForSelection">
+                    </span>
+                        <span>
+                        <img src="images/googlelogo.webp"           onclick="loadImage(this.src)" class="imgThumbForSelection">
+                    </span>
+                        <span>
+                        <img src="images/font.jpg"           onclick="loadImage(this.src)" class="imgThumbForSelection">
+                    </span>
+                        <span>
+                        <img src="images/forest.jpg"           onclick="loadImage(this.src)" class="imgThumbForSelection">
+                    </span>
+                    </div>
+                </div>
+                <div class="clearfix">
+                    <div class="canvasWrapper" style="float: left; width: 400px; height: 400px" >
+                        <canvas id="lookupCanvasFrag" class="canvasInline" width="400" height="400"></canvas>
+                        <canvas id="lookupCanvasFrag_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
+                    </div>
+                    <div class="canvasWrapper" style="float: left; width: 400px; height: 400px">
+                        <canvas id="databaseCanvasFrag" class="canvasInline" width="400" height="400"></canvas>
+                        <canvas id="databaseCanvasFrag_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
+                    </div>
+                </div>
+            </div>
+
+
         </div>
 
         <div>
             <p>Results</p>
             <div class="clearfix">
-                <div id="shapelist2" style="max-width: 300px; height: 400px; overflow: scroll; float: left">
-                    <pre>shape list goes here...</pre>
-                </div>
                 <div class="canvasWrapper" style="height: 400px; width: 400px">
                     <canvas id="shapeDemoResult" class="canvasInline" width="400" height="400"></canvas>
                     <canvas id="shapeDemoResult_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
@@ -366,62 +444,21 @@
             </div>
         </div>
 
-
-        <div class="clearfix largeCanvas">
-            <div class="canvasWrapper" style="float: left">
-                <canvas id="canvasImgEdgeHullValidLeft" class="canvasInline" width="400" height="400"></canvas>
-                <canvas id="canvasImgEdgeHullValidLeft_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
-            </div>
-            <div class="canvasWrapper" style="float: left">
-                <canvas id="canvasImgEdgeHullValidRight" class="canvasInline" width="400" height="400"></canvas>
-                <canvas id="canvasImgEdgeHullValidRight_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
-            </div>
-        </div>
-        <div class="clearfix largeCanvas">
-            <div class="canvasWrapper" style="float: left">
-                <canvas id="canvasImgEdgeContoursLeft" class="canvasInline" width="400" height="400"></canvas>
-                <canvas id="canvasImgEdgeContoursLeft_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
-            </div>
-            <div class="canvasWrapper" style="float: left">
-                <canvas id="canvasImgEdgeContoursRight" class="canvasInline" width="400" height="400"></canvas>
-                <canvas id="canvasImgEdgeContoursRight_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
-            </div>
-        </div>
-        <div class="clearfix largeCanvas">
-            <div class="canvasWrapper" style="float: left">
-                <canvas id="bluredGreyOutputImage" class="canvasInline" width="400" height="400"></canvas>
-                <canvas id="bluredGreyOutputImage_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
-            </div>
-            <div class="canvasWrapper" style="float: left">
-                <canvas id="bluredGreyOutputImageRight" class="canvasInline" width="400" height="400"></canvas>
-                <canvas id="bluredGreyOutputImageRight_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
-            </div>
-        </div>
-        <div class="clearfix largeCanvas">
-            <div class="canvasWrapper" style="float: left">
-                <canvas id="canvasImgEdge" class="canvasInline" width="400" height="400"></canvas>
-                <canvas id="canvasImgEdge_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
-            </div>
-            <div class="canvasWrapper" style="float: left">
-                <canvas id="canvasImgEdgeRight" class="canvasInline" width="400" height="400"></canvas>
-                <canvas id="canvasImgEdgeRight_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
-            </div>
-        </div>
         <div>
             <p>Click and see hashes</p>
             <div class="clearfix">
                 <div id="clickandseeListLeft" style="max-width: 300px; height: 400px; overflow: scroll; float: left">
                     <pre>shape list goes here...</pre>
                 </div>
-                <div class="canvasWrapper" style="border: 3px solid red; float: left">
+                <div class="canvasWrapper canvasFragment">
                     <canvas id="clickandseeImageLeft" class="canvasInline" width="400" height="400"></canvas>
                     <canvas id="clickandseeImageLeft_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
                 </div>
-                <div class="canvasWrapper" style="float: left">
+                <div class="canvasWrapper canvasFragment">
                     <canvas id="clickandseeImageRight" class="canvasInline" width="400" height="400"></canvas>
                     <canvas id="clickandseeImageRight_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
                 </div>
-                <div id="clickandseeListRight" style="max-width: 300px; height: 400px; overflow: scroll; float: left">
+                <div id="clickandseeListRight" style="max-width: 300px; height: 400px; overflow: scroll">
                     <pre>shape list goes here...</pre>
                 </div>
 
@@ -429,31 +466,31 @@
             <div id="carouselclickandseeOutputFragments" style="width: 804px;" class="carousel slide" data-interval="false" data-ride="carousel">
                 <div class="carousel-inner">
                     <div class="carousel-item active">
-                        <div class="canvasWrapper" style="float: left">
+                        <div class="canvasWrapper canvasFragment">
                             <canvas id="clickandseeFragLeft400" class="canvasInline" width="400" height="400"></canvas>
                             <canvas id="clickandseeFragLeft400_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
                         </div>
-                        <div class="canvasWrapper" style="float: left">
+                        <div class="canvasWrapper canvasFragment">
                             <canvas id="clickandseeFragRight400" class="canvasInline" width="400" height="400"></canvas>
                             <canvas id="clickandseeFragRight400_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
                         </div>
                     </div>
                     <div class="carousel-item">
-                        <div class="canvasWrapper" style="float: left">
+                        <div class="canvasWrapper canvasFragment">
                             <canvas id="clickandseeFragLeft200" class="canvasInline" width="200" height="200" style="width: 400px;height: 400px"></canvas>
                             <canvas id="clickandseeFragLeft200_ui" class="canvasInline canvasUILayer" width="200" height="200" style="width: 400px;height: 400px"></canvas>
                         </div>
-                        <div class="canvasWrapper" style="float: left">
+                        <div class="canvasWrapper canvasFragment">
                             <canvas id="clickandseeFragRight200" class="canvasInline" width="200" height="200" style="width: 400px;height: 400px"></canvas>
                             <canvas id="clickandseeFragRight200_ui" class="canvasInline canvasUILayer" width="200" height="200" style="width: 400px;height: 400px"></canvas>
                         </div>
                     </div>
                     <div class="carousel-item">
-                        <div class="canvasWrapper" style="float: left">
+                        <div class="canvasWrapper canvasFragment">
                             <canvas id="clickandseeFragLeft32" class="canvasInline" width="32" height="32" style="width: 400px;height: 400px"></canvas>
                             <canvas id="clickandseeFragLeft32_ui" class="canvasInline canvasUILayer" width="32" height="32" style="width: 400px;height: 400px"></canvas>
                         </div>
-                        <div class="canvasWrapper" style="float: left">
+                        <div class="canvasWrapper canvasFragment">
                             <canvas id="clickandseeFragRight32" class="canvasInline" width="32" height="32" style="width: 400px;height: 400px"></canvas>
                             <canvas id="clickandseeFragRight32_ui" class="canvasInline canvasUILayer" width="32" height="32" style="width: 400px;height: 400px"></canvas>
                         </div>
@@ -473,7 +510,36 @@
 
     </div>
 
-
+    <div id="carouselExampleControls" style="width: 402px;" class="carousel slide" data-interval="false" data-ride="carousel">
+        <div class="carousel-inner">
+            <div class="carousel-item active">
+                <div class="canvasWrapper canvasFragment">
+                    <canvas id="canvasImgFrag" class="canvasInline" width="400" height="400"></canvas>
+                    <canvas id="canvasImgFrag_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
+                </div>
+            </div>
+            <div class="carousel-item">
+                <div class="canvasWrapper canvasFragment">
+                    <canvas id="canvasImgFrag200" class="canvasInline" width="200" height="200" style="width: 400px;height: 400px"></canvas>
+                    <canvas id="canvasImgFrag200_ui" class="canvasInline canvasUILayer" width="200" height="200" style="width: 400px;height: 400px"></canvas>
+                </div>
+            </div>
+            <div class="carousel-item">
+                <div class="canvasWrapper canvasFragment">
+                    <canvas id="canvasImgFrag32" class="canvasInline" width="32" height="32" style="width: 400px;height: 400px"></canvas>
+                    <canvas id="canvasImgFrag32_ui" class="canvasInline canvasUILayer" width="32" height="32" style="width: 400px;height: 400px"></canvas>
+                </div>
+            </div>
+        </div>
+        <a class="carousel-control-prev" href="#carouselExampleControls" role="button" data-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="sr-only">Previous</span>
+        </a>
+        <a class="carousel-control-next" href="#carouselExampleControls" role="button" data-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="sr-only">Next</span>
+        </a>
+    </div>
 
   </body>
 
@@ -591,7 +657,7 @@
               create_buffer: Module.create_buffer,
           };
 
-          main(Module);
+          main();
       };
 
   </script>

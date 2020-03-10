@@ -417,6 +417,7 @@ function mouseUpEvent() {
         handleMouseUp();
         g_transformState.isMouseDownAndClickedOnCanvas = false;
         loadEdgeImages();
+        findMatches();
     }
 }
 
@@ -632,6 +633,8 @@ $("#" + INTERACTIVE_CANVAS_OVERLAY_ID).mouseup(function (e) {
 
 $("#" + DATABASE_CANVAS_OVERLAY_ID).mousedown(function (e) {
     e.preventDefault();
+
+    g_flushCache = true;
 
     g_transformState.activeCanvas = g_transformState.databaseCanvasState;
 

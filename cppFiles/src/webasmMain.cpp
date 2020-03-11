@@ -105,7 +105,6 @@ std::string findMatchesForImageFromCanvas(
             200,//int areaThresh=200
             flush_cache
     );
-    cout << vec.size() << endl;
     std::cout << "findMatchesForImageFromCanvas called, with this many matches: " << vec.size() << std::endl;
 
     std::stringstream polygonString;

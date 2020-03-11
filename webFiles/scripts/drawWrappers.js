@@ -96,10 +96,6 @@ function drawPolyFull(ctx, shape, stroke, fill) {
 function drawImageWithTransformations(ctx, img, mat, offset) {
     offset = (offset == undefined)? [0,0] : offset;
 
-    ctx.imageSmoothingEnabled = true;
-    ctx.webkitImageSmoothingEnabled = true;
-    ctx.mozImageSmoothingEnabled = true;
-
     ctx.save();
     canvasTransform(ctx, mat);
     ctx.drawImage(img, offset[0], offset[1]);
@@ -107,10 +103,6 @@ function drawImageWithTransformations(ctx, img, mat, offset) {
 }
 
 function drawImageWithTransformations_put(ctx, imgdata, mat) {
-    ctx.imageSmoothingEnabled = true;
-    ctx.webkitImageSmoothingEnabled = true;
-    ctx.mozImageSmoothingEnabled = true;
-
     ctx.save();
     canvasTransform(ctx, mat);
     ctx.putImageData(imgdata, 0, 0);

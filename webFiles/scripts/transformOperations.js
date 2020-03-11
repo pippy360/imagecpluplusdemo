@@ -511,13 +511,13 @@ var g_globalState = {
 function updateClickAndSeeImage() {
 
     const lookupCanvas = getCanvas("lookupCanvas");
-
-    const c_shapeDemo2 = getCleanCanvas("shapeDemoResult");
     const c_clickandseeImageLeft = getCleanCanvas("clickandseeImageLeft");
-    //FIXME: just redraw the canvas contentss
-
     c_clickandseeImageLeft.ctx.drawImage(lookupCanvas.c, 0, 0);
-    c_shapeDemo2.ctx.drawImage(lookupCanvas.c, 0, 0);
+
+    const databaseCanvas = getCanvas("databaseCanvas");
+    const c_clickandseeImageRight = getCleanCanvas("clickandseeImageRight");
+    c_clickandseeImageRight.ctx.drawImage(databaseCanvas.c, 0, 0);
+
 }
 
 function draw() {
@@ -548,8 +548,8 @@ function draw() {
 
     let width = c_lookupCanvas.c.width;
     let height = c_lookupCanvas.c.height;
-    drawline_m(c_lookupCanvas.ctx_ui, [[0, height/2], [width, height/2]], 'red');
-    drawline_m(c_lookupCanvas.ctx_ui, [[width/2, 0], [width/2, height]], 'red');
+    // drawline_m(c_lookupCanvas.ctx_ui, [[0, height/2], [width, height/2]], 'red');
+    // drawline_m(c_lookupCanvas.ctx_ui, [[width/2, 0], [width/2, height]], 'red');
 
     //drawRotationEffect(pageMousePosition);
 

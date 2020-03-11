@@ -24,13 +24,13 @@ public:
         size_(size),
         val_(emscripten::typed_memory_view(size, ptr))
     {
-        std::cout << "ptr created with size " << size_ << std::endl;
+//        std::cout << "ptr created with size " << size_ << std::endl;
 
     }
 
     ~ValWrapper()
     {
-        std::cout << "ptr free with size " << size_ << std::endl;
+//        std::cout << "ptr free with size " << size_ << std::endl;
         free(ptr_);
     }
     unsigned char *ptr_;
@@ -66,7 +66,7 @@ string calcMatrixFromString(string shapeStr, int output_width=400, double zoom=1
     std::stringstream polygonString;
     polygonString << "{ \"mat\" : [";
     double *data = (double *) m.data;
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 2; i++) {
         if (i > 0)
             polygonString << ",";
 
@@ -79,7 +79,7 @@ string calcMatrixFromString(string shapeStr, int output_width=400, double zoom=1
         }
         polygonString << "]";
     }
-    polygonString << "]}";
+    polygonString << ",[0,0,1]]}";
     return polygonString.str();
 }
 

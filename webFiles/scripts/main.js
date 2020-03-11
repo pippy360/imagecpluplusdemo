@@ -9,59 +9,60 @@ let g_flushCache = true;
 let g_leftSelected;
 let g_rightSelected;
 
-function drawshapefromClickandseeLeft(shapeStr1) {
-    console.log("drawshapefromClickandseeLeft called with: "+shapeStr1);
-    drawShapeAndFragmentClickAndSee(
-        canvas_inserted_in_database_wasm_heap.ptr,
-        canvas_inserted_in_database_wasm_heap.width,
-        canvas_inserted_in_database_wasm_heap.height,
-        shapeStr1, 256, "clickandseeFragLeft");
-
-    drawShapeAndFragmentClickAndSee(
-        canvas_inserted_in_database_wasm_heap.ptr,
-        canvas_inserted_in_database_wasm_heap.width,
-        canvas_inserted_in_database_wasm_heap.height,
-        shapeStr1, 128, "clickandseeFragLeft");
-
-    drawShapeAndFragmentClickAndSee(
-        canvas_inserted_in_database_wasm_heap.ptr,
-        canvas_inserted_in_database_wasm_heap.width,
-        canvas_inserted_in_database_wasm_heap.height,
-        shapeStr1, 32, "clickandseeFragLeft");
-}
-
 function drawshapefromClickandseeRight(shapeStr1) {
 
     drawShapeAndFragmentClickAndSee(
-        lookup_canvas_wasm_heap.ptr,
-        lookup_canvas_wasm_heap.width,
-        lookup_canvas_wasm_heap.height,
+        canvas_inserted_in_database_wasm_heap.ptr,
+        canvas_inserted_in_database_wasm_heap.width,
+        canvas_inserted_in_database_wasm_heap.height,
         shapeStr1, 256, "clickandseeFragRight");
 
     drawShapeAndFragmentClickAndSee(
-        lookup_canvas_wasm_heap.ptr,
-        lookup_canvas_wasm_heap.width,
-        lookup_canvas_wasm_heap.height,
+        canvas_inserted_in_database_wasm_heap.ptr,
+        canvas_inserted_in_database_wasm_heap.width,
+        canvas_inserted_in_database_wasm_heap.height,
         shapeStr1, 128, "clickandseeFragRight");
+
+    drawShapeAndFragmentClickAndSee(
+        canvas_inserted_in_database_wasm_heap.ptr,
+        canvas_inserted_in_database_wasm_heap.width,
+        canvas_inserted_in_database_wasm_heap.height,
+        shapeStr1, 32, "clickandseeFragRight");
+}
+
+function drawshapefromClickandseeLeft(shapeStr1) {
 
     drawShapeAndFragmentClickAndSee(
         lookup_canvas_wasm_heap.ptr,
         lookup_canvas_wasm_heap.width,
         lookup_canvas_wasm_heap.height,
-        shapeStr1, 32, "clickandseeFragRight");
+        shapeStr1, 256, "clickandseeFragLeft");
+
+    drawShapeAndFragmentClickAndSee(
+        lookup_canvas_wasm_heap.ptr,
+        lookup_canvas_wasm_heap.width,
+        lookup_canvas_wasm_heap.height,
+        shapeStr1, 128, "clickandseeFragLeft");
+
+    drawShapeAndFragmentClickAndSee(
+        lookup_canvas_wasm_heap.ptr,
+        lookup_canvas_wasm_heap.width,
+        lookup_canvas_wasm_heap.height,
+        shapeStr1, 32, "clickandseeFragLeft");
 }
 
 function parseClickandseeShapesLeft(shapes) {
-    var lines = shapes.split('\n');
+    if (shapes.length == 0) {
+        return;
+    }
+    const lines = shapes.split('\n').filter(function (el) {
+        return el.length > 0;
+    });
     const list = document.getElementById("clickandseeListLeft");
     list.innerHTML = "";
 
     const can = getCleanUICanvas("clickandseeImageLeft");
-    for (let i = 0;i < lines.length;i++){
-
-        if (lines[i] == "")
-            continue;
-
+    for (let i = 0;i < lines.length;i++) {
         let opt = lines[i];
         let el = document.createElement("div");
         el.innerHTML = `<div class='shapeListEl' onmouseover="drawshapefromClickandseeLeft('${opt}')" id='clickandseeShapeListElm${i}'>-----${i}</div>`;
@@ -69,19 +70,22 @@ function parseClickandseeShapesLeft(shapes) {
 
         drawPolyFull(can.ctx_ui, shapeStrToShape(opt), 'rgb(45, 0, 255)', 'rgba(45, 0, 255, 0.6)');
     }
+    if (lines.length > 0)
+        drawshapefromClickandseeLeft(lines[0]);
 }
 
 function parseClickandseeShapesRight(shapes) {
-    var lines = shapes.split('\n');
+    if (shapes.length == 0) {
+        return;
+    }
+    const lines = shapes.split('\n').filter(function (el) {
+        return el.length > 0;
+    });
     const list = document.getElementById("clickandseeListRight");
     list.innerHTML = "";
 
     const can = getCleanUICanvas("clickandseeImageRight");
-    for (let i = 0;i < lines.length;i++){
-
-        if (lines[i] == "")
-            continue;
-
+    for (let i = 0;i < lines.length;i++) {
         let opt = lines[i];
         let el = document.createElement("div");
         el.innerHTML = `<div class='shapeListEl' onmouseover="drawshapefromClickandseeRight('${opt}')" id='clickandseeShapeListElm${i}'>-----${i}</div>`;
@@ -89,6 +93,8 @@ function parseClickandseeShapesRight(shapes) {
 
         drawPolyFull(can.ctx_ui, shapeStrToShape(opt), 'rgb(45, 0, 255)', 'rgba(45, 0, 255, 0.6)');
     }
+    if (lines.length > 0)
+        drawshapefromClickandseeRight(lines[0]);
 }
 
 function getShapeWithPointInsideLeft(x, y) {
@@ -115,36 +121,37 @@ function getShapeWithPointInsideRight(x, y) {
     return shapeStr;
 }
 
+function getShapeWithPointInsideCommon(e, canvasId, getShapeWithPointInsideFunc) {
+    var canvasElem = $("#"+canvasId+"_ui")[0];
+    const canvasMousePosition = getCurrentCanvasMousePosition(e, canvasElem);
+    let canvasElemObj = getCleanUICanvas(canvasId);
 
+    const res = getShapeWithPointInsideFunc(canvasMousePosition[0], canvasMousePosition[1]);
+
+    let canvasElemCtx = canvasElemObj.ctx_ui;
+    drawline_m(canvasElemCtx, [[0, canvasMousePosition[1]], [canvasElemObj.c.width, canvasMousePosition[1]]], 'red');
+    drawline_m(canvasElemCtx, [[canvasMousePosition[0], 0], [canvasMousePosition[0], canvasElemObj.c.height]], 'red');
+    return res;
+}
 
 $("#clickandseeImageLeft_ui").mousemove(function (e) {
     if (!module || g_leftSelected) {
         return;
     }
-    var canvasElem = $("#clickandseeImageLeft_ui")[0];
-    const canvasMousePosition = getCurrentCanvasMousePosition(e, canvasElem);
-    let canvasElemObj = getCleanUICanvas("clickandseeImageLeft");
-
-    getShapeWithPointInsideLeft(canvasMousePosition[0], canvasMousePosition[1]);
-
-    let canvasElemCtx = canvasElemObj.ctx_ui;
-    drawline_m(canvasElemCtx, [[0, canvasMousePosition[1]], [canvasElemObj.c.width, canvasMousePosition[1]]], 'red');
-    drawline_m(canvasElemCtx, [[canvasMousePosition[0], 0], [canvasMousePosition[0], canvasElemObj.c.height]], 'red');
+    getShapeWithPointInsideCommon(e, "clickandseeImageLeft", getShapeWithPointInsideLeft);
 });
 
 $("#clickandseeImageLeft_ui").click(function (e) {
     if (!module) {
         return;
     }
-    var canvasElem = $("#clickandseeImageLeft_ui")[0];
-    const canvasMousePosition = getCurrentCanvasMousePosition(e, canvasElem);
-    let canvasElemObj = getCleanUICanvas("clickandseeImageLeft");
 
-    g_leftSelected = getShapeWithPointInsideLeft(canvasMousePosition[0], canvasMousePosition[1]);
-
-    let canvasElemCtx = canvasElemObj.ctx_ui;
-    drawline_m(canvasElemCtx, [[0, canvasMousePosition[1]], [canvasElemObj.c.width, canvasMousePosition[1]]], 'red');
-    drawline_m(canvasElemCtx, [[canvasMousePosition[0], 0], [canvasMousePosition[0], canvasElemObj.c.height]], 'red');
+    if (g_leftSelected) {
+        g_leftSelected = null;
+        getShapeWithPointInsideCommon(e, "clickandseeImageLeft", getShapeWithPointInsideLeft);
+    } else {
+        g_leftSelected = getShapeWithPointInsideCommon(e, "clickandseeImageLeft", getShapeWithPointInsideLeft);
+    }
 });
 
 $("#clickandseeImageRight_ui").mousemove(function (e) {
@@ -152,31 +159,19 @@ $("#clickandseeImageRight_ui").mousemove(function (e) {
         return;
     }
 
-    var canvasElem = $("#clickandseeImageRight_ui")[0];
-    const canvasMousePosition = getCurrentCanvasMousePosition(e, canvasElem);
-    let canvasElemObj = getCleanUICanvas("clickandseeImageRight");
-
-    getShapeWithPointInsideRight(canvasMousePosition[0], canvasMousePosition[1]);
-
-    let canvasElemCtx = canvasElemObj.ctx_ui;
-    drawline_m(canvasElemCtx, [[0, canvasMousePosition[1]], [canvasElemObj.c.width, canvasMousePosition[1]]], 'red');
-    drawline_m(canvasElemCtx, [[canvasMousePosition[0], 0], [canvasMousePosition[0], canvasElemObj.c.height]], 'red');
+    getShapeWithPointInsideCommon(e, "clickandseeImageRight", getShapeWithPointInsideRight);
 });
 
 $("#clickandseeImageRight_ui").click(function (e) {
     if (!module) {
         return;
     }
-
-    var canvasElem = $("#clickandseeImageRight_ui")[0];
-    const canvasMousePosition = getCurrentCanvasMousePosition(e, canvasElem);
-    let canvasElemObj = getCleanUICanvas("clickandseeImageRight");
-
-    g_rightSelected = getShapeWithPointInsideRight(canvasMousePosition[0], canvasMousePosition[1]);
-
-    let canvasElemCtx = canvasElemObj.ctx_ui;
-    drawline_m(canvasElemCtx, [[0, canvasMousePosition[1]], [canvasElemObj.c.width, canvasMousePosition[1]]], 'red');
-    drawline_m(canvasElemCtx, [[canvasMousePosition[0], 0], [canvasMousePosition[0], canvasElemObj.c.height]], 'red');
+    if (g_rightSelected) {
+        g_rightSelected = null;
+        getShapeWithPointInsideCommon(e, "clickandseeImageRight", getShapeWithPointInsideRight);
+    } else {
+        g_rightSelected = getShapeWithPointInsideCommon(e, "clickandseeImageRight", getShapeWithPointInsideRight);
+    }
 });
 
 function setAreaThresh() {
@@ -247,7 +242,6 @@ function drawShapeAndFragmentClickAndSee(imageHeap, width, height, shapeStr, sha
     const edgeImageOut5 = new ImageData(new Uint8ClampedArray(valHolder.outputImage2.val_),
         shapeSize, shapeSize);
 
-    console.log("clean: " + canvasId + shapeSize );
     const ctxOutImage200 = getCleanCanvas(canvasId + shapeSize);
 
     ctxOutImage200.ctx.putImageData(edgeImageOut5, 0, 0);
@@ -255,7 +249,6 @@ function drawShapeAndFragmentClickAndSee(imageHeap, width, height, shapeStr, sha
     const bval = module.calcMatrixFromString(shapeStr, shapeSize, zoom);
     const matrix = JSON.parse(bval)["mat"];
     const transshape = applyTransformationMatrixToAllPoints(shapeStrToShape(shapeStr), matrix);
-    console.log("draw" + transshape);
     drawPolyFull(ctxOutImage200.ctx_ui, transshape, 'rgb(45, 0, 255)', 'rgba(45, 0, 255, 0.1)');
     valHolder.delete();
 }

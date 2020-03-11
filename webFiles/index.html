@@ -19,8 +19,8 @@
               /*height: 402px;*/
           }
           .canvasFragment {
-              width: 402px;
-              height: 402px;
+              width: 258px;
+              height: 258px;
               float: left;
           }
           .tab-content .canvasWrapperRight{
@@ -427,60 +427,65 @@
                 <div id="clickandseeListLeft" style="width: 150px; height: 700px; overflow: scroll; float: left">
                     <pre>shape list goes here...</pre>
                 </div>
-                <div class="canvasWrapper" style="width: 600px; height: 600px; float: left">
-                    <canvas id="clickandseeImageLeft" class="canvasInline" width="600" height="600"></canvas>
-                    <canvas id="clickandseeImageLeft_ui" class="canvasInline canvasUILayer" width="600" height="600"></canvas>
-                </div>
-                <div class="canvasWrapper" style="width: 600px; height: 600px; float: left">
-                    <canvas id="clickandseeImageRight" class="canvasInline" width="600" height="600"></canvas>
-                    <canvas id="clickandseeImageRight_ui" class="canvasInline canvasUILayer" width="600" height="600"></canvas>
+                <div style="float: left">
+                    <div class="clearfix">
+                        <div class="canvasWrapper" style="width: 600px; height: 600px; float: left">
+                            <canvas id="clickandseeImageLeft" class="canvasInline" width="600" height="600"></canvas>
+                            <canvas id="clickandseeImageLeft_ui" class="canvasInline canvasUILayer" width="600" height="600"></canvas>
+                        </div>
+                        <div class="canvasWrapper" style="width: 600px; height: 600px; float: left">
+                            <canvas id="clickandseeImageRight" class="canvasInline" width="600" height="600"></canvas>
+                            <canvas id="clickandseeImageRight_ui" class="canvasInline canvasUILayer" width="600" height="600"></canvas>
+                        </div>
+                    </div>
+                    <div id="carouselclickandseeOutputFragments" style="width: 804px;" class="carousel slide" data-interval="false" data-ride="carousel">
+                        <div class="carousel-inner">
+                            <div class="carousel-item active">
+                                <div class="canvasWrapper canvasFragment">
+                                    <canvas id="clickandseeFragLeft256" class="canvasInline" width="256" height="256"></canvas>
+                                    <canvas id="clickandseeFragLeft256_ui" class="canvasInline canvasUILayer" width="256" height="256"></canvas>
+                                </div>
+                                <div class="canvasWrapper canvasFragment">
+                                    <canvas id="clickandseeFragRight256" class="canvasInline" width="256" height="256"></canvas>
+                                    <canvas id="clickandseeFragRight256_ui" class="canvasInline canvasUILayer" width="256" height="256"></canvas>
+                                </div>
+                            </div>
+                            <div class="carousel-item">
+                                <div class="canvasWrapper canvasFragment">
+                                    <canvas id="clickandseeFragLeft128" class="canvasInline" width="128" height="128" style="width: 256px;height: 256px"></canvas>
+                                    <canvas id="clickandseeFragLeft128_ui" class="canvasInline canvasUILayer" width="128" height="128" style="width: 256px;height: 256px"></canvas>
+                                </div>
+                                <div class="canvasWrapper canvasFragment">
+                                    <canvas id="clickandseeFragRight128" class="canvasInline" width="128" height="128" style="width: 256px;height: 256px"></canvas>
+                                    <canvas id="clickandseeFragRight128_ui" class="canvasInline canvasUILayer" width="128" height="128" style="width: 256px;height: 256px"></canvas>
+                                </div>
+                            </div>
+                            <div class="carousel-item">
+                                <div class="canvasWrapper canvasFragment">
+                                    <canvas id="clickandseeFragLeft32" class="canvasInline" width="32" height="32" style="width: 256px;height: 256px"></canvas>
+                                    <canvas id="clickandseeFragLeft32_ui" class="canvasInline canvasUILayer" width="32" height="32" style="width: 256px;height: 256px"></canvas>
+                                </div>
+                                <div class="canvasWrapper canvasFragment">
+                                    <canvas id="clickandseeFragRight32" class="canvasInline" width="32" height="32" style="width: 256px;height: 256px"></canvas>
+                                    <canvas id="clickandseeFragRight32_ui" class="canvasInline canvasUILayer" width="32" height="32" style="width: 256px;height: 256px"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <a class="carousel-control-prev" href="#carouselclickandseeOutputFragments" role="button" data-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="sr-only">Previous</span>
+                        </a>
+                        <a class="carousel-control-next" href="#carouselclickandseeOutputFragments" role="button" data-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span class="sr-only">Next</span>
+                        </a>
+
+                    </div>
+
                 </div>
                 <div id="clickandseeListRight" style="width: 150px; height: 700px; overflow: scroll; float: left">
                     <pre>shape list ∂goes here...</pre>
                 </div>
-
-            </div>
-            <div id="carouselclickandseeOutputFragments" style="width: 804px;" class="carousel slide" data-interval="false" data-ride="carousel">
-                <div class="carousel-inner">
-                    <div class="carousel-item active">
-                        <div class="canvasWrapper canvasFragment">
-                            <canvas id="clickandseeFragLeft400" class="canvasInline" width="400" height="400"></canvas>
-                            <canvas id="clickandseeFragLeft400_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
-                        </div>
-                        <div class="canvasWrapper canvasFragment">
-                            <canvas id="clickandseeFragRight400" class="canvasInline" width="400" height="400"></canvas>
-                            <canvas id="clickandseeFragRight400_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
-                        </div>
-                    </div>
-                    <div class="carousel-item">
-                        <div class="canvasWrapper canvasFragment">
-                            <canvas id="clickandseeFragLeft200" class="canvasInline" width="200" height="200" style="width: 400px;height: 400px"></canvas>
-                            <canvas id="clickandseeFragLeft200_ui" class="canvasInline canvasUILayer" width="200" height="200" style="width: 400px;height: 400px"></canvas>
-                        </div>
-                        <div class="canvasWrapper canvasFragment">
-                            <canvas id="clickandseeFragRight200" class="canvasInline" width="200" height="200" style="width: 400px;height: 400px"></canvas>
-                            <canvas id="clickandseeFragRight200_ui" class="canvasInline canvasUILayer" width="200" height="200" style="width: 400px;height: 400px"></canvas>
-                        </div>
-                    </div>
-                    <div class="carousel-item">
-                        <div class="canvasWrapper canvasFragment">
-                            <canvas id="clickandseeFragLeft32" class="canvasInline" width="32" height="32" style="width: 400px;height: 400px"></canvas>
-                            <canvas id="clickandseeFragLeft32_ui" class="canvasInline canvasUILayer" width="32" height="32" style="width: 400px;height: 400px"></canvas>
-                        </div>
-                        <div class="canvasWrapper canvasFragment">
-                            <canvas id="clickandseeFragRight32" class="canvasInline" width="32" height="32" style="width: 400px;height: 400px"></canvas>
-                            <canvas id="clickandseeFragRight32_ui" class="canvasInline canvasUILayer" width="32" height="32" style="width: 400px;height: 400px"></canvas>
-                        </div>
-                    </div>
-                </div>
-                <a class="carousel-control-prev" href="#carouselclickandseeOutputFragments" role="button" data-slide="prev">
-                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                    <span class="sr-only">Previous</span>
-                </a>
-                <a class="carousel-control-next" href="#carouselclickandseeOutputFragments" role="button" data-slide="next">
-                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                    <span class="sr-only">Next</span>
-                </a>
 
             </div>
         </div>

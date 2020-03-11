@@ -10,18 +10,18 @@ let g_leftSelected;
 let g_rightSelected;
 
 function drawshapefromClickandseeLeft(shapeStr1) {
+    console.log("drawshapefromClickandseeLeft called with: "+shapeStr1);
+    drawShapeAndFragmentClickAndSee(
+        canvas_inserted_in_database_wasm_heap.ptr,
+        canvas_inserted_in_database_wasm_heap.width,
+        canvas_inserted_in_database_wasm_heap.height,
+        shapeStr1, 256, "clickandseeFragLeft");
 
     drawShapeAndFragmentClickAndSee(
         canvas_inserted_in_database_wasm_heap.ptr,
         canvas_inserted_in_database_wasm_heap.width,
         canvas_inserted_in_database_wasm_heap.height,
-        shapeStr1, 400, "clickandseeFragLeft");
-
-    drawShapeAndFragmentClickAndSee(
-        canvas_inserted_in_database_wasm_heap.ptr,
-        canvas_inserted_in_database_wasm_heap.width,
-        canvas_inserted_in_database_wasm_heap.height,
-        shapeStr1, 200, "clickandseeFragLeft");
+        shapeStr1, 128, "clickandseeFragLeft");
 
     drawShapeAndFragmentClickAndSee(
         canvas_inserted_in_database_wasm_heap.ptr,
@@ -36,13 +36,13 @@ function drawshapefromClickandseeRight(shapeStr1) {
         lookup_canvas_wasm_heap.ptr,
         lookup_canvas_wasm_heap.width,
         lookup_canvas_wasm_heap.height,
-        shapeStr1, 400, "clickandseeFragRight");
+        shapeStr1, 256, "clickandseeFragRight");
 
     drawShapeAndFragmentClickAndSee(
         lookup_canvas_wasm_heap.ptr,
         lookup_canvas_wasm_heap.width,
         lookup_canvas_wasm_heap.height,
-        shapeStr1, 200, "clickandseeFragRight");
+        shapeStr1, 128, "clickandseeFragRight");
 
     drawShapeAndFragmentClickAndSee(
         lookup_canvas_wasm_heap.ptr,
@@ -247,18 +247,16 @@ function drawShapeAndFragmentClickAndSee(imageHeap, width, height, shapeStr, sha
     const edgeImageOut5 = new ImageData(new Uint8ClampedArray(valHolder.outputImage2.val_),
         shapeSize, shapeSize);
 
+    console.log("clean: " + canvasId + shapeSize );
     const ctxOutImage200 = getCleanCanvas(canvasId + shapeSize);
 
     ctxOutImage200.ctx.putImageData(edgeImageOut5, 0, 0);
 
     const bval = module.calcMatrixFromString(shapeStr, shapeSize, zoom);
-    const matrix = [
-        [bval[0], bval[1], bval[2]],
-        [bval[3], bval[4], bval[5]],
-        [bval[6], bval[7], bval[8]],
-    ];
+    const matrix = JSON.parse(bval)["mat"];
     const transshape = applyTransformationMatrixToAllPoints(shapeStrToShape(shapeStr), matrix);
-    drawPolyFull(ctxOutImage200.ctx_ui, transshape);
+    console.log("draw" + transshape);
+    drawPolyFull(ctxOutImage200.ctx_ui, transshape, 'rgb(45, 0, 255)', 'rgba(45, 0, 255, 0.1)');
     valHolder.delete();
 }
 
@@ -276,11 +274,8 @@ function drawShapeAndFragment(imageHeap, width, height, shapeStr, shapeSize, can
     ctxOutImage200.ctx.putImageData(edgeImageOut5, 0, 0);
 
     const bval = module.calcMatrixFromString(shapeStr, shapeSize, zoom);
-    const matrix = [
-        [bval[0], bval[1], bval[2]],
-        [bval[3], bval[4], bval[5]],
-        [bval[6], bval[7], bval[8]],
-    ];
+    const matrix = JSON.parse(bval)["mat"];
+
     const transshape = applyTransformationMatrixToAllPoints(shapeStrToShape(shapeStr), matrix);
     drawPolyFull(ctxOutImage200.ctx_ui, transshape, 'rgb(45, 0, 255)', 'rgba(45, 0, 255, 0.2)');
     valHolder.delete();
@@ -336,11 +331,8 @@ function drawshapefromlist(index, shapeStr) {
     const ctxOutImage = getCleanCanvas("canvasImgFrag");
     ctxOutImage.ctx.putImageData(edgeImageOut2, 0, 0);
     let bval = module.calcMatrixFromString(shapeStr, shapeSize, zoom);
-    let matrix = [
-        [bval[0], bval[1], bval[2]],
-        [bval[3], bval[4], bval[5]],
-        [bval[6], bval[7], bval[8]],
-    ];
+    let matrix = JSON.parse(bval)["mat"];
+
     let transshape = applyTransformationMatrixToAllPoints(global_shapes[index], matrix);
     drawPolyFull(ctxOutImage.ctx_ui, transshape);
 
@@ -358,11 +350,8 @@ function drawshapefromlist(index, shapeStr) {
     const ctxOutImage200 = getCleanCanvas("canvasImgFrag200");
     ctxOutImage200.ctx.putImageData(edgeImageOut5, 0, 0);
     bval = module.calcMatrixFromString(shapeStr, shapeSize, zoom);
-    matrix = [
-        [bval[0], bval[1], bval[2]],
-        [bval[3], bval[4], bval[5]],
-        [bval[6], bval[7], bval[8]],
-    ];
+    matrix = JSON.parse(bval)["mat"];
+
     transshape = applyTransformationMatrixToAllPoints(global_shapes[index], matrix);
     drawPolyFull(ctxOutImage200.ctx_ui, transshape);
 
@@ -380,11 +369,8 @@ function drawshapefromlist(index, shapeStr) {
     const ctxOutImage32 = getCleanCanvas("canvasImgFrag32");
     ctxOutImage32.ctx.putImageData(edgeImageOut4, 0, 0);
     bval = module.calcMatrixFromString(shapeStr, shapeSize, zoom);
-    matrix = [
-        [bval[0], bval[1], bval[2]],
-        [bval[3], bval[4], bval[5]],
-        [bval[6], bval[7], bval[8]],
-    ];
+    matrix = JSON.parse(bval)["mat"];
+
     transshape = applyTransformationMatrixToAllPoints(global_shapes[index], matrix);
     drawPolyFull(ctxOutImage32.ctx_ui, transshape);
 

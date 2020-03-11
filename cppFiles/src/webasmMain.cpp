@@ -58,12 +58,29 @@ public:
 
 RNG rng(12345);
 
-emscripten::val calcMatrixFromString(string shapeStr, int output_width=400, double zoom=1) {
+string calcMatrixFromString(string shapeStr, int output_width=400, double zoom=1) {
     ring_t shape;
     bg::read_wkt(shapeStr, shape);
     Mat m = calcMatrix(shape, 0, output_width, zoom);
 
-    return emscripten::val(emscripten::typed_memory_view(9, (double *)m.data));
+    std::stringstream polygonString;
+    polygonString << "{ \"mat\" : [";
+    double *data = (double *) m.data;
+    for (int i = 0; i < 3; i++) {
+        if (i > 0)
+            polygonString << ",";
+
+        polygonString << "[";
+        for (int j = 0; j < 3; j++) {
+            if (j > 0)
+                polygonString << ",";
+
+            polygonString << data[(3*i)+j];
+        }
+        polygonString << "]";
+    }
+    polygonString << "]}";
+    return polygonString.str();
 }
 
 void getImageFragmentFromShape(uintptr_t img_in, int width, int height, ValHolder *valsOut, string shapeStr, int output_width=400, double zoom=1)

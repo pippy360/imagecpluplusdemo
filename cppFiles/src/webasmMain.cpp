@@ -243,7 +243,7 @@ void encode(
         vector<Point> hull;
         convexHull( contours[i], hull );
         Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255), 255 );
-        drawContours( hulls_img, vector<vector<Point> >(1,hull), -1, color );
+        drawContours( hulls_img, vector<vector<Point> >(1,hull), -1, color, 2 );
     }
 
     Mat valid_hulls_img = imageCannyOut.clone();
@@ -263,7 +263,7 @@ void encode(
             continue;
         }
 
-        drawContours( valid_hulls_img, vector<vector<Point> >(1,hull), -1, color );
+        drawContours( valid_hulls_img, vector<vector<Point> >(1,hull), -1, color, 2 );
     }
     cout << "Number of shapes which failed area: " << failed_area << endl;
 

@@ -446,6 +446,7 @@ function canvasMouseMoveEvent(canvasMousePosition) {
 
     if (g_transformState.isMouseDownAndClickedOnCanvas) {
         handleMouseMoveOnCanvas(canvasMousePosition);
+        clearLowerUi();
     }
 }
 

@@ -465,10 +465,23 @@ function parseGlobalShapes(ctx, shapes) {
     }
 }
 
+function clearLowerUi() {
+    {
+        const ctx = document.getElementById("lookupCanvas_uilower").getContext("2d");
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    }
+    {
+        const ctx = document.getElementById("databaseCanvas_uilower").getContext("2d");
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    }
+}
+
 //FIXME: rename
 function loadEdgeImages() {
 
     // Wasm heap must already have the canvases loaded in memory
+
+    clearLowerUi();
 
     {
         const width = lookup_canvas_wasm_heap.width;

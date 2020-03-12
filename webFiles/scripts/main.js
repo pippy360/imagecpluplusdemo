@@ -9,46 +9,46 @@ let g_flushCache = true;
 let g_leftSelected;
 let g_rightSelected;
 
-function drawshapefromClickandseeRight(shapeStr1) {
+function drawshapefromClickandseeRight(shapeStr1, rotation) {
 
     drawShapeAndFragmentClickAndSee(
         canvas_inserted_in_database_wasm_heap.ptr,
         canvas_inserted_in_database_wasm_heap.width,
         canvas_inserted_in_database_wasm_heap.height,
-        shapeStr1, 256, "clickandseeFragRight");
+        shapeStr1, 256, "clickandseeFragRight", rotation);
 
     drawShapeAndFragmentClickAndSee(
         canvas_inserted_in_database_wasm_heap.ptr,
         canvas_inserted_in_database_wasm_heap.width,
         canvas_inserted_in_database_wasm_heap.height,
-        shapeStr1, 128, "clickandseeFragRight");
+        shapeStr1, 128, "clickandseeFragRight", rotation);
 
     drawShapeAndFragmentClickAndSee(
         canvas_inserted_in_database_wasm_heap.ptr,
         canvas_inserted_in_database_wasm_heap.width,
         canvas_inserted_in_database_wasm_heap.height,
-        shapeStr1, 32, "clickandseeFragRight");
+        shapeStr1, 32, "clickandseeFragRight", rotation);
 }
 
-function drawshapefromClickandseeLeft(shapeStr1) {
+function drawshapefromClickandseeLeft(shapeStr1, rotation) {
 
     drawShapeAndFragmentClickAndSee(
         lookup_canvas_wasm_heap.ptr,
         lookup_canvas_wasm_heap.width,
         lookup_canvas_wasm_heap.height,
-        shapeStr1, 256, "clickandseeFragLeft");
+        shapeStr1, 256, "clickandseeFragLeft", rotation);
 
     drawShapeAndFragmentClickAndSee(
         lookup_canvas_wasm_heap.ptr,
         lookup_canvas_wasm_heap.width,
         lookup_canvas_wasm_heap.height,
-        shapeStr1, 128, "clickandseeFragLeft");
+        shapeStr1, 128, "clickandseeFragLeft", rotation);
 
     drawShapeAndFragmentClickAndSee(
         lookup_canvas_wasm_heap.ptr,
         lookup_canvas_wasm_heap.width,
         lookup_canvas_wasm_heap.height,
-        shapeStr1, 32, "clickandseeFragLeft");
+        shapeStr1, 32, "clickandseeFragLeft", rotation);
 }
 
 function parseClickandseeShapesLeft(shapes) {
@@ -65,13 +65,13 @@ function parseClickandseeShapesLeft(shapes) {
     for (let i = 0;i < lines.length;i++) {
         let opt = lines[i];
         let el = document.createElement("div");
-        el.innerHTML = `<div class='shapeListEl' onmouseover="drawshapefromClickandseeLeft('${opt}')" id='clickandseeShapeListElm${i}'>-----${i}</div>`;
+        el.innerHTML = `<div class='shapeListEl' onmouseover="drawshapefromClickandseeLeft('${opt}', 0)" id='clickandseeShapeListElm${i}'>-----${i}</div>`;
         list.appendChild(el);
 
         drawPolyFull(can.ctx_ui, shapeStrToShape(opt), 'rgb(45, 0, 255)', 'rgba(45, 0, 255, 0.6)');
     }
     if (lines.length > 0)
-        drawshapefromClickandseeLeft(lines[0]);
+        drawshapefromClickandseeLeft(lines[0], 0);
 }
 
 function parseClickandseeShapesRight(shapes) {
@@ -88,13 +88,13 @@ function parseClickandseeShapesRight(shapes) {
     for (let i = 0;i < lines.length;i++) {
         let opt = lines[i];
         let el = document.createElement("div");
-        el.innerHTML = `<div class='shapeListEl' onmouseover="drawshapefromClickandseeRight('${opt}')" id='clickandseeShapeListElm${i}'>-----${i}</div>`;
+        el.innerHTML = `<div class='shapeListEl' onmouseover="drawshapefromClickandseeRight('${opt}', 0)" id='clickandseeShapeListElm${i}'>-----${i}</div>`;
         list.appendChild(el);
 
         drawPolyFull(can.ctx_ui, shapeStrToShape(opt), 'rgb(45, 0, 255)', 'rgba(45, 0, 255, 0.6)');
     }
     if (lines.length > 0)
-        drawshapefromClickandseeRight(lines[0]);
+        drawshapefromClickandseeRight(lines[0], 0);
 }
 
 function getShapeWithPointInsideLeft(x, y) {
@@ -231,13 +231,13 @@ async function loadImage(src) {
     g_leftSelected = null;
 }
 
-function drawShapeAndFragmentClickAndSee(imageHeap, width, height, shapeStr, shapeSize, canvasId) {
+function drawShapeAndFragmentClickAndSee(imageHeap, width, height, shapeStr, shapeSize, canvasId, rotation) {
     const zoom = 1.0/1.5;
 
     var valHolder = new module.ValHolder(shapeSize*shapeSize*4);
     module.getImageFragmentFromShape(
         imageHeap, width, height,
-        valHolder, shapeStr, shapeSize, zoom);
+        valHolder, shapeStr, shapeSize, zoom, rotation);
 
     const edgeImageOut5 = new ImageData(new Uint8ClampedArray(valHolder.outputImage2.val_),
         shapeSize, shapeSize);
@@ -246,18 +246,18 @@ function drawShapeAndFragmentClickAndSee(imageHeap, width, height, shapeStr, sha
 
     ctxOutImage200.ctx.putImageData(edgeImageOut5, 0, 0);
 
-    const bval = module.calcMatrixFromString(shapeStr, shapeSize, zoom);
+    const bval = module.calcMatrixFromString(shapeStr, shapeSize, zoom, rotation);
     const matrix = JSON.parse(bval)["mat"];
     const transshape = applyTransformationMatrixToAllPoints(shapeStrToShape(shapeStr), matrix);
     drawPolyFull(ctxOutImage200.ctx_ui, transshape, 'rgb(45, 0, 255)', 'rgba(45, 0, 255, 0.1)');
     valHolder.delete();
 }
 
-function drawShapeAndFragment(imageHeap, width, height, shapeStr, shapeSize, canvasId) {
+function drawShapeAndFragment(imageHeap, width, height, shapeStr, shapeSize, canvasId, rotation) {
     const zoom = 1.0/1.5;
 
     var valHolder = new module.ValHolder(shapeSize*shapeSize*4);
-    module.getImageFragmentFromShape(imageHeap, width, height, valHolder, shapeStr, shapeSize, zoom);
+    module.getImageFragmentFromShape(imageHeap, width, height, valHolder, shapeStr, shapeSize, zoom, rotation);
 
     const edgeImageOut5 = new ImageData(new Uint8ClampedArray(valHolder.outputImage2.val_),
             shapeSize, shapeSize);
@@ -266,7 +266,7 @@ function drawShapeAndFragment(imageHeap, width, height, shapeStr, shapeSize, can
 
     ctxOutImage200.ctx.putImageData(edgeImageOut5, 0, 0);
 
-    const bval = module.calcMatrixFromString(shapeStr, shapeSize, zoom);
+    const bval = module.calcMatrixFromString(shapeStr, shapeSize, zoom, rotation);
     const matrix = JSON.parse(bval)["mat"];
 
     const transshape = applyTransformationMatrixToAllPoints(shapeStrToShape(shapeStr), matrix);
@@ -274,7 +274,7 @@ function drawShapeAndFragment(imageHeap, width, height, shapeStr, shapeSize, can
     valHolder.delete();
 }
 
-function drawshapefromResult(shapeStr1, shapeStr2) {
+function drawshapefromResult(shapeStr1, shapeStr2, hashDistance, rotation) {
     {
         const canctx = document.getElementById("lookupCanvas_uilower").getContext("2d");
         canctx.clearRect(0, 0, canctx.canvas.width, canctx.canvas.height);
@@ -286,21 +286,24 @@ function drawshapefromResult(shapeStr1, shapeStr2) {
         drawPolyFull(canctx, shapeStrToShape(shapeStr2), 'rgb(45, 0, 255)', 'rgba(45, 0, 255, 0.6)');
     }
 
+    const hashDistSpan = document.getElementById("hammingDistanceForResult");
+    hashDistSpan.innerHTML = "Hash distance: " + hashDistance;
+
     drawShapeAndFragment(
         lookup_canvas_wasm_heap.ptr,
         lookup_canvas_wasm_heap.width,
         lookup_canvas_wasm_heap.height,
-        shapeStr1, 256, "lookupCanvasFrag");
+        shapeStr1, 256, "lookupCanvasFrag", 0);
     drawShapeAndFragment(
         canvas_inserted_in_database_wasm_heap.ptr,
         canvas_inserted_in_database_wasm_heap.width,
         canvas_inserted_in_database_wasm_heap.height,
-        shapeStr2, 256, "databaseCanvasFrag");
+        shapeStr2, 256, "databaseCanvasFrag", rotation);
 }
 
 let global_shapes = [];
 
-function drawshapefromlist(index, shapeStr) {
+function drawshapefromlist(index, shapeStr, rotation) {
 
     const can = getCleanUICanvas("lookupCanvas");
     drawPolyFull(can.ctx_ui, global_shapes[index]);
@@ -318,12 +321,12 @@ function drawshapefromlist(index, shapeStr) {
         lookup_canvas_wasm_heap.ptr,
         lookup_canvas_wasm_heap.width,
         lookup_canvas_wasm_heap.height,
-        valHolder, shapeStr, shapeSize, zoom);
+        valHolder, shapeStr, shapeSize, zoom, rotation);
     const in3 = new Uint8ClampedArray(valHolder.outputImage2.val_);
     const edgeImageOut2 = new ImageData(in3, shapeSize, shapeSize);
     const ctxOutImage = getCleanCanvas("canvasImgFrag");
     ctxOutImage.ctx.putImageData(edgeImageOut2, 0, 0);
-    let bval = module.calcMatrixFromString(shapeStr, shapeSize, zoom);
+    let bval = module.calcMatrixFromString(shapeStr, shapeSize, zoom, rotation);
     let matrix = JSON.parse(bval)["mat"];
 
     let transshape = applyTransformationMatrixToAllPoints(global_shapes[index], matrix);
@@ -336,13 +339,13 @@ function drawshapefromlist(index, shapeStr) {
         lookup_canvas_wasm_heap.ptr,
         lookup_canvas_wasm_heap.width,
         lookup_canvas_wasm_heap.height,
-        valHolder2, shapeStr, shapeSize, zoom);
+        valHolder2, shapeStr, shapeSize, zoom, rotation);
 
     const in5 = new Uint8ClampedArray(valHolder2.outputImage2.val_);
     const edgeImageOut5 = new ImageData(in5, shapeSize, shapeSize);
     const ctxOutImage200 = getCleanCanvas("canvasImgFrag200");
     ctxOutImage200.ctx.putImageData(edgeImageOut5, 0, 0);
-    bval = module.calcMatrixFromString(shapeStr, shapeSize, zoom);
+    bval = module.calcMatrixFromString(shapeStr, shapeSize, zoom, rotation);
     matrix = JSON.parse(bval)["mat"];
 
     transshape = applyTransformationMatrixToAllPoints(global_shapes[index], matrix);
@@ -355,13 +358,13 @@ function drawshapefromlist(index, shapeStr) {
         lookup_canvas_wasm_heap.ptr,
         lookup_canvas_wasm_heap.width,
         lookup_canvas_wasm_heap.height,
-        valHolder3, shapeStr, shapeSize, zoom);
+        valHolder3, shapeStr, shapeSize, zoom, rotation);
 
     const in4 = new Uint8ClampedArray(valHolder3.outputImage2.val_);
     const edgeImageOut4 = new ImageData(in4, shapeSize, shapeSize);
     const ctxOutImage32 = getCleanCanvas("canvasImgFrag32");
     ctxOutImage32.ctx.putImageData(edgeImageOut4, 0, 0);
-    bval = module.calcMatrixFromString(shapeStr, shapeSize, zoom);
+    bval = module.calcMatrixFromString(shapeStr, shapeSize, zoom, rotation);
     matrix = JSON.parse(bval)["mat"];
 
     transshape = applyTransformationMatrixToAllPoints(global_shapes[index], matrix);
@@ -423,8 +426,9 @@ function findMatches() {
         const color = "" + randomColor();
 
         {
+            // debugger;
             let el = document.createElement("div");
-            el.innerHTML = `<div class='shapeListEl' style="background-color: hsl(${color})" onmouseover="drawshapefromResult('${opt[1]}', '${opt[0]}')" id='shapeListEl${i}'>${i}</div>`;
+            el.innerHTML = `<div class='shapeListEl' style="background-color: hsl(${color})" onmouseover="drawshapefromResult('${opt[1]}', '${opt[0]}', ${opt[2]}, ${opt[3]})" id='shapeListEl${i}'>${i}</div>`;
             list.appendChild(el);
         }
 
@@ -458,6 +462,7 @@ function parseGlobalShapes(ctx, shapes) {
     const list = document.getElementById('shapelist');
     list.innerHTML = "";
     for(let i = 0;i < lines.length;i++) {
+        debugger;
         let opt = lines[i];
         let el = document.createElement("div");
         el.innerHTML = `<div class='shapeListEl' onmouseover="drawshapefromlist(${i}, '${lines[i]}')" id='shapeListEl${i}'>${opt}</div>`;

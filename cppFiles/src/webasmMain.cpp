@@ -58,10 +58,10 @@ public:
 
 RNG rng(12345);
 
-string calcMatrixFromString(string shapeStr, int output_width=400, double zoom=1) {
+string calcMatrixFromString(string shapeStr, int output_width, double zoom, int rotation) {
     ring_t shape;
     bg::read_wkt(shapeStr, shape);
-    Mat m = calcMatrix(shape, 0, output_width, zoom);
+    Mat m = calcMatrix(shape, rotation, output_width, zoom);
 
     std::stringstream polygonString;
     polygonString << "{ \"mat\" : [";
@@ -83,7 +83,8 @@ string calcMatrixFromString(string shapeStr, int output_width=400, double zoom=1
     return polygonString.str();
 }
 
-void getImageFragmentFromShape(uintptr_t img_in, int width, int height, ValHolder *valsOut, string shapeStr, int output_width=400, double zoom=1)
+void getImageFragmentFromShape(uintptr_t img_in, int width, int height, ValHolder *valsOut, string shapeStr,
+        int output_width, double zoom, int rotation)
 {
     point_t p;
     ring_t transformedPoly;
@@ -91,7 +92,7 @@ void getImageFragmentFromShape(uintptr_t img_in, int width, int height, ValHolde
 
     bg::read_wkt(shapeStr, shape);
 
-    Mat m = calcMatrix(shape, 0, output_width, zoom);
+    Mat m = calcMatrix(shape, rotation, output_width, zoom);
 
     Mat outputImage(output_width, output_width, CV_8UC3, Scalar(0, 0, 0));
     Mat image(cv::Size(width, height), CV_8UC4, (void *) img_in, cv::Mat::AUTO_STEP);
@@ -130,13 +131,15 @@ std::string findMatchesForImageFromCanvas(
     for (int i = 0; i < vec.size(); i++) {
         auto v = vec[i];
         //FIXME: we need to check that no two hashes are the same, otherwise we can create invalid json
-        auto [shape1, shape2, hash1, hash2] = v;
+        auto [shape1, shape2, hash1, hash2, rotation] = v;
         if (i > 0) {
             polygonString << ",";
         }
 
         polygonString << "\"" << ImageHash::convertHashToString(hash1)
-                << "\" : [\"" << bg::wkt(shape1) << "\", \"" << bg::wkt(shape2) << "\"]";
+                << "\" : [\"" << bg::wkt(shape1) << "\", \"" << bg::wkt(shape2) << "\", \""
+                << ImageHash::bitCount(hash1 ^ hash2) << "\", \""
+                << rotation << "\"]";
     }
     polygonString << "} ";
     return polygonString.str();
@@ -171,12 +174,14 @@ std::string getAllTheHashesForImageFromCanvas(
     for (int i = 0; i < vec.size(); i++) {
         auto v = vec[i];
         //FIXME: we need to check that no two hashes are the same, otherwise we can create invalid json
-        auto [shape, hash] = v;
+        auto [shape, hash, rotation] = v;
         if (i > 0) {
             polygonString << ",";
         }
 
-        polygonString << "\"" << ImageHash::convertHashToString(hash) << "\" : \"" << bg::wkt(shape) << "\"" << endl;
+        polygonString << "\"" << ImageHash::convertHashToString(hash) << "\" : [\""
+            << bg::wkt(shape) << "\", \""
+            << rotation <<  "\"]" << endl;
     }
     polygonString << "} ";
     return polygonString.str();

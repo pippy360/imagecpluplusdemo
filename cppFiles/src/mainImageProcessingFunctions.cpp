@@ -89,13 +89,13 @@ Mat calcMatrix(ring_t shape, double rotation, double output_width, double zoom) 
     return _calcMatrix(area, -p.get<0>(), -p.get<1>(), rotation, output_width, a, b, zoom);
 }
 
-vector<pair<ring_t, uint64_t>> getAllTheHashesForImageAndShapes(Mat &imgdata,
+vector<tuple<ring_t, uint64_t, int>> getAllTheHashesForImageAndShapes(Mat &imgdata,
         vector<ring_t> shapes,
         int rotations,
         int rotationJump)
 {
 //    vector<pair<ring_t, uint64_t>> ret(shapes.size()*rotations*4);
-    vector<pair<ring_t, uint64_t>> ret;
+    vector<tuple<ring_t, uint64_t, int>> ret;
 //#pragma omp parallel for
     for (int i = 0; i < shapes.size(); i++)
     {
@@ -136,7 +136,7 @@ vector<ring_t> extractShapes(int thresh, int ratio, int kernel_size, int blur_wi
     return extractShapesFromContours(contours, areaThresh);
 }
 
-vector<pair<ring_t, uint64_t>> getAllTheHashesForImage(
+vector<tuple<ring_t, uint64_t, int>> getAllTheHashesForImage(
         Mat img_in,
         int rotations,
         int thresh,
@@ -156,9 +156,9 @@ vector<pair<ring_t, uint64_t>> getAllTheHashesForImage(
 using namespace std::chrono;
 
 static void *prevImg;
-vector<pair<ring_t, uint64_t>> g_imghashes;
+vector<tuple<ring_t, uint64_t, int>> g_imghashes;
 
-vector<tuple<ring_t, ring_t, uint64_t, uint64_t>> findMatches(
+vector<tuple<ring_t, ring_t, uint64_t, uint64_t, int>> findMatches(
         Mat img_in,
         Mat img_in2,
         int thresh,
@@ -184,11 +184,13 @@ vector<tuple<ring_t, ring_t, uint64_t, uint64_t>> findMatches(
 
     auto img2hashes = getAllTheHashesForImageAndShapes(grayImg2, shapes2, 1, 1);
 
-    vector<tuple<ring_t, ring_t, uint64_t, uint64_t>> res;
+    vector<tuple<ring_t, ring_t, uint64_t, uint64_t, int>> res;
     for (auto h : g_imghashes) {
         for (auto h2 : img2hashes) {
-            if( ImageHash::bitCount(h.second ^ h2.second) < 5 ) {
-                res.push_back(std::tie(h.first, h2.first , h.second, h2.second));
+            auto [shape1, hash1, rotation1] = h;
+            auto [shape2, hash2, rotation2] = h2;
+            if( ImageHash::bitCount(hash1 ^ hash2) < 5 ) {
+                res.push_back(std::tie(shape1, shape2, hash1, hash2, rotation1));
             }
         }
     }
@@ -204,7 +206,7 @@ std::tuple<double, double> getAandBWrapper(const ring_t& shape, point_t centroid
 }
 
 void handleForRotation(const Mat &input_image, const ring_t &shape, int output_width,
-                       vector<pair<ring_t, uint64_t>> &ret, const point_t centroid, double a,
+                       vector<tuple<ring_t, uint64_t, int>> &ret, const point_t centroid, double a,
                        double b, double area, unsigned int _rotation_in) {
     double rotation = _rotation_in;
 //        std::cout << "rotation: " << rotation << std::endl;
@@ -217,12 +219,12 @@ void handleForRotation(const Mat &input_image, const ring_t &shape, int output_w
 //        imshow("image", outputImage);
 //        waitKey(0);
 
-    ret.push_back(make_pair(shape, calculatedHash));
+    ret.push_back(tie(shape, calculatedHash, rotation));
 
 }
 
 void handleForRotation2(const Mat &input_image, const ring_t &shape, int output_width,
-                              vector<pair<ring_t, uint64_t>> &ret, const point_t centroid, double a,
+                              vector<tuple<ring_t, uint64_t, int>> &ret, const point_t centroid, double a,
                               double b, double area, unsigned int _rotation_in) {
 //    for (unsigned int j = 0; j < 4; j++) {
 //        double rotation = _rotation_in + (90*j);
@@ -252,18 +254,18 @@ void handleForRotation2(const Mat &input_image, const ring_t &shape, int output_
 //        waitKey(0);
 
         for (auto h : calculatedHashs)
-            ret.push_back(make_pair(shape, h));
+            ret.push_back(tie(shape, h, rotation));
     }
 }
 
-vector<pair<ring_t, uint64_t>> getHashesForShape(const cv::Mat& input_image,
+vector<tuple<ring_t, uint64_t, int>> getHashesForShape(const cv::Mat& input_image,
                                                          const ring_t& shape,
                                                          int numRotations,
                                                          int rotationJump,
                                                          int output_width)
 {
     point_t p;
-    auto ret = vector<pair<ring_t, uint64_t >>();
+    auto ret = vector<tuple<ring_t, uint64_t, int>>();
     bg::centroid(shape, p);
     auto [a, b] = getAandBWrapper(shape, p);
     double area = bg::area(shape);

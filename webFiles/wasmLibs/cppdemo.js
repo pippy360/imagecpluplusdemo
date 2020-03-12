@@ -8577,22 +8577,28 @@ var dynCall_viiiiddiiiii = Module["dynCall_viiiiddiiiii"] = function() {
   return Module["asm"]["dynCall_viiiiddiiiii"].apply(null, arguments)
 };
 
-var dynCall_viiiiiiid = Module["dynCall_viiiiiiid"] = function() {
+var dynCall_viiiiiiidi = Module["dynCall_viiiiiiidi"] = function() {
   assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
   assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
-  return Module["asm"]["dynCall_viiiiiiid"].apply(null, arguments)
+  return Module["asm"]["dynCall_viiiiiiidi"].apply(null, arguments)
 };
 
-var dynCall_viiiiiid = Module["dynCall_viiiiiid"] = function() {
+var dynCall_viiiiiidi = Module["dynCall_viiiiiidi"] = function() {
   assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
   assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
-  return Module["asm"]["dynCall_viiiiiid"].apply(null, arguments)
+  return Module["asm"]["dynCall_viiiiiidi"].apply(null, arguments)
 };
 
-var dynCall_iiiid = Module["dynCall_iiiid"] = function() {
+var dynCall_iiiidi = Module["dynCall_iiiidi"] = function() {
   assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
   assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
-  return Module["asm"]["dynCall_iiiid"].apply(null, arguments)
+  return Module["asm"]["dynCall_iiiidi"].apply(null, arguments)
+};
+
+var dynCall_viiidi = Module["dynCall_viiidi"] = function() {
+  assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
+  assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
+  return Module["asm"]["dynCall_viiidi"].apply(null, arguments)
 };
 
 var dynCall_iiiiiiiiii = Module["dynCall_iiiiiiiiii"] = function() {

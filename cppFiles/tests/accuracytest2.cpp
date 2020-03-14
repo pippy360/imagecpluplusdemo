@@ -85,27 +85,28 @@ TEST(AccuracyTest, DISABLED_testGetHashesForShape) {
     std::cout << "HERE...." << std::endl;
 
     {
-        auto ret = vector<pair<ring_t, uint64_t >>();
+        vector<tuple<ring_t, uint64_t, int>> ret;
 //        handleForRotation(grayImg, shape, output_width, ret, p, a, b, area, 1);
         handleForRotation2(grayImg, shape, output_width, ret, p, a, b, area, 1);
         assert(ret.size() == 4);
-        EXPECT_STREQ("ffea7faaaaa2b20b", ImageHash::convertHashToString(ret[0].second).c_str());
-        EXPECT_STREQ("feea76a8fb80fd2b", ImageHash::convertHashToString(ret[1].second).c_str());
-        EXPECT_STREQ("feea7ba8fba8fba1", ImageHash::convertHashToString(ret[2].second).c_str());
-        EXPECT_STREQ("ffe8fba2fea8e8a1", ImageHash::convertHashToString(ret[3].second).c_str());
+        auto [first, second, c] = ret[0];
+        EXPECT_STREQ("ffea7faaaaa2b20b", ImageHash::convertHashToString(get<1>(ret[0])).c_str());
+        EXPECT_STREQ("feea76a8fb80fd2b", ImageHash::convertHashToString(get<1>(ret[1])).c_str());
+        EXPECT_STREQ("feea7ba8fba8fba1", ImageHash::convertHashToString(get<1>(ret[2])).c_str());
+        EXPECT_STREQ("ffe8fba2fea8e8a1", ImageHash::convertHashToString(get<1>(ret[3])).c_str());
     }
 
     std::cout << "HERE...." << std::endl;
 
     {
-        auto ret = vector<pair<ring_t, uint64_t >>();
+        vector<tuple<ring_t, uint64_t, int>> ret;
         handleForRotation(grayImg, shape, output_width, ret, p, a, b, area, 1);
 //        handleForRotation2(grayImg, shape, output_width, ret, p, a, b, area, 1);
         assert(ret.size() == 4);
-        EXPECT_STREQ("ffea7faaaaa2b20b", ImageHash::convertHashToString(ret[0].second).c_str());
-        EXPECT_STREQ("feea76a8fb80fd2b", ImageHash::convertHashToString(ret[1].second).c_str());
-        EXPECT_STREQ("feea7ba8fba8fba1", ImageHash::convertHashToString(ret[2].second).c_str());
-        EXPECT_STREQ("ffe8fba2fea8e8a1", ImageHash::convertHashToString(ret[3].second).c_str());
+        EXPECT_STREQ("ffea7faaaaa2b20b", ImageHash::convertHashToString(get<1>(ret[0])).c_str());
+        EXPECT_STREQ("feea76a8fb80fd2b", ImageHash::convertHashToString(get<1>(ret[1])).c_str());
+        EXPECT_STREQ("feea7ba8fba8fba1", ImageHash::convertHashToString(get<1>(ret[2])).c_str());
+        EXPECT_STREQ("ffe8fba2fea8e8a1", ImageHash::convertHashToString(get<1>(ret[3])).c_str());
     }
 
     std::cout << "HERE...." << std::endl;
@@ -519,12 +520,12 @@ TEST(AccuracyTest, DISABLED_testRotatedAndResults) {
     cv::Mat rickandmortyImage = cv::imread("../webFiles/images/richandmalty.jpg", cv::IMREAD_GRAYSCALE);
     assert(rickandmortyImage.data);
 
-    vector<pair<ring_t, uint64_t>> res = getAllTheHashesForImage(rickandmortyImage);
+    vector<tuple<ring_t, uint64_t, int>> res = getAllTheHashesForImage(rickandmortyImage);
     std::map<std::string,ring_t> mtmap;
     for (auto &r : res) {
-
+        auto [first, second, c] = r;
         //FIXME: assert( map.find(r.second.toString()) == map.end() );
-        mtmap[ImageHash::convertHashToString(r.second)] = r.first;
+        mtmap[ImageHash::convertHashToString(second)] = first;
     }
     //something........
 
@@ -552,10 +553,11 @@ TEST(AccuracyTest, DISABLED_testRotatedAndResults) {
         cv::Mat m = covertToDynamicallyAllocatedMatrix(transpose_3*transpose_rot*transpose_1);
         cv::warpAffine(rickandmortyImage, r, m, r.size());
 
-        vector<pair<ring_t, uint64_t>> res = getAllTheHashesForImage(r);
+        vector<tuple<ring_t, uint64_t, int>> res = getAllTheHashesForImage(r);
         int count = 0;
         for (auto &r : res) {
-            if ( mtmap.count(ImageHash::convertHashToString(r.second)) > 0 ) {
+            auto [a, hash, c] = r;
+            if ( mtmap.count(ImageHash::convertHashToString(hash)) > 0 ) {
 //                std::cout << "found" << r.second.toString() << std::endl;
                 count++;
             }

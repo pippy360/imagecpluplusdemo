@@ -635,7 +635,7 @@ TEST(EquationTest, testab4) {
     bg::transform(red, transformedPoly, rotate);
 
     double a = getA(transformedPoly);
-    double b = getB(transformedPoly);
+    double b = getB(transformedPoly, a);
     EXPECT_NEAR(1, a, ALLOWED_ERROR);
     EXPECT_NEAR(0, b, ALLOWED_ERROR);
 }

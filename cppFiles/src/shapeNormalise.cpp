@@ -188,15 +188,15 @@ static double getA(ring_t inPoly) {
     return sqrt(sqrt( val ));
 }
 
-static double getB(ring_t inPoly) {
+static double getB(ring_t inPoly, double aVal) {
     double ys = getYSquaredAverage(inPoly);
     double xy = getXYAverage(inPoly);
-    return getA(inPoly)*(-xy/ys);
+    return aVal*(-xy/ys);
 }
 
 std::tuple<double, double> getAandB(ring_t inPoly) {
     double a = getA(inPoly);
-    double b = getB(inPoly);
+    double b = getB(inPoly, a);
     return  {a, b};
 }
 

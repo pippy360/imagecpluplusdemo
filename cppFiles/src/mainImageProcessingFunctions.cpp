@@ -4,6 +4,11 @@
 #include <stdio.h>
 #include <math.h>       /* pow, atan2 */
 
+
+#include "annoylib.h"
+#include "annoymodule.cc"
+
+
 #include "ImageHash.hpp"
 #include "boostGeometryTypes.hpp"
 #include "miscUtils.hpp"
@@ -14,6 +19,7 @@
 #include <algorithm>
 #include <chrono>
 #include <iostream>
+
 using namespace std;
 using namespace std::chrono;
 
@@ -157,6 +163,7 @@ using namespace std::chrono;
 
 static void *prevImg;
 vector<tuple<ring_t, uint64_t, int>> g_imghashes;
+HammingWrapper *tree;
 
 vector<tuple<ring_t, ring_t, uint64_t, uint64_t, int>> findMatches(
         Mat img_in,
@@ -177,6 +184,19 @@ vector<tuple<ring_t, ring_t, uint64_t, uint64_t, int>> findMatches(
         vector<ring_t> shapes = extractShapes(thresh, ratio, kernel_size, blur_width, areaThresh, grayImg);
 
         g_imghashes = getAllTheHashesForImageAndShapes(grayImg, shapes, 360, 2);
+        if (tree != nullptr)
+            delete tree;
+
+        tree = new HammingWrapper(64);
+        int count = 0;
+        for (auto h : g_imghashes) {
+            auto [shape1, hash1, rotation1] = h;
+            vector<float> unpacked(64, 0);
+            tree->_unpack(&hash1, &unpacked[0]);
+            tree->add_item(count++, &unpacked[0], nullptr);
+        }
+
+        tree->build(20, nullptr);
     }
 
     Mat grayImg2 = convertToGrey(img_in2);
@@ -185,15 +205,33 @@ vector<tuple<ring_t, ring_t, uint64_t, uint64_t, int>> findMatches(
     auto img2hashes = getAllTheHashesForImageAndShapes(grayImg2, shapes2, 1, 1);
 
     vector<tuple<ring_t, ring_t, uint64_t, uint64_t, int>> res;
-    for (auto h : g_imghashes) {
-        for (auto h2 : img2hashes) {
-            auto [shape1, hash1, rotation1] = h;
-            auto [shape2, hash2, rotation2] = h2;
-            if( ImageHash::bitCount(hash1 ^ hash2) < 5 ) {
+
+    for (auto h2 : img2hashes) {
+        vector<int32_t> result;
+        vector<float> distances;
+        auto [shape2, hash2, rotation2] = h2;
+        vector<float> unpacked(64, 0);
+        tree->_unpack(&hash2, &unpacked[0]);
+        tree->get_nns_by_vector(&unpacked[0], 6, -1, &result, &distances);
+//        cout << result.size() << " with distance " << ((distances.size() > 0)? distances[0] : -1 ) << endl;
+        for (int i = 0; i < result.size(); i++) {
+            if (distances[i] < 5) {
+                auto [shape1, hash1, rotation1] = g_imghashes[result[i]];
                 res.push_back(std::tie(shape1, shape2, hash1, hash2, rotation1));
             }
         }
+//        res.push_back(std::tie(shape1, shape2, hash1, hash2, rotation1));
     }
+
+            //    for (auto h : g_imghashes) {
+//        for (auto h2 : img2hashes) {
+//            auto [shape1, hash1, rotation1] = h;
+//            auto [shape2, hash2, rotation2] = h2;
+//            if( ImageHash::bitCount(hash1 ^ hash2) < 5 ) {
+//                res.push_back(std::tie(shape1, shape2, hash1, hash2, rotation1));
+//            }
+//        }
+//    }
 
     return res;
 }

@@ -28,7 +28,12 @@ vector<tuple<ring_t, uint64_t, int>> getHashesForShape(const cv::Mat& input_imag
                                                 const ring_t& shape,
                                                 int numRotations,
                                                 int rotationJump,
-                                                int output_width=32);
+                                                int output_width=32,
+                                                int start_rotation=0);
+
+tuple<ring_t, uint64_t, int> getHashesForShape_singleRotation(const cv::Mat& input_image,
+                                                              const ring_t& shape,
+                                                              int rotation);
 
 Mat convertToGrey(Mat img_in);
 

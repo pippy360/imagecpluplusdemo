@@ -145,6 +145,32 @@ std::string findMatchesForImageFromCanvas(
     return polygonString.str();
 }
 
+int getHashDistanceFromCanvas(
+            string string1,
+            double rotation,
+            uintptr_t database_img_in,
+            int db_width,
+            int db_height,
+            string string2,
+            uintptr_t lookup_img_in,
+            int lk_width,
+            int lk_height
+        )
+{
+    ring_t shape_db;
+    bg::read_wkt(string1, shape_db);
+
+    ring_t shape_lk;
+    bg::read_wkt(string2, shape_lk);
+
+    Mat image_db(cv::Size(db_width, db_height), CV_8UC4, (void *) database_img_in, cv::Mat::AUTO_STEP);
+    Mat image_lk(cv::Size(lk_width, lk_height), CV_8UC4, (void *) lookup_img_in, cv::Mat::AUTO_STEP);
+
+    auto [a, hash1, b] = getHashesForShape_singleRotation(image_db, shape_db, rotation);
+    auto [c, hash2, d] = getHashesForShape_singleRotation(image_lk, shape_lk, 0);
+    return ImageHash::bitCount(hash1 ^ hash2);
+}
+
 std::string getAllTheHashesForImageFromCanvas(
         uintptr_t img_in,
         int width,
@@ -333,4 +359,6 @@ EMSCRIPTEN_BINDINGS(my_value_example) {
     emscripten::function("calcMatrixFromString", &calcMatrixFromString);
     emscripten::function("getAllTheHashesForImageFromCanvas", &getAllTheHashesForImageFromCanvas);
     emscripten::function("findMatchesForImageFromCanvas", &findMatchesForImageFromCanvas);
+    emscripten::function("getHashDistanceFromCanvas", &getHashDistanceFromCanvas);
+
 }

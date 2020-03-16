@@ -68,6 +68,10 @@
           }
           .canvasUILayer {
           }
+          #databaseAndLookupCanvasWrapper:hover {
+              border: 5px solid red;
+              box-sizing: border-box;
+          }
           #databaseAndLookupCanvasWrapper:hover #lookupCanvas_ui {
               opacity: 1;
           }
@@ -91,6 +95,10 @@
           }
           #databaseAndLookupCanvasWrapper #databaseCanvas {
               opacity: 1;
+          }
+          #clickandseeHashDistanceOutput {
+              padding: 20px;
+              font-size: 20px;
           }
 
       </style>
@@ -443,7 +451,7 @@
                             <canvas id="clickandseeImageRight_ui" class="canvasInline canvasUILayer" width="600" height="600"></canvas>
                         </div>
                     </div>
-                    <div id="carouselclickandseeOutputFragments" style="width: 516px;" class="carousel slide" data-interval="false" data-ride="carousel">
+                    <div id="carouselclickandseeOutputFragments" style="width: 516px; float: left" class="carousel slide" data-interval="false" data-ride="carousel">
                         <div class="carousel-inner">
                             <div class="carousel-item active">
                                 <div class="canvasWrapper canvasFragment">
@@ -486,7 +494,14 @@
                         </a>
 
                     </div>
+                    <div style="padding: 40px;">
+                        <input type="range" min="0" max="360" id="clickandseeRotation" onchange="drawshapefromClickandseeRight(g_lastusedClickAndSeeShapeRight, 0)" value="0">
+                    </div>
+                    <div>
+                        <span id="clickandseeHashDistanceOutput">
 
+                        </span>
+                    </div>
                 </div>
                 <div id="clickandseeListRight" style="width: 150px; height: 700px; overflow: scroll; float: left">
                     <pre>shape list ∂goes here...</pre>

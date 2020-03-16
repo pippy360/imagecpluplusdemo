@@ -9,7 +9,39 @@ let g_flushCache = true;
 let g_leftSelected;
 let g_rightSelected;
 
+let g_lastusedClickAndSeeShapeRight;
+let g_lastusedClickAndSeeShapeLeft;
+
+function getHashDistance() {
+    let databaseString = g_lastusedClickAndSeeShapeRight;
+    let lookupString = g_lastusedClickAndSeeShapeLeft;
+
+    if (databaseString === undefined || lookupString === undefined)
+        return -1;
+
+    let rotation = parseInt(document.getElementById("clickandseeRotation").value);
+
+    let distance = module.getHashDistanceFromCanvas(
+        databaseString, rotation,
+        canvas_inserted_in_database_wasm_heap.ptr,
+        canvas_inserted_in_database_wasm_heap.width,
+        canvas_inserted_in_database_wasm_heap.height,
+        lookupString,
+        lookup_canvas_wasm_heap.ptr,
+        lookup_canvas_wasm_heap.width,
+        lookup_canvas_wasm_heap.height
+    );
+    document.getElementById("clickandseeHashDistanceOutput").innerHTML = ""+distance;
+}
+
+
+
 function drawshapefromClickandseeRight(shapeStr1, rotation) {
+    if (shapeStr1 === undefined)
+        return;
+
+    g_lastusedClickAndSeeShapeRight = shapeStr1;
+    rotation = parseInt(document.getElementById("clickandseeRotation").value);
 
     drawShapeAndFragmentClickAndSee(
         canvas_inserted_in_database_wasm_heap.ptr,
@@ -28,9 +60,12 @@ function drawshapefromClickandseeRight(shapeStr1, rotation) {
         canvas_inserted_in_database_wasm_heap.width,
         canvas_inserted_in_database_wasm_heap.height,
         shapeStr1, 32, "clickandseeFragRight", rotation);
+
+    getHashDistance();
 }
 
 function drawshapefromClickandseeLeft(shapeStr1, rotation) {
+    g_lastusedClickAndSeeShapeLeft = shapeStr1;
 
     drawShapeAndFragmentClickAndSee(
         lookup_canvas_wasm_heap.ptr,
@@ -49,6 +84,8 @@ function drawshapefromClickandseeLeft(shapeStr1, rotation) {
         lookup_canvas_wasm_heap.width,
         lookup_canvas_wasm_heap.height,
         shapeStr1, 32, "clickandseeFragLeft", rotation);
+
+    getHashDistance();
 }
 
 function parseClickandseeShapesLeft(shapes) {

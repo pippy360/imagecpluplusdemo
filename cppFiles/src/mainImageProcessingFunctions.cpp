@@ -215,7 +215,7 @@ vector<tuple<ring_t, ring_t, uint64_t, uint64_t, int>> findMatches(
         tree->get_nns_by_vector(&unpacked[0], 6, -1, &result, &distances);
 //        cout << result.size() << " with distance " << ((distances.size() > 0)? distances[0] : -1 ) << endl;
         for (int i = 0; i < result.size(); i++) {
-            if (distances[i] < 5) {
+            if (distances[i] < 8) {
                 auto [shape1, hash1, rotation1] = g_imghashes[result[i]];
                 res.push_back(std::tie(shape1, shape2, hash1, hash2, rotation1));
             }
@@ -300,18 +300,26 @@ vector<tuple<ring_t, uint64_t, int>> getHashesForShape(const cv::Mat& input_imag
                                                          const ring_t& shape,
                                                          int numRotations,
                                                          int rotationJump,
-                                                         int output_width)
+                                                         int output_width,
+                                                         int start_rotation)
 {
     point_t p;
     auto ret = vector<tuple<ring_t, uint64_t, int>>();
     bg::centroid(shape, p);
     auto [a, b] = getAandBWrapper(shape, p);
     double area = bg::area(shape);
-    for (unsigned int i = 0; i < numRotations; i += rotationJump)
+    for (unsigned int i = start_rotation; i < start_rotation + numRotations; i += rotationJump)
     {
         handleForRotation(input_image, shape, output_width, ret, p, a, b, area, i);
     }
     return ret;
+}
+
+tuple<ring_t, uint64_t, int> getHashesForShape_singleRotation(const cv::Mat& input_image,
+                                                              const ring_t& shape,
+                                                              int rotation)
+{
+    return getHashesForShape(input_image, shape, 1, 1, 32, rotation)[0];
 }
 
 Mat applyCanny(

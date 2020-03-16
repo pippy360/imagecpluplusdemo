@@ -404,6 +404,11 @@ function mouseMoveOnDocumentEvent(pageMousePosition) {
         //draw();
         //clearOutputListAndWipeCanvas();//FIXME:
         draw(pageMousePosition);
+        updateDatabaseCanvasHeap();
+        updateLookupCanvasHeap();
+
+        if (g_transformState.activeCanvas == g_transformState.interactiveCanvasState)
+            findMatches();
     }
 }
 

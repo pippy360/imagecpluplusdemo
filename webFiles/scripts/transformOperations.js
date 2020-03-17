@@ -4,6 +4,8 @@
 const INTERACTIVE_CANVAS_OVERLAY_ID = "lookupCanvas_ui";
 const DATABASE_CANVAS_OVERLAY_ID = "databaseCanvas_ui";
 
+const MIN_CROPPING_POLYGON_AREA = 600;
+
 const enum_TransformationOperation = {
     TRANSLATE: 1,
     UNIFORM_SCALE: 2,
@@ -97,7 +99,8 @@ function setCurrnetOperation(newState) {
 
 function reset() {
     var saved = g_transformState.currentTranformationOperationState;
-    g_globalState = buildGlobalState();
+    //FIXME:
+    // g_globalState = buildGlobalState();
     setCurrnetOperation(saved);
     draw();
 }
@@ -159,6 +162,16 @@ function handleMouseMoveUniformScale(pageMouseDownPosition, pageMousePosition, g
     globalState.temporaryAppliedTransformations.uniformScale = scale;
 }
 
+function buildRectangularCroppingPolyFromLayer(layer) {
+    return [
+        [0, 0],
+        [layer.image.width, 0],
+        [layer.image.width, layer.image.height],
+        [0, layer.image.height]
+    ]
+
+}
+
 function handleMouseMoveRotate(pageMouseDownPosition, pageMousePosition, globalState) {
     const y = (pageMousePosition[1] - pageMouseDownPosition[1]);
     const x = (pageMousePosition[0] - pageMouseDownPosition[0]);
@@ -196,20 +209,46 @@ function handleMouseMoveSkewY(pageMouseDownPosition, pageMousePosition, globalSt
 }
 
 function handleMouseMoveCrop(mousePosition, activeLayer) {
-    var invMat = math.inv(activeLayer.appliedTransformationsMat);
-    var keypointMat = convertSingleKeypointToMatrix(mousePosition);
-    var transformedPointMat = applyTransformationMatToSingleKeypoint(keypointMat, invMat);
-    var transformedPoint = convertSingleMatrixKeypoinToKeypointObject(transformedPointMat);
-    activeLayer.nonTransformedImageOutline.push(transformedPoint);
+    const invMat = math.inv(activeLayer.appliedTransformationsMat);
+    activeLayer.nonTransformedImageOutline.push(applyTransformationMatrixToPoint(mousePosition, invMat));
 }
 
-function canvasMouseDownEvent(pageMousePosition, canvasMousePosition) {
-    if (g_transformState == null) {
-        return;
+function filterPointsOutsideImage(imageOutline, imageDimensions) {
+    var result = [];
+    for (var i = 0; i < imageOutline.length; i++) {
+        var point = imageOutline[i];
+        var x = point[0], y = point[1];
+        if (point[0] < 0) {
+            x = 0;
+        }
+        if (point[0] > imageDimensions.width) {
+            x = imageDimensions.width;
+        }
+        if (point[1] < 0) {
+            y = 0;
+        }
+        if (point[1] > imageDimensions.height) {
+            y = imageDimensions.height;
+        }
+        result.push([x, y]);
     }
+    return result;
+}
 
-    g_transformState.isMouseDownAndClickedOnCanvas = true;
-    handleMouseDownOnCanvas(pageMousePosition, canvasMousePosition);
+function handleMouseUpCrop(activeLayer) {
+
+    const imageOutline = activeLayer.nonTransformedImageOutline;
+    const imageDimensions = {
+        width: activeLayer.image.width,
+        height: activeLayer.image.height
+    };
+    activeLayer.nonTransformedImageOutline = filterPointsOutsideImage(imageOutline, imageDimensions);
+
+    const area = calcPolygonArea(activeLayer.nonTransformedImageOutline);
+    if (area < MIN_CROPPING_POLYGON_AREA) {
+        activeLayer.nonTransformedImageOutline = buildRectangularCroppingPolyFromLayer(activeLayer);
+        activeLayer.croppingPolygonInverseMatrix = getIdentityMatrix();
+    }
 }
 
 
@@ -228,7 +267,6 @@ function handleMouseUp() {
         case enum_TransformationOperation.SKEW_Y:
             break;
         case enum_TransformationOperation.CROP:
-            return;//FIXME:
             var activeLayer = g_transformState.activeCanvas.activeLayer;
             handleMouseUpCrop(activeLayer);
             break;
@@ -301,15 +339,73 @@ function drawLayerImageOutline(ctx, imageOutlinePolygon) {
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     ctx.beginPath();
 
-    ctx.moveTo(imageOutlinePolygon[0].x, imageOutlinePolygon[0].y);
+    ctx.moveTo(imageOutlinePolygon[0][0], imageOutlinePolygon[0][1]);
     for (var i = 1; i < imageOutlinePolygon.length; i++) {//i = 1 to skip first point
         var currentPoint = imageOutlinePolygon[i];
-        ctx.lineTo(currentPoint.x, currentPoint.y);
+        ctx.lineTo(currentPoint[0], currentPoint[1]);
     }
     ctx.closePath();
     ctx.lineWidth = 2;
     ctx.strokeStyle = '#2196F3';
     ctx.stroke();
+}
+
+function cropCanvasImage(ctx, inPoints) {
+    if (inPoints.length == 0) {
+        return;
+    }
+
+    ctx.beginPath();
+    drawPolygonPath(ctx, inPoints);
+
+    ctx.globalCompositeOperation = 'destination-in';
+    ctx.fill('evenodd');
+}
+
+function getTemporaryCanvasContext(canvasSize) {
+    let tempCanvasElement = document.createElement('canvas');
+    tempCanvasElement.width = canvasSize.width;
+    tempCanvasElement.height = canvasSize.height;
+
+    return tempCanvasElement.getContext("2d");
+}
+
+function cropLayerImage(transformedImage, croppingPolygon) {
+
+    var ctx = getTemporaryCanvasContext(transformedImage);
+    ctx.drawImage(transformedImage, 0, 0);
+
+    cropCanvasImage(ctx, croppingPolygon);
+    return ctx.canvas;
+}
+
+function clearCanvasByContext(context) {
+    const canvas = context.canvas;
+    context.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+function drawImageOutlineWithLayer(canvasContext, layer) {
+    const imageOutline = applyTransformationMatrixToAllPoints(layer.nonTransformedImageOutline, layer.appliedTransformationsMat);
+    drawLayerImageOutline(canvasContext, imageOutline);
+}
+
+function drawImageOutlineInternal() {
+
+    const referenceImageOutlineContext = document.getElementById('databaseCanvas_uipass').getContext('2d');
+    const referenceLayerUnderMouse = g_transformState.databaseCanvasState.imageOutlineHighlightLayer;
+    clearCanvasByContext(referenceImageOutlineContext);
+    if (referenceLayerUnderMouse != null) {
+        drawImageOutlineWithLayer(referenceImageOutlineContext, referenceLayerUnderMouse);
+    }
+
+    const interactiveImageOutlineContext = document.getElementById('lookupCanvas_uipass').getContext('2d');
+    const interactiveLayerUnderMouse = g_transformState.interactiveCanvasState.imageOutlineHighlightLayer;
+    clearCanvasByContext(interactiveImageOutlineContext);
+    if (interactiveLayerUnderMouse != null) {
+        drawImageOutlineWithLayer(interactiveImageOutlineContext, interactiveLayerUnderMouse);
+    }
+
+    window.requestAnimationFrame(drawImageOutlineInternal);
 }
 
 function handleMouseMoveOnCanvas(canvasMousePosition) {
@@ -327,9 +423,8 @@ function handleMouseMoveOnCanvas(canvasMousePosition) {
             //do nothing
             break;
         case enum_TransformationOperation.CROP:
-            return;//FIXME:
-            var activeLayer = g_transformState.activeCanvas.activeLayer;
-            handleMouseMoveCrop(canvasMousePosition, g_transformState);
+            const activeLayer = g_transformState.activeCanvas.activeLayer;
+            handleMouseMoveCrop(canvasMousePosition, activeLayer);
             break;
         default:
             console.log("ERROR: Invalid state.");
@@ -345,8 +440,7 @@ function handleMouseDownCrop(activeLayer) {
 }
 
 function getActiveLayerWithCanvasPosition(canvasMousePosition, layers, noMatchReturnValue) {
-
-    for (let i = 0; i < layers.length; i++) {
+    for (let i = layers.length-1; i >= 0; i--) {
         let layer = layers[i];
         // Apply our transformation matrix to the non transformed image outline
         let imageOutline = applyTransformationMatrixToAllPoints(
@@ -386,7 +480,7 @@ function handleMouseDownOnCanvas(pageMousePosition, canvasMousePosition) {
             //do nothing
             break;
         case enum_TransformationOperation.CROP:
-            //FIXME: handleMouseDownCrop(clickedActiveLayer);
+            handleMouseDownCrop(clickedActiveLayer);
             break;
         default:
             console.log("ERROR: Invalid state.");
@@ -397,17 +491,19 @@ function handleMouseDownOnCanvas(pageMousePosition, canvasMousePosition) {
 function mouseMoveOnDocumentEvent(pageMousePosition) {
     if (g_transformState != null && g_transformState.isMouseDownAndClickedOnCanvas) {
         g_transformState.referenceImageHighlightedTriangle = null;
-        // copyimagetocpp();
 
-        // g_transformState.activeCanvas.imageOutlineHighlightLayer = g_transformState.activeCanvas.activeLayer;
+        g_transformState.activeCanvas.imageOutlineHighlightLayer = g_transformState.activeCanvas.activeLayer;
         handleMouseMoveOnDocument(pageMousePosition);
-        //draw();
+
         //clearOutputListAndWipeCanvas();//FIXME:
-        draw(pageMousePosition);
+        draw();
         updateDatabaseCanvasHeap();
         updateLookupCanvasHeap();
 
-        if (g_transformState.activeCanvas == g_transformState.interactiveCanvasState)
+        const isCrop = g_transformState.currentTranformationOperationState == enum_TransformationOperation.CROP;
+        const isCroppingEffectActive = g_transformState.isMouseDownAndClickedOnCanvas && isCrop;
+
+        if (!isCroppingEffectActive && g_transformState.activeCanvas == g_transformState.interactiveCanvasState)
             findMatches();
     }
 }
@@ -415,12 +511,14 @@ function mouseMoveOnDocumentEvent(pageMousePosition) {
 function mouseUpEvent() {
     if (g_transformState != null && g_transformState.isMouseDownAndClickedOnCanvas) {
         //FIXME: we actually only need to update one heap
+
+        handleMouseUp();
+        g_transformState.isMouseDownAndClickedOnCanvas = false;
+        draw();
+
         updateDatabaseCanvasHeap();
         updateLookupCanvasHeap();
 
-        draw();
-        handleMouseUp();
-        g_transformState.isMouseDownAndClickedOnCanvas = false;
         loadEdgeImages();
         findMatches();
     }
@@ -436,20 +534,16 @@ function canvasMouseDownEvent(pageMousePosition, canvasMousePosition) {
     handleMouseDownOnCanvas(pageMousePosition, canvasMousePosition);
 }
 
-function canvasMouseMoveEvent(canvasMousePosition) {
-    if (g_transformState == null) {//hack
+function canvasMouseMoveEvent(canvasMousePosition, canvasState) {
+
+    const layers = g_transformState.activeCanvas.layers;
+    g_transformState.activeCanvas.imageOutlineHighlightLayer = getActiveLayerWithCanvasPosition(canvasMousePosition, layers, null);
+
+    if (g_transformState === undefined) {
         return;
     }
-    // const layers = g_transformState.interactiveCanvasState.layers;
-    // const canvasContext = g_transformState.interactiveCanvasState.imageOutlineLayerCanvasContext;
-    //
-    // g_transformState.interactiveCanvasState.imageOutlineHighlightLayer = getActiveLayerWithCanvasPosition(canvasMousePosition, layers, null);
 
-    // if (g_transformState == null || g_transformState.activeCanvas != g_transformState.interactiveCanvasState) {
-    //     return;
-    // }
-
-    if (g_transformState.isMouseDownAndClickedOnCanvas) {
+    if (g_transformState.isMouseDownAndClickedOnCanvas && canvasState == g_transformState.activeCanvas) {
         handleMouseMoveOnCanvas(canvasMousePosition);
         clearLowerUi();
     }
@@ -496,7 +590,13 @@ var g_img = new Image();
 g_img.src = g_src;
 
 function addLayer(canvasState, img) {
-    canvasState.layers.push(newLayer(img))
+    canvasState.layers.push(newLayer(img));
+
+    g_transformState.interactiveCanvasState.imageLayerCanvasContext =
+        document.getElementById("lookupCanvas").getContext("2d");
+    g_transformState.databaseCanvasState.imageLayerCanvasContext =
+        document.getElementById("databaseCanvas").getContext("2d");
+
     if (canvasState.layers.length == 1) {
         canvasState.activeLayer = canvasState.layers[0];
     }
@@ -506,6 +606,7 @@ async function initImages() {
     // We're guaranteed images are already loaded
     addLayer(g_transformState.interactiveCanvasState, g_img);
     addLayer(g_transformState.databaseCanvasState, g_img);
+    window.requestAnimationFrame(drawImageOutlineInternal);
 }
 
 var g_globalState = {
@@ -513,6 +614,15 @@ var g_globalState = {
     inputImage1Mat: null,
     inputImage2Mat: null,
 };
+
+function drawCroppingEffect(canvasContext, imageOutline) {
+    canvasContext.beginPath();
+    drawPolygonPath(canvasContext, buildRect(canvasContext.canvas.width, canvasContext.canvas.height));
+    drawPolygonPath(canvasContext, imageOutline);
+    canvasContext.globalCompositeOperation = 'source-over';
+    canvasContext.fillStyle = 'rgba(255, 255, 255, 0.5)';
+    canvasContext.fill('evenodd');
+}
 
 function updateClickAndSeeImage() {
 
@@ -524,6 +634,23 @@ function updateClickAndSeeImage() {
     const c_clickandseeImageRight = getCleanCanvas("clickandseeImageRight");
     c_clickandseeImageRight.ctx.drawImage(databaseCanvas.c, 0, 0);
 
+}
+
+function drawLayer(ctx, canvasState, layer) {
+    const isCrop = g_transformState.currentTranformationOperationState == enum_TransformationOperation.CROP;
+    const isCroppingEffectActive = g_transformState.isMouseDownAndClickedOnCanvas && isCrop;
+    const isActiveCanvas = g_transformState.activeCanvas == canvasState;
+    const isActiveLayer = canvasState.activeLayer == layer;
+    const dontCropImage = isActiveLayer && isCroppingEffectActive && isActiveCanvas;
+    const skipUiLayer = isCroppingEffectActive && isActiveCanvas && !isActiveLayer;
+
+    const transMat = layer.appliedTransformationsMat;
+    if (dontCropImage) {
+        drawImageWithTransformations(ctx, layer.image, transMat);
+    } else {
+        const drawingImage = cropLayerImage(layer.image, layer.nonTransformedImageOutline);
+        drawImageWithTransformations(ctx, drawingImage, transMat);
+    }
 }
 
 function draw() {
@@ -543,13 +670,22 @@ function draw() {
 
     for (let i = 0; i < g_transformState.interactiveCanvasState.layers.length; i++){
         const layer = g_transformState.interactiveCanvasState.layers[i];
-        const transMat = layer.appliedTransformationsMat;
-        drawImageWithTransformations(c_lookupCanvas.ctx, layer.image, transMat);
+        drawLayer(c_lookupCanvas.ctx, g_transformState.interactiveCanvasState, layer);
     }
+
     for (let i = 0; i < g_transformState.databaseCanvasState.layers.length; i++){
         const layer = g_transformState.databaseCanvasState.layers[i];
-        const transMat = layer.appliedTransformationsMat;
-        drawImageWithTransformations(c_databaseCanvas.ctx, layer.image, transMat);
+        drawLayer(c_databaseCanvas.ctx, g_transformState.databaseCanvasState, layer);
+    }
+
+    const isCrop = g_transformState.currentTranformationOperationState == enum_TransformationOperation.CROP;
+    const isCroppingEffectActive = g_transformState.isMouseDownAndClickedOnCanvas && isCrop;
+    if (isCroppingEffectActive) {
+        const appliedTransformations = g_transformState.activeCanvas.activeLayer.appliedTransformationsMat;
+        const imageOutlineToken1 = g_transformState.activeCanvas.activeLayer.nonTransformedImageOutline;
+        const transformedImageOutline = applyTransformationMatrixToAllPoints(imageOutlineToken1, appliedTransformations);
+        const canvasContext = g_transformState.activeCanvas.imageLayerCanvasContext;
+        drawCroppingEffect(canvasContext, transformedImageOutline);
     }
 
     let width = c_lookupCanvas.c.width;
@@ -568,7 +704,7 @@ $(document).mousedown(function (e) {
 });
 
 $(document).mousemove(function (e) {
-    var pageMousePosition = getCurrentPageMousePosition(e);
+    const pageMousePosition = getCurrentPageMousePosition(e);
     mouseMoveOnDocumentEvent(pageMousePosition);
 });
 
@@ -618,14 +754,14 @@ $("#" + INTERACTIVE_CANVAS_OVERLAY_ID).mousemove(function (e) {
     var canvasElem = $("#" + INTERACTIVE_CANVAS_OVERLAY_ID)[0];
     const canvasMousePosition = getCurrentCanvasMousePosition(e, canvasElem);
 
-    canvasMouseMoveEvent(canvasMousePosition);
+    canvasMouseMoveEvent(canvasMousePosition, g_transformState.interactiveCanvasState);
 });
 
 $(document).on('touchmove', "#" + INTERACTIVE_CANVAS_OVERLAY_ID, function(e) {
     e.preventDefault();
     var canvasElem = $("#" + INTERACTIVE_CANVAS_OVERLAY_ID)[0];
     const canvasMousePosition = getCurrentCanvasMousePosition(e, canvasElem);
-    canvasMouseMoveEvent(canvasMousePosition);
+    canvasMouseMoveEvent(canvasMousePosition, g_transformState.interactiveCanvasState);
 });
 
 $("#" + INTERACTIVE_CANVAS_OVERLAY_ID).mouseup(function (e) {
@@ -666,14 +802,14 @@ $("#" + DATABASE_CANVAS_OVERLAY_ID).mousemove(function (e) {
     var canvasElem = $("#" + DATABASE_CANVAS_OVERLAY_ID)[0];
     const canvasMousePosition = getCurrentCanvasMousePosition(e, canvasElem);
 
-    canvasMouseMoveEvent(canvasMousePosition);
+    canvasMouseMoveEvent(canvasMousePosition, g_transformState.databaseCanvasState);
 });
 
 $(document).on('touchmove', "#" + DATABASE_CANVAS_OVERLAY_ID, function(e) {
     e.preventDefault();
     var canvasElem = $("#" + DATABASE_CANVAS_OVERLAY_ID)[0];
     const canvasMousePosition = getCurrentCanvasMousePosition(e, canvasElem);
-    canvasMouseMoveEvent(canvasMousePosition);
+    canvasMouseMoveEvent(canvasMousePosition, g_transformState.databaseCanvasState);
 });
 
 $("#" + DATABASE_CANVAS_OVERLAY_ID).mouseup(function (e) {

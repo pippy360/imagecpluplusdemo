@@ -234,9 +234,11 @@
       #clickandseeImageLeft_ui {
           cursor: pointer;
       }
-
       #clickandseeImageRight_ui {
           cursor: pointer;
+      }
+      .avoid-clicks {
+          pointer-events: none;
       }
 
     </style>
@@ -280,6 +282,9 @@
                           </button>
                           <button class="btn btn-secondary" onclick="setCurrnetOperation(enum_TransformationOperation.SKEW_Y)">
                               Skew/Shear Y
+                          </button>
+                          <button class="btn btn-secondary" onclick="setCurrnetOperation(enum_TransformationOperation.CROP)">
+                              Crop
                           </button>
                             <button type="button" style="margin-bottom: 8px;" class="alert-danger btn btn-secondary"
                                     onclick="reset()">Reset</button>
@@ -326,11 +331,13 @@
                                     <canvas id="lookupCanvas" class="canvasInline" width="600" height="600"></canvas>
                                     <canvas id="lookupCanvas_uilower" class="canvasInline canvasUILayer" width="600" height="600"></canvas>
                                     <canvas id="lookupCanvas_ui" class="canvasInline canvasUILayer" width="600" height="600"></canvas>
+                                    <canvas id="lookupCanvas_uipass" class="canvasInline canvasUILayer avoid-clicks" width="600" height="600"></canvas>
                                 </div>
                                 <div class="canvasWrapper canvasWrapperRight" width="600" height="600">
                                     <canvas id="databaseCanvas" class="canvasInline" width="600" height="600"></canvas>
                                     <canvas id="databaseCanvas_uilower" class="canvasInline canvasUILayer" width="600" height="600"></canvas>
                                     <canvas id="databaseCanvas_ui" class="canvasInline canvasUILayer" width="600" height="600"></canvas>
+                                    <canvas id="databaseCanvas_uipass" class="canvasInline canvasUILayer avoid-clicks" width="600" height="600"></canvas>
                                 </div>
                             </div>
                         </div>

@@ -51,34 +51,13 @@ function drawSquareWithTransformation(canvasObj, cPoint, radius, mat, colour) {
     canvasObj.ctx_ui.restore();
 }
 
-function drawPolygonPath_m(ctx, inPoints) {
-    ctx.beginPath();
-    ctx.moveTo(inPoints[0][0], inPoints[1][0]);
-    for (var i = 1; i < inPoints[0].length; i++) {//i = 1 to skip first point
-        ctx.lineTo(inPoints[0][i], inPoints[1][i]);
-    }
-    ctx.closePath();
-    ctx.stroke();
-}
-
 function drawPolygonPath(ctx, inPoints) {
-    ctx.beginPath();
     ctx.moveTo(inPoints[0][0], inPoints[0][1]);
     for (var i = 1; i < inPoints.length; i++) {//i = 1 to skip first point
         ctx.lineTo(inPoints[i][0], inPoints[i][1]);
     }
     ctx.closePath();
-    ctx.stroke();
-}
-
-function drawPolyFullNoFill(ctx, shape) {
-    ctx.beginPath();
-    drawPolygonPath(ctx, shape);
-    //ctx.globalCompositeOperation = 'source-over';
-    ctx.strokeStyle = (stroke)? stroke : 'rgb(45, 0, 255)';
-    ctx.strokeWidth = 1;
-    ctx.fillStyle = (fill)? fill: 'green';
-    ctx.fill('evenodd');
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0)';
     ctx.stroke();
 }
 

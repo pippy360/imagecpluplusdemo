@@ -253,6 +253,26 @@ function updateDatabaseCanvasHeap() {
 
 async function loadImage(src) {
     console.log("Loading image: "+src);
+    let img = new Image();
+    g_flushCache = true;
+    img.onload = function () {
+        addLayer(g_transformState.activeCanvas, img);
+
+        draw();
+
+        updateLookupCanvasHeap();
+        updateDatabaseCanvasHeap();
+
+        loadEdgeImages();
+        findMatches();
+    };
+    img.src = src;
+    g_rightSelected = null;
+    g_leftSelected = null;
+}
+
+async function initloadImage(src) {
+    console.log("Loading image: "+src);
     g_flushCache = true;
     g_img.onload = function () {
         draw();
@@ -463,7 +483,6 @@ function findMatches() {
         const color = "" + randomColor();
 
         {
-            // debugger;
             let el = document.createElement("div");
             el.innerHTML = `<div class='shapeListEl' style="background-color: hsl(${color})" onmouseover="drawshapefromResult('${opt[1]}', '${opt[0]}', ${opt[2]}, ${opt[3]})" id='shapeListEl${i}'>${i}</div>`;
             list.appendChild(el);
@@ -499,7 +518,6 @@ function parseGlobalShapes(ctx, shapes) {
     const list = document.getElementById('shapelist');
     list.innerHTML = "";
     for(let i = 0;i < lines.length;i++) {
-        debugger;
         let opt = lines[i];
         let el = document.createElement("div");
         el.innerHTML = `<div class='shapeListEl' onmouseover="drawshapefromlist(${i}, '${lines[i]}')" id='shapeListEl${i}'>${opt}</div>`;
@@ -578,7 +596,7 @@ function loadEdgeImages() {
 }
 
 function main() {
-    loadImage(g_img.src);
+    initloadImage(g_img.src);
 
     $( "#databaseAndLookupCanvasWrapper" ).hover(
         function() {

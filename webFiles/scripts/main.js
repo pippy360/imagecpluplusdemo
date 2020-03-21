@@ -251,41 +251,23 @@ function updateDatabaseCanvasHeap() {
     Module.HEAP8.set(image.data, canvas_inserted_in_database_wasm_heap.ptr);
 }
 
-async function loadImage(src) {
-    console.log("Loading image: "+src);
-    let img = new Image();
-    g_flushCache = true;
-    img.onload = function () {
-        addLayer(g_transformState.activeCanvas, img);
+async function addLayerToActiveCanvas(src) {
 
-        draw();
+    await addLayer(g_transformState.activeCanvas, src);
 
-        updateLookupCanvasHeap();
-        updateDatabaseCanvasHeap();
+    if (g_transformState.activeCanvas == g_transformState.databaseCanvasState) {
+        g_flushCache = true;
+    }
 
-        loadEdgeImages();
-        findMatches();
-    };
-    img.src = src;
-    g_rightSelected = null;
-    g_leftSelected = null;
-}
+    draw();
 
-async function initloadImage(src) {
-    console.log("Loading image: "+src);
-    g_flushCache = true;
-    g_img.onload = function () {
-        draw();
+    // Updating the wasm heap needs to happen after draw because we load data from the canvas
+    updateLookupCanvasHeap();
+    updateDatabaseCanvasHeap();
 
-        updateLookupCanvasHeap();
-        updateDatabaseCanvasHeap();
+    loadEdgeImages();
 
-        loadEdgeImages();
-        findMatches();
-    };
-    g_img.src = src;
-    g_rightSelected = null;
-    g_leftSelected = null;
+    findMatches();
 }
 
 function drawShapeAndFragmentClickAndSee(imageHeap, width, height, shapeStr, shapeSize, canvasId, rotation) {
@@ -454,8 +436,9 @@ function drawMatches() {
 }
 
 function findMatches() {
-
-    var db = module.findMatchesForImageFromCanvas(
+    updateDatabaseCanvasHeap();
+    updateLookupCanvasHeap();
+    let db = module.findMatchesForImageFromCanvas(
         canvas_inserted_in_database_wasm_heap.ptr,
         canvas_inserted_in_database_wasm_heap.width,
         canvas_inserted_in_database_wasm_heap.height,
@@ -477,7 +460,7 @@ function findMatches() {
     const list = document.getElementById('shapelist2');
     list.innerHTML = "";
     let keys = Object.keys(g_matchesObj);
-    for (var i = 0; i < keys.length; i++) {
+    for (let i = 0; i < keys.length; i++) {
         var key = keys[i];
         let opt = g_matchesObj[key];
         const color = "" + randomColor();
@@ -596,24 +579,6 @@ function loadEdgeImages() {
 }
 
 function main() {
-    initloadImage(g_img.src);
-
-    $( "#databaseAndLookupCanvasWrapper" ).hover(
-        function() {
-            // const lookup = getCleanUICanvas("lookupCanvas");
-            // const database = getCleanUICanvas("databaseCanvas");
-
-            // drawMatches();
-
-            // lookup.c.style.opacity = "0.5";
-            // database.c.style.opacity = "0.5";
-        }, function() {
-            // const lookup = getCleanUICanvas("lookupCanvas");
-            // const database = getCleanUICanvas("databaseCanvas");
-            //
-            // lookup.c.style.opacity = "1";
-            // database.c.style.opacity = "1";
-        }
-    );
+    init_loadTransformStateAndImages();
 }
 

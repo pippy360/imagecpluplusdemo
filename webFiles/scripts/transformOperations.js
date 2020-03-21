@@ -46,26 +46,45 @@ function convertTransformationObjectToTransformationMatrix(transformations, shap
     return ret;
 }
 
-function newLayer(layerImage, colour) {
+function _newLayer(layerImage) {
     return {
         nonTransformedImageOutline: buildRect(layerImage.width, layerImage.height),
         image: layerImage,
         appliedTransformationsMat: getIdentityMatrix(),
         visible: true,
         layerColour: [0, 0, 0], //used for canvas UI overlay elements
-        colour: colour//used for UI elements
+        colour: [255, 0, 0]//used for UI elements
     };
 }
 
-let interactiveCanvasState = {
-    activeLayer: null,
-    layers : []
-};
+function asyncLoadImage(src){
+    return new Promise((resolve, reject) => {
+        let img = new Image();
+        img.onload = function() {
+            resolve(img);
+        };
+        img.onerror = reject;
+        img.src = src;
+    })
+}
 
-let databaseCanvasState = {
-    activeLayer: null,
-    layers : []
-};
+function newLayer(src){
+    return new Promise((resolve, reject) => {
+        let img = new Image();
+        img.onload = function() {
+            resolve(_newLayer(img))
+        };
+        img.onerror = reject;
+        img.src = src;
+    })
+}
+
+async function addLayer(canvasState, imgSrc) {
+    canvasState.layers.push(await newLayer(imgSrc));
+    if (canvasState.layers.length == 1) {
+        canvasState.activeLayer = canvasState.layers[0];
+    }
+}
 
 function getIdentityTransformations() {
     return {
@@ -79,30 +98,116 @@ function getIdentityTransformations() {
     };
 }
 
-let g_transformState = {
-    activeCanvas: interactiveCanvasState,
-    interactiveCanvasState: interactiveCanvasState,
-    databaseCanvasState: databaseCanvasState,
-	currentTranformationOperationState: enum_TransformationOperation.TRANSLATE,
-    isMouseDownAndClickedOnCanvas: false,
-    temporaryAppliedTransformations: getIdentityTransformations(),
+let g_drawingOptions = {
+    liveupdate: false,
 };
+
+let g_transformState = null;
+
+function newCanvasState() {
+    return {
+        activeLayer: null,
+        layers : []
+    }
+}
+
+async function newTransformState() {
+
+    // Add the default layer
+    let interactiveCanvasState = newCanvasState();
+    let databaseCanvasState = newCanvasState();
+    interactiveCanvasState.imageLayerCanvasContext = document.getElementById("lookupCanvas").getContext("2d");
+    databaseCanvasState.imageLayerCanvasContext = document.getElementById("databaseCanvas").getContext("2d");
+
+    let p1 = addLayer(interactiveCanvasState, "images/basicshapes.png");
+    let p2 = addLayer(databaseCanvasState, "images/basicshapes.png");
+    await Promise.all([p1, p2]);
+    interactiveCanvasState.activeLayer = interactiveCanvasState.layers[0];
+    databaseCanvasState.activeLayer = databaseCanvasState.layers[0];
+    return {
+        drawingOptions: g_drawingOptions,
+        activeCanvas: interactiveCanvasState,
+        interactiveCanvasState: interactiveCanvasState,
+        databaseCanvasState: databaseCanvasState,
+        currentTransformationOperationState: enum_TransformationOperation.TRANSLATE,
+        isMouseDownAndClickedOnCanvas: false,
+        temporaryAppliedTransformations: getIdentityTransformations(),
+    }
+}
+
+async function loadTransformationStateFromUrlData(urlData) {
+    let transformData = JSON.parse(urlData);
+
+    {
+        let layers = transformData.interactiveCanvasState.layers;
+        for (let i = 0; i < layers.length; i++) {
+            //FIXME: batch these
+            layers[i].image = await asyncLoadImage(layers[i].image)
+        }
+        transformData.interactiveCanvasState.activeLayer = layers[0];
+    }
+
+    {
+        let layers = transformData.databaseCanvasState.layers;
+        for (let i = 0; i < layers.length; i++) {
+            //FIXME: batch these
+            layers[i].image = await asyncLoadImage(layers[i].image)
+        }
+        transformData.databaseCanvasState.activeLayer = layers[0];
+    }
+
+    transformData.activeCanvas = transformData.interactiveCanvasState;
+    transformData.interactiveCanvasState.imageLayerCanvasContext =
+        document.getElementById("lookupCanvas").getContext("2d");
+    transformData.databaseCanvasState.imageLayerCanvasContext =
+        document.getElementById("databaseCanvas").getContext("2d");
+
+    return transformData;
+}
 
 function wipeTemporaryAppliedTransformations() {
     g_transformState.temporaryAppliedTransformations = getIdentityTransformations();
 }
 
 function setCurrnetOperation(newState) {
-    g_transformState.currentTranformationOperationState = newState;
+    if (g_transformState == null) {
+        return;
+    }
+
+    g_transformState.currentTransformationOperationState = newState;
     applyTransformationEffects(newState);
 }
 
-function reset() {
-    var saved = g_transformState.currentTranformationOperationState;
-    //FIXME:
-    // g_globalState = buildGlobalState();
+async function init_loadTransformStateAndImages() {
+    //check if we can load from the url
+    let urlData = (new URLSearchParams(location.search)).get('transfromState');
+    let transformState;
+    if (urlData == null) {
+        transformState = await newTransformState();
+    } else {
+        transformState = await loadTransformationStateFromUrlData(urlData);
+    }
+
+    //set this at the end of the function so it's not used when it's half finished
+    g_transformState = transformState;
+
+    draw();
+    findMatches();
+    window.requestAnimationFrame(drawImageOutlineInternal);
+}
+
+async function setDefaultTransformationValues() {
+    if (g_transformState == null) {
+        return;
+    }
+
+    let saved = enum_TransformationOperation.TRANSLATE;
+
+    g_transformState = await newTransformState();
+
     setCurrnetOperation(saved);
     draw();
+    findMatches();
 }
 
 function applyTransformationEffects(state) {
@@ -253,7 +358,7 @@ function handleMouseUpCrop(activeLayer) {
 
 
 function handleMouseUp() {
-    switch (g_transformState.currentTranformationOperationState) {
+    switch (g_transformState.currentTransformationOperationState) {
         case enum_TransformationOperation.TRANSLATE:
             break;
         case enum_TransformationOperation.NON_UNIFORM_SCALE:
@@ -280,9 +385,9 @@ function handleMouseUp() {
 }
 
 function drawRotationEffect(pageMousePosition) {
-    if (g_transformState.currentTranformationOperationState == enum_TransformationOperation.ROTATE
-        || g_transformState.currentTranformationOperationState == enum_TransformationOperation.SKEW_X
-        || g_transformState.currentTranformationOperationState == enum_TransformationOperation.SKEW_Y)
+    if (g_transformState.currentTransformationOperationState == enum_TransformationOperation.ROTATE
+        || g_transformState.currentTransformationOperationState == enum_TransformationOperation.SKEW_X
+        || g_transformState.currentTransformationOperationState == enum_TransformationOperation.SKEW_Y)
     {
         if (g_transformState.isMouseDownAndClickedOnCanvas) {
             _drawRotationUIElement(
@@ -295,7 +400,7 @@ function drawRotationEffect(pageMousePosition) {
 }
 
 function handleMouseMoveOnDocument(pageMousePosition) {
-    switch (g_transformState.currentTranformationOperationState) {
+    switch (g_transformState.currentTransformationOperationState) {
         case enum_TransformationOperation.TRANSLATE:
             handleMouseMoveTranslate(g_transformState.pageMouseDownPosition, pageMousePosition, g_transformState);
             break;
@@ -409,7 +514,7 @@ function drawImageOutlineInternal() {
 }
 
 function handleMouseMoveOnCanvas(canvasMousePosition) {
-    switch (g_transformState.currentTranformationOperationState) {
+    switch (g_transformState.currentTransformationOperationState) {
         case enum_TransformationOperation.TRANSLATE:
             //do nothing
             break;
@@ -466,7 +571,7 @@ function handleMouseDownOnCanvas(pageMousePosition, canvasMousePosition) {
     g_transformState.activeCanvas.activeLayer = clickedActiveLayer;
     g_transformState.transformationMatBeforeTemporaryTransformations = clickedActiveLayer.appliedTransformationsMat;
 
-    switch (g_transformState.currentTranformationOperationState) {
+    switch (g_transformState.currentTransformationOperationState) {
         case enum_TransformationOperation.TRANSLATE:
             //do nothing
             break;
@@ -497,14 +602,17 @@ function mouseMoveOnDocumentEvent(pageMousePosition) {
 
         //clearOutputListAndWipeCanvas();//FIXME:
         draw();
-        updateDatabaseCanvasHeap();
-        updateLookupCanvasHeap();
 
-        const isCrop = g_transformState.currentTranformationOperationState == enum_TransformationOperation.CROP;
+        const isCrop = g_transformState.currentTransformationOperationState == enum_TransformationOperation.CROP;
         const isCroppingEffectActive = g_transformState.isMouseDownAndClickedOnCanvas && isCrop;
 
-        if (!isCroppingEffectActive && g_transformState.activeCanvas == g_transformState.interactiveCanvasState)
+        if (!isCroppingEffectActive && g_transformState.activeCanvas == g_transformState.interactiveCanvasState
+            && g_transformState.drawingOptions.liveupdate)
+        {
+            updateDatabaseCanvasHeap();
+            updateLookupCanvasHeap();
             findMatches();
+        }
     }
 }
 
@@ -584,37 +692,6 @@ function buildRect(x2, y2) {
 
 }
 
-let g_initImages = false;
-const g_src = './images/basicshapes.png'
-var g_img = new Image();
-g_img.src = g_src;
-
-function addLayer(canvasState, img) {
-    canvasState.layers.push(newLayer(img));
-
-    g_transformState.interactiveCanvasState.imageLayerCanvasContext =
-        document.getElementById("lookupCanvas").getContext("2d");
-    g_transformState.databaseCanvasState.imageLayerCanvasContext =
-        document.getElementById("databaseCanvas").getContext("2d");
-
-    if (canvasState.layers.length == 1) {
-        canvasState.activeLayer = canvasState.layers[0];
-    }
-}
-
-async function initImages() {
-    // We're guaranteed images are already loaded
-    addLayer(g_transformState.interactiveCanvasState, g_img);
-    addLayer(g_transformState.databaseCanvasState, g_img);
-    window.requestAnimationFrame(drawImageOutlineInternal);
-}
-
-var g_globalState = {
-    canvasClickLocation: {x: .5, y: .5},
-    inputImage1Mat: null,
-    inputImage2Mat: null,
-};
-
 function drawCroppingEffect(canvasContext, imageOutline) {
     canvasContext.beginPath();
     drawPolygonPath(canvasContext, buildRect(canvasContext.canvas.width, canvasContext.canvas.height));
@@ -637,7 +714,7 @@ function updateClickAndSeeImage() {
 }
 
 function drawLayer(ctx, canvasState, layer) {
-    const isCrop = g_transformState.currentTranformationOperationState == enum_TransformationOperation.CROP;
+    const isCrop = g_transformState.currentTransformationOperationState == enum_TransformationOperation.CROP;
     const isCroppingEffectActive = g_transformState.isMouseDownAndClickedOnCanvas && isCrop;
     const isActiveCanvas = g_transformState.activeCanvas == canvasState;
     const isActiveLayer = canvasState.activeLayer == layer;
@@ -653,17 +730,26 @@ function drawLayer(ctx, canvasState, layer) {
     }
 }
 
+function _jsonReplacer(name, val) {
+    if (name == "image") {
+        return val.src;
+    } else if (name == "activeCanvas" || name == "activeLayer") {
+        return undefined;
+    } else {
+        return val;
+    }
+}
+
 function draw() {
     console.log("draw called");
 
-    if (!g_initImages) {
-        initImages();
-        g_initImages = true;
+    if (g_transformState == null) {
+        return;
     }
 
-    // window.history.pushState("object or string", "Title", "index.html?point=" + g_globalState.canvasClickLocation.x + ","
-    //     + g_globalState.canvasClickLocation.y + "&image=" + g_src + "&appliedTransformationsMat="
-    //     + JSON.stringify(g_transformState.appliedTransformationsMat)+"" );
+    window.history.pushState("object or string", "Title", "index.html?"
+        + "transfromState="
+        + JSON.stringify(g_transformState, _jsonReplacer)+"");
 
     const c_lookupCanvas = getCleanCanvas("lookupCanvas");
     const c_databaseCanvas = getCleanCanvas("databaseCanvas");
@@ -678,7 +764,7 @@ function draw() {
         drawLayer(c_databaseCanvas.ctx, g_transformState.databaseCanvasState, layer);
     }
 
-    const isCrop = g_transformState.currentTranformationOperationState == enum_TransformationOperation.CROP;
+    const isCrop = g_transformState.currentTransformationOperationState == enum_TransformationOperation.CROP;
     const isCroppingEffectActive = g_transformState.isMouseDownAndClickedOnCanvas && isCrop;
     if (isCroppingEffectActive) {
         const appliedTransformations = g_transformState.activeCanvas.activeLayer.appliedTransformationsMat;
@@ -704,11 +790,19 @@ $(document).mousedown(function (e) {
 });
 
 $(document).mousemove(function (e) {
+    if (g_transformState == null) {
+        return;
+    }
+
     const pageMousePosition = getCurrentPageMousePosition(e);
     mouseMoveOnDocumentEvent(pageMousePosition);
 });
 
 $(document).bind( "touchmove", function (e) {
+    if (g_transformState == null) {
+        return;
+    }
+
     const pageMousePosition = [
         e.originalEvent.touches[0].pageX,
         e.originalEvent.touches[0].pageY
@@ -720,14 +814,26 @@ $(document).bind( "touchmove", function (e) {
 });
 
 $(document).mouseup(function (e) {
+    if (g_transformState == null) {
+        return;
+    }
+
     mouseUpEvent();
 });
 
 $(document).bind( "touchend", function (e) {
+    if (g_transformState == null) {
+        return;
+    }
+
     mouseUpEvent()
 });
 
 $("#" + INTERACTIVE_CANVAS_OVERLAY_ID).mousedown(function (e) {
+    if (g_transformState == null) {
+        return;
+    }
+
     e.preventDefault();
 
     g_transformState.activeCanvas = g_transformState.interactiveCanvasState;
@@ -739,6 +845,10 @@ $("#" + INTERACTIVE_CANVAS_OVERLAY_ID).mousedown(function (e) {
 });
 
 $(document).on('touchstart', "#" + INTERACTIVE_CANVAS_OVERLAY_ID, function(e) {
+    if (g_transformState == null) {
+        return;
+    }
+
     e.preventDefault();
     const pageMousePosition = [
         e.originalEvent.touches[0].pageX,
@@ -751,13 +861,21 @@ $(document).on('touchstart', "#" + INTERACTIVE_CANVAS_OVERLAY_ID, function(e) {
 
 
 $("#" + INTERACTIVE_CANVAS_OVERLAY_ID).mousemove(function (e) {
-    var canvasElem = $("#" + INTERACTIVE_CANVAS_OVERLAY_ID)[0];
+    if (g_transformState == null) {
+        return;
+    }
+
+    const canvasElem = $("#" + INTERACTIVE_CANVAS_OVERLAY_ID)[0];
     const canvasMousePosition = getCurrentCanvasMousePosition(e, canvasElem);
 
     canvasMouseMoveEvent(canvasMousePosition, g_transformState.interactiveCanvasState);
 });
 
 $(document).on('touchmove', "#" + INTERACTIVE_CANVAS_OVERLAY_ID, function(e) {
+    if (g_transformState == null) {
+        return;
+    }
+
     e.preventDefault();
     var canvasElem = $("#" + INTERACTIVE_CANVAS_OVERLAY_ID)[0];
     const canvasMousePosition = getCurrentCanvasMousePosition(e, canvasElem);
@@ -774,6 +892,10 @@ $("#" + INTERACTIVE_CANVAS_OVERLAY_ID).mouseup(function (e) {
 
 
 $("#" + DATABASE_CANVAS_OVERLAY_ID).mousedown(function (e) {
+    if (g_transformState == null) {
+        return;
+    }
+
     e.preventDefault();
 
     g_flushCache = true;
@@ -787,6 +909,10 @@ $("#" + DATABASE_CANVAS_OVERLAY_ID).mousedown(function (e) {
 });
 
 $(document).on('touchstart', "#" + DATABASE_CANVAS_OVERLAY_ID, function(e) {
+    if (g_transformState == null) {
+        return;
+    }
+
     e.preventDefault();
     const pageMousePosition = [
         e.originalEvent.touches[0].pageX,
@@ -799,6 +925,10 @@ $(document).on('touchstart', "#" + DATABASE_CANVAS_OVERLAY_ID, function(e) {
 
 
 $("#" + DATABASE_CANVAS_OVERLAY_ID).mousemove(function (e) {
+    if (g_transformState == null) {
+        return;
+    }
+
     var canvasElem = $("#" + DATABASE_CANVAS_OVERLAY_ID)[0];
     const canvasMousePosition = getCurrentCanvasMousePosition(e, canvasElem);
 
@@ -806,6 +936,10 @@ $("#" + DATABASE_CANVAS_OVERLAY_ID).mousemove(function (e) {
 });
 
 $(document).on('touchmove', "#" + DATABASE_CANVAS_OVERLAY_ID, function(e) {
+    if (g_transformState == null) {
+        return;
+    }
+
     e.preventDefault();
     var canvasElem = $("#" + DATABASE_CANVAS_OVERLAY_ID)[0];
     const canvasMousePosition = getCurrentCanvasMousePosition(e, canvasElem);

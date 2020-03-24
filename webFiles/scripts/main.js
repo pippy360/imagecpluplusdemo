@@ -12,6 +12,8 @@ let g_rightSelected;
 let g_lastusedClickAndSeeShapeRight;
 let g_lastusedClickAndSeeShapeLeft;
 
+let g_mainGlobalState;
+
 function getHashDistance() {
     let databaseString = g_lastusedClickAndSeeShapeRight;
     let lookupString = g_lastusedClickAndSeeShapeLeft;
@@ -234,8 +236,8 @@ function setKernelVal() {
 }
 
 function updateLookupCanvasHeap() {
-    const lookupCanvas = getCanvas('lookupCanvas');
-    const image = lookupCanvas.ctx.getImageData(0, 0,
+    const lookupCanvas_ctx = document.getElementById('lookupCanvas_output').getContext("2d");
+    const image = lookupCanvas_ctx.getImageData(0, 0,
         lookup_canvas_wasm_heap.width,
         lookup_canvas_wasm_heap.height);
 
@@ -243,12 +245,25 @@ function updateLookupCanvasHeap() {
 }
 
 function updateDatabaseCanvasHeap() {
-    const databaseCanvas = getCanvas('databaseCanvas');
-    const image = databaseCanvas.ctx.getImageData(0, 0,
+    const databaseCanvas_ctx = document.getElementById('databaseCanvas_output').getContext("2d");
+    const image = databaseCanvas_ctx.getImageData(0, 0,
         canvas_inserted_in_database_wasm_heap.width,
         canvas_inserted_in_database_wasm_heap.height);
 
     Module.HEAP8.set(image.data, canvas_inserted_in_database_wasm_heap.ptr);
+}
+
+async function addLayerToLookupCanvas(src) {
+    await addLayer(g_transformState.interactiveCanvasState, src);
+    draw();
+    findMatches();
+}
+
+async function addLayerToDatabaseCanvas(src) {
+    await addLayer(g_transformState.databaseCanvasState, src);
+    g_flushCache = true;
+    draw();
+    findMatches();
 }
 
 async function addLayerToActiveCanvas(src) {
@@ -260,12 +275,6 @@ async function addLayerToActiveCanvas(src) {
     }
 
     draw();
-
-    // Updating the wasm heap needs to happen after draw because we load data from the canvas
-    updateLookupCanvasHeap();
-    updateDatabaseCanvasHeap();
-
-    loadEdgeImages();
 
     findMatches();
 }
@@ -436,8 +445,6 @@ function drawMatches() {
 }
 
 function findMatches() {
-    updateDatabaseCanvasHeap();
-    updateLookupCanvasHeap();
     let db = module.findMatchesForImageFromCanvas(
         canvas_inserted_in_database_wasm_heap.ptr,
         canvas_inserted_in_database_wasm_heap.width,
@@ -519,8 +526,43 @@ function clearLowerUi() {
     }
 }
 
-//FIXME: rename
-function loadEdgeImages() {
+const enum_drawingImage = {
+    RBGA: 0,
+    valid_shapes: 1,
+    all_shapes: 2,
+    contours: 3,
+    edge: 4,
+};
+
+function drawImageFromValHolder(width, height, valHolder, outputCanvasId, rgbId, imageName) {
+
+    const ctx = document.getElementById(outputCanvasId).getContext("2d");
+
+    switch (imageName) {
+        case enum_drawingImage.RBGA:
+            const canvas = document.getElementById(rgbId).getContext("2d").getImageData(0, 0, width, height);
+            ctx.putImageData(canvas, 0, 0);
+            break;
+        case enum_drawingImage.valid_shapes:
+            const outputImage3 = new ImageData(new Uint8ClampedArray(valHolder.outputImage3.val_), width, height);
+            ctx.putImageData(outputImage3, 0, 0);
+            break;
+        case enum_drawingImage.all_shapes:
+            const outputImage2 = new ImageData(new Uint8ClampedArray(valHolder.outputImage2.val_), width, height);
+            ctx.putImageData(outputImage2, 0, 0);
+            break;
+        case enum_drawingImage.contours:
+            const outputImage1 = new ImageData(new Uint8ClampedArray(valHolder.outputImage1.val_), width, height);
+            ctx.putImageData(outputImage1, 0, 0);
+            break;
+        case enum_drawingImage.edge:
+            const edgeImageOut = new ImageData(new Uint8ClampedArray(valHolder.edgeImage.val_), width, height);
+            ctx.putImageData(edgeImageOut, 0, 0);
+            break;
+    }
+}
+
+function drawOutputImageOrEdgeImage(ctx, imageName) {
 
     // Wasm heap must already have the canvases loaded in memory
 
@@ -530,7 +572,7 @@ function loadEdgeImages() {
         const width = lookup_canvas_wasm_heap.width;
         const height = lookup_canvas_wasm_heap.height;
 
-        var valHolder = new module.ValHolder(lookup_canvas_wasm_heap.width*lookup_canvas_wasm_heap.height*4);
+        const valHolder = new module.ValHolder(lookup_canvas_wasm_heap.width*lookup_canvas_wasm_heap.height*4);
 
         module.encode(
             lookup_canvas_wasm_heap.ptr,
@@ -538,15 +580,8 @@ function loadEdgeImages() {
             lookup_canvas_wasm_heap.height,
             valHolder, 100, g_ratio, g_kernelSize, g_blurWidth, g_areaThresh);
 
-        const outputImage3 = new ImageData(new Uint8ClampedArray(valHolder.outputImage3.val_), width, height);
-        const outputImage2 = new ImageData(new Uint8ClampedArray(valHolder.outputImage2.val_), width, height);
-        const outputImage1 = new ImageData(new Uint8ClampedArray(valHolder.outputImage1.val_), width, height);
-        const edgeImageOut = new ImageData(new Uint8ClampedArray(valHolder.edgeImage.val_), width, height);
-
-        getCleanCanvas("canvasImgEdgeHullValidLeft").ctx.putImageData(outputImage3, 0, 0);
-        getCleanCanvas("canvasImgEdgeContoursLeft").ctx.putImageData(outputImage2, 0, 0);
-        getCleanCanvas("contoursImageLeft").ctx.putImageData(outputImage1, 0, 0);
-        getCleanCanvas("canvasEdgeImageLeft").ctx.putImageData(edgeImageOut, 0, 0);
+        drawImageFromValHolder(width, height, valHolder, "lookupCanvas", "lookupCanvas_output",
+            g_mainGlobalState.drawingImageLookup);
 
         valHolder.delete();
     }
@@ -555,7 +590,7 @@ function loadEdgeImages() {
         const width = canvas_inserted_in_database_wasm_heap.width;
         const height = canvas_inserted_in_database_wasm_heap.height;
 
-        var valHolder = new module.ValHolder(canvas_inserted_in_database_wasm_heap.width*canvas_inserted_in_database_wasm_heap.height*4);
+        const valHolder = new module.ValHolder(canvas_inserted_in_database_wasm_heap.width*canvas_inserted_in_database_wasm_heap.height*4);
 
         module.encode(
             canvas_inserted_in_database_wasm_heap.ptr,
@@ -563,15 +598,8 @@ function loadEdgeImages() {
             canvas_inserted_in_database_wasm_heap.height,
             valHolder, 100, g_ratio, g_kernelSize, g_blurWidth, g_areaThresh);
 
-        const outputImage3 = new ImageData(new Uint8ClampedArray(valHolder.outputImage3.val_), width, height);
-        const outputImage2 = new ImageData(new Uint8ClampedArray(valHolder.outputImage2.val_), width, height);
-        const outputImage1 = new ImageData(new Uint8ClampedArray(valHolder.outputImage1.val_), width, height);
-        const edgeImageOut = new ImageData(new Uint8ClampedArray(valHolder.edgeImage.val_), width, height);
-
-        getCleanCanvas("canvasImgEdgeHullValidRight").ctx.putImageData(outputImage3, 0, 0);
-        getCleanCanvas("canvasImgEdgeContoursRight").ctx.putImageData(outputImage2, 0, 0);
-        getCleanCanvas("contoursImageRight").ctx.putImageData(outputImage1, 0, 0);
-        getCleanCanvas("canvasEdgeImageRight").ctx.putImageData(edgeImageOut, 0, 0);
+        drawImageFromValHolder(width, height, valHolder, "databaseCanvas", "databaseCanvas_output",
+            g_mainGlobalState.drawingImageDatabase);
 
         valHolder.delete();
     }
@@ -580,5 +608,9 @@ function loadEdgeImages() {
 
 function main() {
     init_loadTransformStateAndImages();
+    g_mainGlobalState = {};
+    g_mainGlobalState.transformState = g_transformState;
+    g_mainGlobalState.drawingImageLookup = enum_drawingImage.RBGA;
+    g_mainGlobalState.drawingImageDatabase = enum_drawingImage.RBGA;
 }
 

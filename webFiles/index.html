@@ -7,6 +7,23 @@
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
       <style>
+          .topPageDemoContainer {
+              margin: auto;
+              width: 1600px;
+          }
+          .leftSidebar {
+              width: 200px;
+              float: left;
+          }
+          .middleImageContainer {
+              width: 1200px;
+              float: left;
+          }
+          .rightSidebar {
+              width: 200px;
+              float: left;
+          }
+
           .canvasInline {
               display: inline-block;
               float: left;
@@ -18,26 +35,48 @@
               position: relative;
               /*height: 402px;*/
           }
+          .addLayerButtonWrapper {
+
+          }
+          .selectUpperOptionsButtons {
+              width: 200px;
+              font-size: 13px;
+              padding: 4px 10px;
+              margin: 5px 10px;
+              height: 28px;
+          }
+          .upperOptionsButtons {
+              margin: 5px 10px;
+              /*color: #007bff;*/
+              cursor: pointer;
+              font-size: 13px;
+              padding: 4px;
+          }
+          .addLayerButton {
+              float: right;
+          }
           .canvasFragment {
               width: 258px;
               height: 258px;
               float: left;
           }
           .tab-content .canvasWrapperRight{
-              width: 600px;
-              height: 600px;
+              width: 560px;
+              height: 560px;
+              margin: auto;
           }
           .tab-content .canvasWrapperRight canvas{
-              width: 600px;
-              height: 600px;
+              width: 560px;
+              height: 560px;
           }
           .tab-content .canvasWrapperLeft{
-              width: 600px;
-              height: 600px;
+              width: 560px;
+              height: 560px;
+              margin: auto;
           }
           .tab-content .canvasWrapperLeft canvas{
-              width: 600px;
-              height: 600px;
+              width: 560px;
+              height: 560px;
           }
           .linebreak {
               margin: auto;
@@ -48,9 +87,12 @@
               width: 126px;
               height: 126px;
           }
+          .subScript {
+              margin: 10px;
+          }
           canvas {
+              box-sizing: border-box;
               border: 1px solid rgba(0,0,0,.12);
-              margin: 5px;
           }
           .buttonsWrapper {
               max-width: 300px;
@@ -68,8 +110,10 @@
           }
           .canvasUILayer {
           }
+          #databaseAndLookupCanvasWrapper {
+              width: 1200px;
+          }
           #databaseAndLookupCanvasWrapper:hover {
-              border: 5px solid red;
               box-sizing: border-box;
           }
           #databaseAndLookupCanvasWrapper:hover #lookupCanvas_ui {
@@ -79,7 +123,7 @@
               opacity: 0;
           }
           #databaseAndLookupCanvasWrapper:hover #lookupCanvas {
-              opacity: .5;
+              opacity: .9;
           }
           #databaseAndLookupCanvasWrapper #lookupCanvas {
               opacity: 1;
@@ -91,7 +135,7 @@
               opacity: 0;
           }
           #databaseAndLookupCanvasWrapper:hover #databaseCanvas {
-              opacity: .5;
+              opacity: .9;
           }
           #databaseAndLookupCanvasWrapper #databaseCanvas {
               opacity: 1;
@@ -100,7 +144,37 @@
               padding: 20px;
               font-size: 20px;
           }
+          .innerLeftSide {
 
+              width: 50%;
+              box-sizing: border-box;
+              float: left;
+          }
+          .innerLeftSide .canvasWrapper {
+              margin: auto;
+          }
+          .innerLeftSide>div{
+              display: block;
+              padding: 10px;
+          }
+          .innerLeftSide .canvasWrapperLeft {
+              cursor: crosshair;
+          }
+          .innerRightSide {
+              width: 50%;
+              box-sizing: border-box;
+              float: left;
+          }
+          .innerRightSide>div{
+              display: block;
+              padding: 10px;
+          }
+          .innerRightSide .canvasWrapperRight {
+              cursor: crosshair;
+          }
+          .innerRightSide .canvasWrapper {
+              margin: auto;
+          }
       </style>
 
     <title>Image matching</title>
@@ -112,7 +186,7 @@
       }
 
       .emscripten { padding-right: 0; margin-left: auto; margin-right: auto; display: block; }
-      div.emscripten { text-align: center; }      
+      div.emscripten { text-align: center; }
       div.emscripten_border { border: 1px solid black; }
       /* the canvas *must not* have any border or padding, or mouse coords will be wrong */
       canvas.emscripten { border: 0px none; background-color: black; }
@@ -140,7 +214,7 @@
         border-right: 5px solid rgb(235, 235, 235);
         border-bottom: 5px solid rgb(235, 235, 235);
         border-top: 5px solid rgb(120, 120, 120);
-        
+
         border-radius: 100%;
         background-color: rgb(189, 215, 46);
       }
@@ -232,10 +306,10 @@
           height: 80px;
       }
       #clickandseeImageLeft_ui {
-          cursor: pointer;
+          cursor: crosshair;
       }
       #clickandseeImageRight_ui {
-          cursor: pointer;
+          cursor: crosshair;
       }
       .avoid-clicks {
           pointer-events: none;
@@ -244,7 +318,9 @@
     </style>
   </head>
   <body>
-
+    <!--some temporary canvases we use for drawing-->
+    <canvas id="lookupCanvas_output"    style="display: none" class="canvasInline" width="560" height="560"></canvas>
+    <canvas id="databaseCanvas_output"  style="display: none" class="canvasInline" width="560" height="560"></canvas>
 
     <div class="alert alert-info">
         <div class="spinner" id='spinner'></div>
@@ -254,8 +330,8 @@
         </div>
     </div>
     <div>
-        <div class="topPageDemoContainer clearfix" style="width: 1600px">
-            <div style="float: left; width: 150px;" class="leftSidebar">
+        <div class="topPageDemoContainer clearfix">
+            <div class="leftSidebar">
                 <div style="height: 700px; overflow: scroll">
                     <div>transformations</div>
                     <hr>
@@ -314,125 +390,151 @@
                     </div>
                 </div>
             </div>
-
-            <div style="float: left">
+            <div class="middleImageContainer">
                 <div style="float: left">
-                    <ul class="nav nav-tabs">
-                        <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#home">Main</a></li>
-                        <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#home_1">Shapes</a></li>
-                        <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#menu1">Shapes W/ Excluded</a></li>
-                        <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#menu2">Contours</a></li>
-                        <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#menu3">Edge Image</a></li>
-                    </ul>
                     <div class="tab-content">
                         <div id="home" class="tab-pane active">
                             <div id="databaseAndLookupCanvasWrapper" class="clearfix">
-                                <div class="canvasWrapper canvasWrapperLeft" width="600" height="600">
-                                    <canvas id="lookupCanvas" class="canvasInline" width="600" height="600"></canvas>
-                                    <canvas id="lookupCanvas_uilower" class="canvasInline canvasUILayer" width="600" height="600"></canvas>
-                                    <canvas id="lookupCanvas_ui" class="canvasInline canvasUILayer" width="600" height="600"></canvas>
-                                    <canvas id="lookupCanvas_uipass" class="canvasInline canvasUILayer avoid-clicks" width="600" height="600"></canvas>
+                                <div class="innerLeftSide">
+                                    <div class="canvasWrapper">
+                                        <div class="clearfix">
+                                            <select class="browser-default selectUpperOptionsButtons custom-select" onchange="g_mainGlobalState.drawingImageLookup = this.selectedIndex; draw()" style="width: 200px">
+                                                <option value="0" selected>RGBA</option>
+                                                <option value="1">Valid Shape</option>
+                                                <option value="2">All Shape</option>
+                                                <option value="3">Contours</option>
+                                                <option value="4">Edge</option>
+                                            </select>
+                                            <span class="dropdown">
+                                                <button class="upperOptionsButtons addLayerButton btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                    + Add layer
+                                                </button>
+                                                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton2">
+                                                    <div style="padding: 10px; width: 270px">
+                                                        <span>
+                                                            <img src="images/basicshapes.png" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                                        </span>
+                                                            <span>
+                                                            <img src="images/IMG_20191024_130833.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                                        </span>
+                                                            <span>
+                                                            <img src="images/richandmalty.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                                        </span>
+                                                            <span>
+                                                            <img src="images/richandmalty400px.png" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                                        </span>
+                                                            <span>
+                                                            <img src="images/Total_Rickall.webp" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                                        </span>
+                                                            <span>
+                                                            <img src="images/googlelogo.webp" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                                        </span>
+                                                            <span>
+                                                            <img src="images/font.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                                        </span>
+                                                        <span>
+                                                            <img src="images/forest.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                                        </span>
+                                                        <span>
+                                                            <img src="images/tech.png" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                                        </span>
+                                                        <span>
+                                                            <img src="images/mus.png" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </span>
+                                        </div>
+                                        <div class="canvasWrapperLeft">
+                                            <canvas id="lookupCanvas" class="canvasInline" width="560" height="560"></canvas>
+                                            <canvas id="lookupCanvas_uilower" class="canvasInline canvasUILayer" width="560" height="560"></canvas>
+                                            <canvas id="lookupCanvas_ui" class="canvasInline canvasUILayer" width="560" height="560"></canvas>
+                                            <canvas id="lookupCanvas_uipass" class="canvasInline canvasUILayer avoid-clicks" width="560" height="560"></canvas>
+                                        </div>
+                                        <div class="subScript alert alert-secondary">
+                                            <b>Click and drag</b> to change on the image to change it. This is the query image. This is the image the user is using to search.
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="canvasWrapper canvasWrapperRight" width="600" height="600">
-                                    <canvas id="databaseCanvas" class="canvasInline" width="600" height="600"></canvas>
-                                    <canvas id="databaseCanvas_uilower" class="canvasInline canvasUILayer" width="600" height="600"></canvas>
-                                    <canvas id="databaseCanvas_ui" class="canvasInline canvasUILayer" width="600" height="600"></canvas>
-                                    <canvas id="databaseCanvas_uipass" class="canvasInline canvasUILayer avoid-clicks" width="600" height="600"></canvas>
+                                <div class="innerRightSide">
+                                    <div class="canvasWrapper">
+                                        <div class="clearfix">
+                                            <select class="browser-default selectUpperOptionsButtons custom-select" onchange="g_mainGlobalState.drawingImageDatabase = this.selectedIndex; draw()" style="width: 200px">
+                                                <option value="0" selected>RGBA</option>
+                                                <option value="1">Valid Shape</option>
+                                                <option value="2">All Shape</option>
+                                                <option value="3">Contours</option>
+                                                <option value="4">Edge</option>
+                                            </select>
+                                            <span class="dropdown">
+                                                <button class="upperOptionsButtons addLayerButton btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton3" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                    + Add layer
+                                                </button>
+                                                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton3">
+                                                    <div style="padding: 10px; width: 270px">
+                                                        <span>
+                                                            <img src="images/basicshapes.png" onclick="addLayerToDatabaseCanvas(this.src)" class="imgThumbForSelection">
+                                                        </span>
+                                                            <span>
+                                                            <img src="images/IMG_20191024_130833.jpg" onclick="addLayerToDatabaseCanvas(this.src)" class="imgThumbForSelection">
+                                                        </span>
+                                                            <span>
+                                                            <img src="images/richandmalty.jpg" onclick="addLayerToDatabaseCanvas(this.src)" class="imgThumbForSelection">
+                                                        </span>
+                                                            <span>
+                                                            <img src="images/richandmalty400px.png" onclick="addLayerToDatabaseCanvas(this.src)" class="imgThumbForSelection">
+                                                        </span>
+                                                            <span>
+                                                            <img src="images/Total_Rickall.webp" onclick="addLayerToDatabaseCanvas(this.src)" class="imgThumbForSelection">
+                                                        </span>
+                                                            <span>
+                                                            <img src="images/googlelogo.webp" onclick="addLayerToDatabaseCanvas(this.src)" class="imgThumbForSelection">
+                                                        </span>
+                                                            <span>
+                                                            <img src="images/font.jpg" onclick="addLayerToDatabaseCanvas(this.src)" class="imgThumbForSelection">
+                                                        </span>
+                                                        <span>
+                                                            <img src="images/forest.jpg" onclick="addLayerToDatabaseCanvas(this.src)" class="imgThumbForSelection">
+                                                        </span>
+                                                        <span>
+                                                            <img src="images/tech.png" onclick="addLayerToDatabaseCanvas(this.src)" class="imgThumbForSelection">
+                                                        </span>
+                                                        <span>
+                                                            <img src="images/mus.png" onclick="addLayerToDatabaseCanvas(this.src)" class="imgThumbForSelection">
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </span>
+                                        </div>
+                                        <div class="canvasWrapperRight">
+                                            <canvas id="databaseCanvas" class="canvasInline" width="560" height="560"></canvas>
+                                            <canvas id="databaseCanvas_uilower" class="canvasInline canvasUILayer" width="560" height="560"></canvas>
+                                            <canvas id="databaseCanvas_ui" class="canvasInline canvasUILayer" width="560" height="560"></canvas>
+                                            <canvas id="databaseCanvas_uipass" class="canvasInline canvasUILayer avoid-clicks" width="560" height="560"></canvas>
+                                        </div>
+                                        <div class="subScript alert alert-secondary">
+                                            This is an image stored in the database. Changing this image is slower because images being stored in the database require extra preprocessing compared with query images.
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div id="home_1" class="tab-pane">
-                            <div class="clearfix">
-                                <div class="canvasWrapper canvasWrapperLeft" width="600" height="600">
-                                    <canvas id="canvasImgEdgeHullValidLeft" class="canvasInline" width="600" height="600"></canvas>
-                                    <canvas id="canvasImgEdgeHullValidLeft_ui" class="canvasInline canvasUILayer" width="600" height="600"></canvas>
-                                </div>
-                                <div class="canvasWrapper canvasWrapperRight" width="600" height="600">
-                                    <canvas id="canvasImgEdgeHullValidRight" class="canvasInline" width="600" height="600"></canvas>
-                                    <canvas id="canvasImgEdgeHullValidRight_ui" class="canvasInline canvasUILayer" width="600" height="600"></canvas>
-                                </div>
-                            </div>
+                    </div>
+                    <div class="clearfix">
+                        <div class="canvasWrapper" style="float: left; width: 256px; height: 256px" >
+                            <canvas id="lookupCanvasFrag" class="canvasInline" width="256" height="256"></canvas>
+                            <canvas id="lookupCanvasFrag_ui" class="canvasInline canvasUILayer" width="256" height="256"></canvas>
                         </div>
-                        <div id="menu1" class="tab-pane">
-                            <div class="clearfix">
-                                <div class="canvasWrapper canvasWrapperLeft" width="600" height="600">
-                                    <canvas id="canvasImgEdgeContoursLeft" class="canvasInline" width="600" height="600"></canvas>
-                                    <canvas id="canvasImgEdgeContoursLeft_ui" class="canvasInline canvasUILayer" width="600" height="600"></canvas>
-                                </div>
-                                <div class="canvasWrapper canvasWrapperRight" width="600" height="600">
-                                    <canvas id="canvasImgEdgeContoursRight" class="canvasInline" width="600" height="600"></canvas>
-                                    <canvas id="canvasImgEdgeContoursRight_ui" class="canvasInline canvasUILayer" width="600" height="600"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                        <div id="menu2" class="tab-pane">
-                            <div class="clearfix">
-                                <div class="canvasWrapper canvasWrapperLeft" width="600" height="600">
-                                    <canvas id="contoursImageLeft" class="canvasInline" width="600" height="600"></canvas>
-                                    <canvas id="contoursImageLeft_ui" class="canvasInline canvasUILayer" width="600" height="600"></canvas>
-                                </div>
-                                <div class="canvasWrapper canvasWrapperRight" width="600" height="600">
-                                    <canvas id="contoursImageRight" class="canvasInline" width="600" height="600"></canvas>
-                                    <canvas id="contoursImageRight_ui" class="canvasInline canvasUILayer" width="600" height="600"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                        <div id="menu3" class="tab-pane">
-                            <div class="clearfix">
-                                <div class="canvasWrapper canvasWrapperLeft" width="600" height="600">
-                                    <canvas id="canvasEdgeImageLeft" class="canvasInline" width="600" height="600"></canvas>
-                                    <canvas id="canvasEdgeImageLeft_ui" class="canvasInline canvasUILayer" width="600" height="600"></canvas>
-                                </div>
-                                <div class="canvasWrapper canvasWrapperRight" width="600" height="600">
-                                    <canvas id="canvasEdgeImageRight" class="canvasInline" width="600" height="600"></canvas>
-                                    <canvas id="canvasEdgeImageRight_ui" class="canvasInline canvasUILayer" width="600" height="600"></canvas>
-                                </div>
-                            </div>
+                        <div id="hammingDistanceForResult" style="float: left; padding: 30px; font-size: 20px"></div>
+                        <div class="canvasWrapper" style="float: left; width: 256px; height: 256px">
+                            <canvas id="databaseCanvasFrag" class="canvasInline" width="256" height="256"></canvas>
+                            <canvas id="databaseCanvasFrag_ui" class="canvasInline canvasUILayer" width="256" height="256"></canvas>
                         </div>
                     </div>
                 </div>
-                <div>
-                    <div style="">
-                    <span>
-                        <img src="images/basicshapes.png" onclick="addLayerToActiveCanvas(this.src)" class="imgThumbForSelection">
-                    </span>
-                        <span>
-                        <img src="images/IMG_20191024_130833.jpg" onclick="addLayerToActiveCanvas(this.src)" class="imgThumbForSelection">
-                    </span>
-                        <span>
-                        <img src="images/richandmalty.jpg" onclick="addLayerToActiveCanvas(this.src)" class="imgThumbForSelection">
-                    </span>
-                        <span>
-                        <img src="images/richandmalty400px.png" onclick="addLayerToActiveCanvas(this.src)" class="imgThumbForSelection">
-                    </span>
-                        <span>
-                        <img src="images/Total_Rickall.webp" onclick="addLayerToActiveCanvas(this.src)" class="imgThumbForSelection">
-                    </span>
-                        <span>
-                        <img src="images/googlelogo.webp" onclick="addLayerToActiveCanvas(this.src)" class="imgThumbForSelection">
-                    </span>
-                        <span>
-                        <img src="images/font.jpg" onclick="addLayerToActiveCanvas(this.src)" class="imgThumbForSelection">
-                    </span>
-                        <span>
-                        <img src="images/forest.jpg" onclick="addLayerToActiveCanvas(this.src)" class="imgThumbForSelection">
-                    </span>
-                    </div>
-                </div>
-                <div class="clearfix">
-                    <div class="canvasWrapper" style="float: left; width: 256px; height: 256px" >
-                        <canvas id="lookupCanvasFrag" class="canvasInline" width="256" height="256"></canvas>
-                        <canvas id="lookupCanvasFrag_ui" class="canvasInline canvasUILayer" width="256" height="256"></canvas>
-                    </div>
-                    <div id="hammingDistanceForResult" style="float: left; padding: 30px; font-size: 20px"></div>
-                    <div class="canvasWrapper" style="float: left; width: 256px; height: 256px">
-                        <canvas id="databaseCanvasFrag" class="canvasInline" width="256" height="256"></canvas>
-                        <canvas id="databaseCanvasFrag_ui" class="canvasInline canvasUILayer" width="256" height="256"></canvas>
-                    </div>
-                </div>
-            </div>
 
-            <div style="float: left; width: 150px">
+            </div>
+            <div class="rightSidebar">
                 <div>results</div>
                 <hr>
                 <div id="shapelist2" style="height: 700px; overflow: scroll">
@@ -502,7 +604,7 @@
 
                     </div>
                     <div style="padding: 40px;">
-                        <input type="range" min="0" max="360" id="clickandseeRotation" onchange="drawshapefromClickandseeRight(g_lastusedClickAndSeeShapeRight, 0)" value="0">
+                        <input type="range" min="0" max="360" id="clickandseeRotation" oninput="drawshapefromClickandseeRight(g_lastusedClickAndSeeShapeRight, 0)" value="0">
                     </div>
                     <div>
                         <span id="clickandseeHashDistanceOutput">
@@ -523,8 +625,11 @@
 
   <!-- Optional JavaScript -->
   <!-- jQuery first, then Popper.js, then Bootstrap JS -->
-  <script src="scripts/jquery.min.js"></script>
-  <script src="scripts/bootstrap.min.js" integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k" crossorigin="anonymous"></script>
+
+  <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+
 
   <script src="scripts/math.min.js"></script>
   <script src="scripts/matrixMaths.js"></script>

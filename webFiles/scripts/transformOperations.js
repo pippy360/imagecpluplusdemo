@@ -624,10 +624,6 @@ function mouseUpEvent() {
         g_transformState.isMouseDownAndClickedOnCanvas = false;
         draw();
 
-        updateDatabaseCanvasHeap();
-        updateLookupCanvasHeap();
-
-        loadEdgeImages();
         findMatches();
     }
 }
@@ -751,17 +747,21 @@ function draw() {
         + "transfromState="
         + JSON.stringify(g_transformState, _jsonReplacer)+"");
 
-    const c_lookupCanvas = getCleanCanvas("lookupCanvas");
-    const c_databaseCanvas = getCleanCanvas("databaseCanvas");
+    const c_lookupCanvas = document.getElementById("lookupCanvas_output");
+    const c_lookupCanvas_ctx = c_lookupCanvas.getContext("2d");
+    clearCanvasByContext(c_lookupCanvas_ctx);
+    const c_databaseCanvas = document.getElementById("databaseCanvas_output");
+    const c_databaseCanvas_ctx = c_databaseCanvas.getContext("2d");
+    clearCanvasByContext(c_databaseCanvas_ctx);
 
     for (let i = 0; i < g_transformState.interactiveCanvasState.layers.length; i++){
         const layer = g_transformState.interactiveCanvasState.layers[i];
-        drawLayer(c_lookupCanvas.ctx, g_transformState.interactiveCanvasState, layer);
+        drawLayer(c_lookupCanvas_ctx, g_transformState.interactiveCanvasState, layer);
     }
 
     for (let i = 0; i < g_transformState.databaseCanvasState.layers.length; i++){
         const layer = g_transformState.databaseCanvasState.layers[i];
-        drawLayer(c_databaseCanvas.ctx, g_transformState.databaseCanvasState, layer);
+        drawLayer(c_databaseCanvas_ctx, g_transformState.databaseCanvasState, layer);
     }
 
     const isCrop = g_transformState.currentTransformationOperationState == enum_TransformationOperation.CROP;
@@ -774,14 +774,16 @@ function draw() {
         drawCroppingEffect(canvasContext, transformedImageOutline);
     }
 
-    let width = c_lookupCanvas.c.width;
-    let height = c_lookupCanvas.c.height;
-    // drawline_m(c_lookupCanvas.ctx_ui, [[0, height/2], [width, height/2]], 'red');
-    // drawline_m(c_lookupCanvas.ctx_ui, [[width/2, 0], [width/2, height]], 'red');
+    const _c_lookupCanvas = getCleanCanvas("lookupCanvas");
+    const _c_databaseCanvas = getCleanCanvas("databaseCanvas");
+    _c_lookupCanvas.ctx.drawImage(c_lookupCanvas, 0, 0);
+    _c_databaseCanvas.ctx.drawImage(c_databaseCanvas, 0, 0);
 
-    //drawRotationEffect(pageMousePosition);
+    drawOutputImageOrEdgeImage(_c_lookupCanvas.ctx);
 
-    updateClickAndSeeImage();
+    //FIXME: check active canvas and flush cache on heap update!!!
+    updateLookupCanvasHeap();
+    updateDatabaseCanvasHeap();
 }
 
 //hooks

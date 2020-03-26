@@ -174,6 +174,8 @@ function setCurrnetOperation(newState) {
         return;
     }
 
+    g_mainGlobalState.mode = enum_modes.transform;
+
     g_transformState.currentTransformationOperationState = newState;
     applyTransformationEffects(newState);
 }
@@ -797,7 +799,9 @@ $(document).mousemove(function (e) {
     }
 
     const pageMousePosition = getCurrentPageMousePosition(e);
-    mouseMoveOnDocumentEvent(pageMousePosition);
+    if (g_mainGlobalState.mode == enum_modes.transform) {
+        mouseMoveOnDocumentEvent(pageMousePosition);
+    }
 });
 
 $(document).bind( "touchmove", function (e) {
@@ -812,7 +816,9 @@ $(document).bind( "touchmove", function (e) {
     if (g_transformState != null && g_transformState.isMouseDownAndClickedOnCanvas) {
         e.preventDefault();
     }
-    mouseMoveOnDocumentEvent(pageMousePosition);
+    if (g_mainGlobalState.mode == enum_modes.transform) {
+        mouseMoveOnDocumentEvent(pageMousePosition);
+    }
 });
 
 $(document).mouseup(function (e) {
@@ -843,7 +849,16 @@ $("#" + INTERACTIVE_CANVAS_OVERLAY_ID).mousedown(function (e) {
     var canvasElem = $("#" + INTERACTIVE_CANVAS_OVERLAY_ID)[0];
     const pageMousePosition = getCurrentPageMousePosition(e);
     const canvasMousePosition = getCurrentCanvasMousePosition(e, canvasElem);
-    canvasMouseDownEvent(pageMousePosition, canvasMousePosition);
+    if (g_mainGlobalState.mode == enum_modes.inspect) {
+        if (g_leftSelected) {
+            g_leftSelected = null;
+            getShapeWithPointInsideCommon(e, "lookupCanvas", getShapeWithPointInsideLeft);
+        } else {
+            g_leftSelected = getShapeWithPointInsideCommon(e, "lookupCanvas", getShapeWithPointInsideLeft);
+        }
+    } else {
+        canvasMouseDownEvent(pageMousePosition, canvasMousePosition);
+    }
 });
 
 $(document).on('touchstart', "#" + INTERACTIVE_CANVAS_OVERLAY_ID, function(e) {
@@ -870,7 +885,15 @@ $("#" + INTERACTIVE_CANVAS_OVERLAY_ID).mousemove(function (e) {
     const canvasElem = $("#" + INTERACTIVE_CANVAS_OVERLAY_ID)[0];
     const canvasMousePosition = getCurrentCanvasMousePosition(e, canvasElem);
 
-    canvasMouseMoveEvent(canvasMousePosition, g_transformState.interactiveCanvasState);
+    if (g_mainGlobalState.mode == enum_modes.inspect) {
+        if (!module || g_leftSelected) {
+            return;
+        }
+
+        getShapeWithPointInsideCommon(e, "lookupCanvas", getShapeWithPointInsideLeft);
+    } else {
+        canvasMouseMoveEvent(canvasMousePosition, g_transformState.interactiveCanvasState);
+    }
 });
 
 $(document).on('touchmove', "#" + INTERACTIVE_CANVAS_OVERLAY_ID, function(e) {
@@ -881,7 +904,16 @@ $(document).on('touchmove', "#" + INTERACTIVE_CANVAS_OVERLAY_ID, function(e) {
     e.preventDefault();
     var canvasElem = $("#" + INTERACTIVE_CANVAS_OVERLAY_ID)[0];
     const canvasMousePosition = getCurrentCanvasMousePosition(e, canvasElem);
-    canvasMouseMoveEvent(canvasMousePosition, g_transformState.interactiveCanvasState);
+
+    if (g_mainGlobalState.mode == enum_modes.inspect) {
+        if (!module || g_leftSelected) {
+            return;
+        }
+
+        getShapeWithPointInsideCommon(e, "lookupCanvas", getShapeWithPointInsideLeft);
+    } else {
+        canvasMouseMoveEvent(canvasMousePosition, g_transformState.interactiveCanvasState);
+    }
 });
 
 $("#" + INTERACTIVE_CANVAS_OVERLAY_ID).mouseup(function (e) {
@@ -907,7 +939,16 @@ $("#" + DATABASE_CANVAS_OVERLAY_ID).mousedown(function (e) {
     var canvasElem = $("#" + DATABASE_CANVAS_OVERLAY_ID)[0];
     const pageMousePosition = getCurrentPageMousePosition(e);
     const canvasMousePosition = getCurrentCanvasMousePosition(e, canvasElem);
-    canvasMouseDownEvent(pageMousePosition, canvasMousePosition);
+    if (g_mainGlobalState.mode == enum_modes.inspect) {
+        if (g_rightSelected) {
+            g_rightSelected = null;
+            getShapeWithPointInsideCommon(e, "databaseCanvas", getShapeWithPointInsideRight);
+        } else {
+            g_rightSelected = getShapeWithPointInsideCommon(e, "databaseCanvas", getShapeWithPointInsideRight);
+        }
+    } else {
+        canvasMouseDownEvent(pageMousePosition, canvasMousePosition);
+    }
 });
 
 $(document).on('touchstart', "#" + DATABASE_CANVAS_OVERLAY_ID, function(e) {
@@ -934,7 +975,17 @@ $("#" + DATABASE_CANVAS_OVERLAY_ID).mousemove(function (e) {
     var canvasElem = $("#" + DATABASE_CANVAS_OVERLAY_ID)[0];
     const canvasMousePosition = getCurrentCanvasMousePosition(e, canvasElem);
 
-    canvasMouseMoveEvent(canvasMousePosition, g_transformState.databaseCanvasState);
+    if (g_mainGlobalState.mode == enum_modes.inspect) {
+
+        if (!module || g_rightSelected) {
+            return;
+        }
+
+        getShapeWithPointInsideCommon(e, "databaseCanvas", getShapeWithPointInsideRight);
+    } else {
+        canvasMouseMoveEvent(canvasMousePosition, g_transformState.databaseCanvasState);
+    }
+
 });
 
 $(document).on('touchmove', "#" + DATABASE_CANVAS_OVERLAY_ID, function(e) {

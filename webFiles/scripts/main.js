@@ -49,19 +49,7 @@ function drawshapefromClickandseeRight(shapeStr1, rotation) {
         canvas_inserted_in_database_wasm_heap.ptr,
         canvas_inserted_in_database_wasm_heap.width,
         canvas_inserted_in_database_wasm_heap.height,
-        shapeStr1, 256, "clickandseeFragRight", rotation);
-
-    drawShapeAndFragmentClickAndSee(
-        canvas_inserted_in_database_wasm_heap.ptr,
-        canvas_inserted_in_database_wasm_heap.width,
-        canvas_inserted_in_database_wasm_heap.height,
-        shapeStr1, 128, "clickandseeFragRight", rotation);
-
-    drawShapeAndFragmentClickAndSee(
-        canvas_inserted_in_database_wasm_heap.ptr,
-        canvas_inserted_in_database_wasm_heap.width,
-        canvas_inserted_in_database_wasm_heap.height,
-        shapeStr1, 32, "clickandseeFragRight", rotation);
+        shapeStr1, 256, "databaseCanvasFrag", rotation);
 
     getHashDistance();
 }
@@ -73,19 +61,7 @@ function drawshapefromClickandseeLeft(shapeStr1, rotation) {
         lookup_canvas_wasm_heap.ptr,
         lookup_canvas_wasm_heap.width,
         lookup_canvas_wasm_heap.height,
-        shapeStr1, 256, "clickandseeFragLeft", rotation);
-
-    drawShapeAndFragmentClickAndSee(
-        lookup_canvas_wasm_heap.ptr,
-        lookup_canvas_wasm_heap.width,
-        lookup_canvas_wasm_heap.height,
-        shapeStr1, 128, "clickandseeFragLeft", rotation);
-
-    drawShapeAndFragmentClickAndSee(
-        lookup_canvas_wasm_heap.ptr,
-        lookup_canvas_wasm_heap.width,
-        lookup_canvas_wasm_heap.height,
-        shapeStr1, 32, "clickandseeFragLeft", rotation);
+        shapeStr1, 256, "lookupCanvasFrag", rotation);
 
     getHashDistance();
 }
@@ -100,7 +76,7 @@ function parseClickandseeShapesLeft(shapes) {
     const list = document.getElementById("clickandseeListLeft");
     list.innerHTML = "";
 
-    const can = getCleanUICanvas("clickandseeImageLeft");
+    const can = getCleanUICanvas("lookupCanvas");
     for (let i = 0;i < lines.length;i++) {
         let opt = lines[i];
         let el = document.createElement("div");
@@ -123,7 +99,7 @@ function parseClickandseeShapesRight(shapes) {
     const list = document.getElementById("clickandseeListRight");
     list.innerHTML = "";
 
-    const can = getCleanUICanvas("clickandseeImageRight");
+    const can = getCleanUICanvas("databaseCanvas");
     for (let i = 0;i < lines.length;i++) {
         let opt = lines[i];
         let el = document.createElement("div");
@@ -173,13 +149,6 @@ function getShapeWithPointInsideCommon(e, canvasId, getShapeWithPointInsideFunc)
     return res;
 }
 
-$("#clickandseeImageLeft_ui").mousemove(function (e) {
-    if (!module || g_leftSelected) {
-        return;
-    }
-    getShapeWithPointInsideCommon(e, "clickandseeImageLeft", getShapeWithPointInsideLeft);
-});
-
 $("#clickandseeImageLeft_ui").click(function (e) {
     if (!module) {
         return;
@@ -191,14 +160,6 @@ $("#clickandseeImageLeft_ui").click(function (e) {
     } else {
         g_leftSelected = getShapeWithPointInsideCommon(e, "clickandseeImageLeft", getShapeWithPointInsideLeft);
     }
-});
-
-$("#clickandseeImageRight_ui").mousemove(function (e) {
-    if (!module || g_rightSelected) {
-        return;
-    }
-
-    getShapeWithPointInsideCommon(e, "clickandseeImageRight", getShapeWithPointInsideRight);
 });
 
 $("#clickandseeImageRight_ui").click(function (e) {
@@ -290,7 +251,7 @@ function drawShapeAndFragmentClickAndSee(imageHeap, width, height, shapeStr, sha
     const edgeImageOut5 = new ImageData(new Uint8ClampedArray(valHolder.outputImage2.val_),
         shapeSize, shapeSize);
 
-    const ctxOutImage200 = getCleanCanvas(canvasId + shapeSize);
+    const ctxOutImage200 = getCleanCanvas(canvasId);
 
     ctxOutImage200.ctx.putImageData(edgeImageOut5, 0, 0);
 
@@ -526,6 +487,11 @@ function clearLowerUi() {
     }
 }
 
+const enum_modes = {
+    transform: 0,
+    inspect: 1,
+};
+
 const enum_drawingImage = {
     RBGA: 0,
     valid_shapes: 1,
@@ -612,5 +578,6 @@ function main() {
     g_mainGlobalState.transformState = g_transformState;
     g_mainGlobalState.drawingImageLookup = enum_drawingImage.RBGA;
     g_mainGlobalState.drawingImageDatabase = enum_drawingImage.RBGA;
+    g_mainGlobalState.mode = enum_modes.transform;
 }
 

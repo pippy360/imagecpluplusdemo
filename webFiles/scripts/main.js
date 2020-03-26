@@ -33,7 +33,7 @@ function getHashDistance() {
         lookup_canvas_wasm_heap.width,
         lookup_canvas_wasm_heap.height
     );
-    document.getElementById("clickandseeHashDistanceOutput").innerHTML = ""+distance;
+    document.getElementById("hammingDistanceForResult").innerHTML = "Hash distance: "+distance;
 }
 
 

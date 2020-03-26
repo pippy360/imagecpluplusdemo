@@ -525,21 +525,35 @@
                         </div>
                     </div>
                     <div class="clearfix">
-                        <div class="canvasWrapper" style="float: left; width: 256px; height: 256px" >
-                            <canvas id="lookupCanvasFrag" class="canvasInline" width="256" height="256"></canvas>
-                            <canvas id="lookupCanvasFrag_ui" class="canvasInline canvasUILayer" width="256" height="256"></canvas>
+                        <div  class="clearfix" style="margin: auto;">
+                            <div id="clickandseeListLeft" style="width: 150px; height: 700px; overflow: scroll; float: left">
+                                <pre>shape list goes here...</pre>
+                            </div>
+                            <div class="canvasWrapper" style="float: left; width: 256px; height: 256px" >
+                                <canvas id="lookupCanvasFrag" class="canvasInline" width="256" height="256"></canvas>
+                                <canvas id="lookupCanvasFrag_ui" class="canvasInline canvasUILayer" width="256" height="256"></canvas>
+                            </div>
+                            <div id="hammingDistanceForResult" style="float: left; width: 250px; padding: 20px; text-align: center; font-size: 20px"></div>
+                            <div style="float: left">
+                                <div class="canvasWrapper" style="width: 256px; height: 256px">
+                                    <canvas id="databaseCanvasFrag" class="canvasInline" width="256" height="256"></canvas>
+                                    <canvas id="databaseCanvasFrag_ui" class="canvasInline canvasUILayer" width="256" height="256"></canvas>
+                                </div>
+                                <div style="padding: 40px">
+                                    <input type="range" min="0" max="360" id="clickandseeRotation" oninput="drawshapefromClickandseeRight(g_lastusedClickAndSeeShapeRight, 0)" value="0">
+                                </div>
+                            </div>
+                            <div id="clickandseeListRight" style="width: 150px; height: 700px; overflow: scroll; float: left">
+                                <pre>shape list goes here...</pre>
+                            </div>
                         </div>
-                        <div id="hammingDistanceForResult" style="float: left; padding: 30px; font-size: 20px"></div>
-                        <div class="canvasWrapper" style="float: left; width: 256px; height: 256px">
-                            <canvas id="databaseCanvasFrag" class="canvasInline" width="256" height="256"></canvas>
-                            <canvas id="databaseCanvasFrag_ui" class="canvasInline canvasUILayer" width="256" height="256"></canvas>
-                        </div>
+
                     </div>
                 </div>
 
             </div>
             <div class="rightSidebar">
-                <div>results</div>
+                <div>Matches</div>
                 <hr>
                 <div id="shapelist2" style="height: 700px; overflow: scroll">
                     <pre>shape list goes here...</pre>
@@ -547,28 +561,6 @@
             </div>
         </div>
 
-        <div>
-            <p>Inspect non-matching fragments</p>
-            <div class="clearfix">
-                <div id="clickandseeListLeft" style="width: 150px; height: 700px; overflow: scroll; float: left">
-                    <pre>shape list goes here...</pre>
-                </div>
-                <div style="float: left">
-                    <div style="padding: 40px;">
-                        <input type="range" min="0" max="360" id="clickandseeRotation" oninput="drawshapefromClickandseeRight(g_lastusedClickAndSeeShapeRight, 0)" value="0">
-                    </div>
-                    <div>
-                        <span id="clickandseeHashDistanceOutput">
-
-                        </span>
-                    </div>
-                </div>
-                <div id="clickandseeListRight" style="width: 150px; height: 700px; overflow: scroll; float: left">
-                    <pre>shape list ∂goes here...</pre>
-                </div>
-
-            </div>
-        </div>
 
     </div>
 

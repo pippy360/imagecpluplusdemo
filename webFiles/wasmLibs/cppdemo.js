@@ -221,7 +221,7 @@ function getNativeTypeSize(type) {
    if (type[type.length - 1] === "*") {
     return 4;
    } else if (type[0] === "i") {
-    var bits = Number(type.substr(1));
+    var bits = parseInt(type.substr(1));
     assert(bits % 8 === 0, "getNativeTypeSize invalid bits " + bits + ", type " + type);
     return bits / 8;
    } else {
@@ -286,23 +286,16 @@ function convertJsFunctionToWasm(func, sig) {
  return wrappedFunc;
 }
 
-var freeTableIndexes = [];
-
 function addFunctionWasm(func, sig) {
  var table = wasmTable;
- var ret;
- if (freeTableIndexes.length) {
-  ret = freeTableIndexes.pop();
- } else {
-  ret = table.length;
-  try {
-   table.grow(1);
-  } catch (err) {
-   if (!(err instanceof RangeError)) {
-    throw err;
-   }
-   throw "Unable to grow wasm table. Set ALLOW_TABLE_GROWTH.";
+ var ret = table.length;
+ try {
+  table.grow(1);
+ } catch (err) {
+  if (!(err instanceof RangeError)) {
+   throw err;
   }
+  throw "Unable to grow wasm table. Use a higher value for RESERVED_FUNCTION_POINTERS or set ALLOW_TABLE_GROWTH.";
  }
  try {
   table.set(ret, func);
@@ -317,9 +310,7 @@ function addFunctionWasm(func, sig) {
  return ret;
 }
 
-function removeFunctionWasm(index) {
- freeTableIndexes.push(index);
-}
+function removeFunctionWasm(index) {}
 
 var funcWrappers = {};
 
@@ -390,8 +381,8 @@ function setValue(ptr, value, type, noSafe) {
 var wasmMemory;
 
 var wasmTable = new WebAssembly.Table({
- "initial": 1810,
- "maximum": 1810 + 0,
+ "initial": 1815,
+ "maximum": 1815 + 0,
  "element": "anyfunc"
 });
 
@@ -618,93 +609,6 @@ function lengthBytesUTF8(str) {
 
 var UTF16Decoder = typeof TextDecoder !== "undefined" ? new TextDecoder("utf-16le") : undefined;
 
-function UTF16ToString(ptr) {
- var endPtr = ptr;
- var idx = endPtr >> 1;
- while (HEAP16[idx]) ++idx;
- endPtr = idx << 1;
- if (endPtr - ptr > 32 && UTF16Decoder) {
-  return UTF16Decoder.decode(HEAPU8.subarray(ptr, endPtr));
- } else {
-  var i = 0;
-  var str = "";
-  while (1) {
-   var codeUnit = HEAP16[ptr + i * 2 >> 1];
-   if (codeUnit == 0) return str;
-   ++i;
-   str += String.fromCharCode(codeUnit);
-  }
- }
-}
-
-function stringToUTF16(str, outPtr, maxBytesToWrite) {
- if (maxBytesToWrite === undefined) {
-  maxBytesToWrite = 2147483647;
- }
- if (maxBytesToWrite < 2) return 0;
- maxBytesToWrite -= 2;
- var startPtr = outPtr;
- var numCharsToWrite = maxBytesToWrite < str.length * 2 ? maxBytesToWrite / 2 : str.length;
- for (var i = 0; i < numCharsToWrite; ++i) {
-  var codeUnit = str.charCodeAt(i);
-  HEAP16[outPtr >> 1] = codeUnit;
-  outPtr += 2;
- }
- HEAP16[outPtr >> 1] = 0;
- return outPtr - startPtr;
-}
-
-function lengthBytesUTF16(str) {
- return str.length * 2;
-}
-
-function UTF32ToString(ptr) {
- var i = 0;
- var str = "";
- while (1) {
-  var utf32 = HEAP32[ptr + i * 4 >> 2];
-  if (utf32 == 0) return str;
-  ++i;
-  if (utf32 >= 65536) {
-   var ch = utf32 - 65536;
-   str += String.fromCharCode(55296 | ch >> 10, 56320 | ch & 1023);
-  } else {
-   str += String.fromCharCode(utf32);
-  }
- }
-}
-
-function stringToUTF32(str, outPtr, maxBytesToWrite) {
- if (maxBytesToWrite === undefined) {
-  maxBytesToWrite = 2147483647;
- }
- if (maxBytesToWrite < 4) return 0;
- var startPtr = outPtr;
- var endPtr = startPtr + maxBytesToWrite - 4;
- for (var i = 0; i < str.length; ++i) {
-  var codeUnit = str.charCodeAt(i);
-  if (codeUnit >= 55296 && codeUnit <= 57343) {
-   var trailSurrogate = str.charCodeAt(++i);
-   codeUnit = 65536 + ((codeUnit & 1023) << 10) | trailSurrogate & 1023;
-  }
-  HEAP32[outPtr >> 2] = codeUnit;
-  outPtr += 4;
-  if (outPtr + 4 > endPtr) break;
- }
- HEAP32[outPtr >> 2] = 0;
- return outPtr - startPtr;
-}
-
-function lengthBytesUTF32(str) {
- var len = 0;
- for (var i = 0; i < str.length; ++i) {
-  var codeUnit = str.charCodeAt(i);
-  if (codeUnit >= 55296 && codeUnit <= 57343) ++i;
-  len += 4;
- }
- return len;
-}
-
 function writeArrayToMemory(array, buffer) {
  HEAP8.set(array, buffer);
 }
@@ -732,16 +636,16 @@ function updateGlobalBufferAndViews(buf) {
  Module["HEAPF64"] = HEAPF64 = new Float64Array(buf);
 }
 
-var STACK_BASE = 5992432, DYNAMIC_BASE = 5992432, DYNAMICTOP_PTR = 749392;
+var STACK_BASE = 5992320, DYNAMIC_BASE = 5992320, DYNAMICTOP_PTR = 749280;
 
-var INITIAL_INITIAL_MEMORY = Module["INITIAL_MEMORY"] || 149880832;
+var INITIAL_TOTAL_MEMORY = Module["TOTAL_MEMORY"] || 149880832;
 
 if (Module["wasmMemory"]) {
  wasmMemory = Module["wasmMemory"];
 } else {
  wasmMemory = new WebAssembly.Memory({
-  "initial": INITIAL_INITIAL_MEMORY / WASM_PAGE_SIZE,
-  "maximum": INITIAL_INITIAL_MEMORY / WASM_PAGE_SIZE
+  "initial": INITIAL_TOTAL_MEMORY / WASM_PAGE_SIZE,
+  "maximum": INITIAL_TOTAL_MEMORY / WASM_PAGE_SIZE
  });
 }
 
@@ -749,7 +653,7 @@ if (wasmMemory) {
  buffer = wasmMemory.buffer;
 }
 
-INITIAL_INITIAL_MEMORY = buffer.byteLength;
+INITIAL_TOTAL_MEMORY = buffer.byteLength;
 
 updateGlobalBufferAndViews(buffer);
 
@@ -1047,17 +951,13 @@ function _atexit(func, arg) {
  });
 }
 
-function ___cxa_atexit(a0, a1) {
- return _atexit(a0, a1);
+function ___cxa_atexit() {
+ return _atexit.apply(null, arguments);
 }
 
 var ___exception_infos = {};
 
 var ___exception_last = 0;
-
-function __ZSt18uncaught_exceptionv() {
- return __ZSt18uncaught_exceptionv.uncaught_exceptions > 0;
-}
 
 function ___cxa_throw(ptr, type, destructor) {
  ___exception_infos[ptr] = {
@@ -1077,6 +977,8 @@ function ___cxa_throw(ptr, type, destructor) {
  }
  throw ptr;
 }
+
+function ___lock() {}
 
 function ___setErrNo(value) {
  if (Module["___errno_location"]) HEAP32[Module["___errno_location"]() >> 2] = value;
@@ -1434,7 +1336,7 @@ var MEMFS = {
   return node.contents;
  },
  getFileDataAsTypedArray: function(node) {
-  if (!node.contents) return new Uint8Array(0);
+  if (!node.contents) return new Uint8Array();
   if (node.contents.subarray) return node.contents.subarray(0, node.usedBytes);
   return new Uint8Array(node.contents);
  },
@@ -1629,7 +1531,7 @@ var MEMFS = {
     allocated = false;
     ptr = contents.byteOffset;
    } else {
-    if (position > 0 || position + length < contents.length) {
+    if (position > 0 || position + length < stream.node.usedBytes) {
      if (contents.subarray) {
       contents = contents.subarray(position, position + length);
      } else {
@@ -1797,6 +1699,53 @@ var FS = {
   return FS.lookup(parent, name);
  },
  createNode: function(parent, name, mode, rdev) {
+  if (!FS.FSNode) {
+   FS.FSNode = function(parent, name, mode, rdev) {
+    if (!parent) {
+     parent = this;
+    }
+    this.parent = parent;
+    this.mount = parent.mount;
+    this.mounted = null;
+    this.id = FS.nextInode++;
+    this.name = name;
+    this.mode = mode;
+    this.node_ops = {};
+    this.stream_ops = {};
+    this.rdev = rdev;
+   };
+   FS.FSNode.prototype = {};
+   var readMode = 292 | 73;
+   var writeMode = 146;
+   Object.defineProperties(FS.FSNode.prototype, {
+    read: {
+     get: function() {
+      return (this.mode & readMode) === readMode;
+     },
+     set: function(val) {
+      val ? this.mode |= readMode : this.mode &= ~readMode;
+     }
+    },
+    write: {
+     get: function() {
+      return (this.mode & writeMode) === writeMode;
+     },
+     set: function(val) {
+      val ? this.mode |= writeMode : this.mode &= ~writeMode;
+     }
+    },
+    isFolder: {
+     get: function() {
+      return FS.isDir(this.mode);
+     }
+    },
+    isDevice: {
+     get: function() {
+      return FS.isChrdev(this.mode);
+     }
+    }
+   });
+  }
   var node = new FS.FSNode(parent, name, mode, rdev);
   FS.hashAddNode(node);
   return node;
@@ -1943,7 +1892,8 @@ var FS = {
  createStream: function(stream, fd_start, fd_end) {
   if (!FS.FSStream) {
    FS.FSStream = function() {};
-   FS.FSStream.prototype = {
+   FS.FSStream.prototype = {};
+   Object.defineProperties(FS.FSStream.prototype, {
     object: {
      get: function() {
       return this.node;
@@ -1967,7 +1917,7 @@ var FS = {
       return this.flags & 1024;
      }
     }
-   };
+   });
   }
   var newStream = new FS.FSStream();
   for (var p in stream) {
@@ -3352,8 +3302,8 @@ var FS = {
 };
 
 var SYSCALLS = {
- mappings: {},
  DEFAULT_POLLMASK: 5,
+ mappings: {},
  umask: 511,
  calculateAt: function(dirfd, path) {
   if (path[0] !== "/") {
@@ -3484,29 +3434,35 @@ var SYSCALLS = {
   }
   return ret;
  },
- varargs: undefined,
- get: function() {
+ varargs: 0,
+ get: function(varargs) {
   SYSCALLS.varargs += 4;
   var ret = HEAP32[SYSCALLS.varargs - 4 >> 2];
   return ret;
  },
- getStr: function(ptr) {
-  var ret = UTF8ToString(ptr);
+ getStr: function() {
+  var ret = UTF8ToString(SYSCALLS.get());
   return ret;
  },
  getStreamFromFD: function(fd) {
+  if (fd === undefined) fd = SYSCALLS.get();
   var stream = FS.getStream(fd);
   if (!stream) throw new FS.ErrnoError(8);
   return stream;
  },
- get64: function(low, high) {
+ get64: function() {
+  var low = SYSCALLS.get(), high = SYSCALLS.get();
   return low;
+ },
+ getZero: function() {
+  SYSCALLS.get();
  }
 };
 
-function ___syscall10(path) {
+function ___syscall10(which, varargs) {
+ SYSCALLS.varargs = varargs;
  try {
-  path = SYSCALLS.getStr(path);
+  var path = SYSCALLS.getStr();
   FS.unlink(path);
   return 0;
  } catch (e) {
@@ -3561,7 +3517,7 @@ function _memset(ptr, value, num) {
  return end - num | 0;
 }
 
-function syscallMmap2(addr, len, prot, flags, fd, off) {
+function __emscripten_syscall_mmap2(addr, len, prot, flags, fd, off) {
  off <<= 12;
  var ptr;
  var allocated = false;
@@ -3591,18 +3547,21 @@ function syscallMmap2(addr, len, prot, flags, fd, off) {
  return ptr;
 }
 
-function ___syscall192(addr, len, prot, flags, fd, off) {
+function ___syscall192(which, varargs) {
+ SYSCALLS.varargs = varargs;
  try {
-  return syscallMmap2(addr, len, prot, flags, fd, off);
+  var addr = SYSCALLS.get(), len = SYSCALLS.get(), prot = SYSCALLS.get(), flags = SYSCALLS.get(), fd = SYSCALLS.get(), off = SYSCALLS.get();
+  return __emscripten_syscall_mmap2(addr, len, prot, flags, fd, off);
  } catch (e) {
   if (typeof FS === "undefined" || !(e instanceof FS.ErrnoError)) abort(e);
   return -e.errno;
  }
 }
 
-function ___syscall194(fd, zero, low, high) {
+function ___syscall194(which, varargs) {
+ SYSCALLS.varargs = varargs;
  try {
-  var length = SYSCALLS.get64(low, high);
+  var fd = SYSCALLS.get(), zero = SYSCALLS.getZero(), length = SYSCALLS.get64();
   FS.ftruncate(fd, length);
   return 0;
  } catch (e) {
@@ -3611,10 +3570,10 @@ function ___syscall194(fd, zero, low, high) {
  }
 }
 
-function ___syscall221(fd, cmd, varargs) {
+function ___syscall221(which, varargs) {
  SYSCALLS.varargs = varargs;
  try {
-  var stream = SYSCALLS.getStreamFromFD(fd);
+  var stream = SYSCALLS.getStreamFromFD(), cmd = SYSCALLS.get();
   switch (cmd) {
   case 0:
    {
@@ -3672,11 +3631,10 @@ function ___syscall221(fd, cmd, varargs) {
  }
 }
 
-function ___syscall5(path, flags, varargs) {
+function ___syscall5(which, varargs) {
  SYSCALLS.varargs = varargs;
  try {
-  var pathname = SYSCALLS.getStr(path);
-  var mode = SYSCALLS.get();
+  var pathname = SYSCALLS.getStr(), flags = SYSCALLS.get(), mode = SYSCALLS.get();
   var stream = FS.open(pathname, flags, mode);
   return stream.fd;
  } catch (e) {
@@ -3685,10 +3643,10 @@ function ___syscall5(path, flags, varargs) {
  }
 }
 
-function ___syscall54(fd, op, varargs) {
+function ___syscall54(which, varargs) {
  SYSCALLS.varargs = varargs;
  try {
-  var stream = SYSCALLS.getStreamFromFD(fd);
+  var stream = SYSCALLS.getStreamFromFD(), op = SYSCALLS.get();
   switch (op) {
   case 21509:
   case 21505:
@@ -3749,7 +3707,7 @@ function ___syscall54(fd, op, varargs) {
  }
 }
 
-function syscallMunmap(addr, len) {
+function __emscripten_syscall_munmap(addr, len) {
  if (addr === -1 || len === 0) {
   return -28;
  }
@@ -3767,14 +3725,18 @@ function syscallMunmap(addr, len) {
  return 0;
 }
 
-function ___syscall91(addr, len) {
+function ___syscall91(which, varargs) {
+ SYSCALLS.varargs = varargs;
  try {
-  return syscallMunmap(addr, len);
+  var addr = SYSCALLS.get(), len = SYSCALLS.get();
+  return __emscripten_syscall_munmap(addr, len);
  } catch (e) {
   if (typeof FS === "undefined" || !(e instanceof FS.ErrnoError)) abort(e);
   return -e.errno;
  }
 }
+
+function ___unlock() {}
 
 function getShiftFromSize(size) {
  switch (size) {
@@ -4517,8 +4479,21 @@ function embind__requireFunction(signature, rawFunction) {
   body += "};\n";
   return new Function("dynCall", "rawFunction", body)(dynCall, rawFunction);
  }
- var dc = Module["dynCall_" + signature];
- var fp = makeDynCaller(dc);
+ var fp;
+ if (Module["FUNCTION_TABLE_" + signature] !== undefined) {
+  fp = Module["FUNCTION_TABLE_" + signature][rawFunction];
+ } else if (typeof FUNCTION_TABLE !== "undefined") {
+  fp = FUNCTION_TABLE[rawFunction];
+ } else {
+  var dc = Module["dynCall_" + signature];
+  if (dc === undefined) {
+   dc = Module["dynCall_" + signature.replace(/f/g, "d")];
+   if (dc === undefined) {
+    throwBindingError("No dynCall invoker for signature: " + signature);
+   }
+  }
+  fp = makeDynCaller(dc);
+ }
  if (typeof fp !== "function") {
   throwBindingError("unknown function pointer with signature " + signature + ": " + rawFunction);
  }
@@ -5026,7 +5001,7 @@ function __embind_register_memory_view(rawType, dataTypeIndex, name) {
   var heap = HEAPU32;
   var size = heap[handle];
   var data = heap[handle + 1];
-  return new TA(buffer, data, size);
+  return new TA(heap["buffer"], data, size);
  }
  name = readLatin1String(name);
  registerType(rawType, {
@@ -5059,18 +5034,14 @@ function __embind_register_std_string(rawType, name) {
      var currentBytePtr = value + 4 + i;
      if (HEAPU8[currentBytePtr] == 0) {
       var stringSegment = UTF8ToString(decodeStartPtr);
-      if (str === undefined) {
-       str = stringSegment;
-      } else {
+      if (str === undefined) str = stringSegment; else {
        str += String.fromCharCode(0);
        str += stringSegment;
       }
       decodeStartPtr = currentBytePtr + 1;
      }
     }
-    if (endCharSwap != 0) {
-     HEAPU8[value + 4 + length] = endCharSwap;
-    }
+    if (endCharSwap != 0) HEAPU8[value + 4 + length] = endCharSwap;
    } else {
     var a = new Array(length);
     for (var i = 0; i < length; ++i) {
@@ -5135,19 +5106,13 @@ function __embind_register_std_string(rawType, name) {
 
 function __embind_register_std_wstring(rawType, charSize, name) {
  name = readLatin1String(name);
- var decodeString, encodeString, getHeap, lengthBytesUTF, shift;
+ var getHeap, shift;
  if (charSize === 2) {
-  decodeString = UTF16ToString;
-  encodeString = stringToUTF16;
-  lengthBytesUTF = lengthBytesUTF16;
   getHeap = function() {
    return HEAPU16;
   };
   shift = 1;
  } else if (charSize === 4) {
-  decodeString = UTF32ToString;
-  encodeString = stringToUTF32;
-  lengthBytesUTF = lengthBytesUTF32;
   getHeap = function() {
    return HEAPU32;
   };
@@ -5156,43 +5121,25 @@ function __embind_register_std_wstring(rawType, charSize, name) {
  registerType(rawType, {
   name: name,
   "fromWireType": function(value) {
-   var length = HEAPU32[value >> 2];
    var HEAP = getHeap();
-   var str;
-   var endChar = HEAP[value + 4 + length * charSize >> shift];
-   var endCharSwap = 0;
-   if (endChar != 0) {
-    endCharSwap = endChar;
-    HEAP[value + 4 + length * charSize >> shift] = 0;
-   }
-   var decodeStartPtr = value + 4;
-   for (var i = 0; i <= length; ++i) {
-    var currentBytePtr = value + 4 + i * charSize;
-    if (HEAP[currentBytePtr >> shift] == 0) {
-     var stringSegment = decodeString(decodeStartPtr);
-     if (str === undefined) {
-      str = stringSegment;
-     } else {
-      str += String.fromCharCode(0);
-      str += stringSegment;
-     }
-     decodeStartPtr = currentBytePtr + charSize;
-    }
-   }
-   if (endCharSwap != 0) {
-    HEAP[value + 4 + length * charSize >> shift] = endCharSwap;
+   var length = HEAPU32[value >> 2];
+   var a = new Array(length);
+   var start = value + 4 >> shift;
+   for (var i = 0; i < length; ++i) {
+    a[i] = String.fromCharCode(HEAP[start + i]);
    }
    _free(value);
-   return str;
+   return a.join("");
   },
   "toWireType": function(destructors, value) {
-   if (!(typeof value === "string")) {
-    throwBindingError("Cannot pass non-string to C++ string type " + name);
+   var length = value.length;
+   var ptr = _malloc(4 + length * charSize);
+   var HEAP = getHeap();
+   HEAPU32[ptr >> 2] = length;
+   var start = ptr + 4 >> shift;
+   for (var i = 0; i < length; ++i) {
+    HEAP[start + i] = value.charCodeAt(i);
    }
-   var length = lengthBytesUTF(value);
-   var ptr = _malloc(4 + length + charSize);
-   HEAPU32[ptr >> 2] = length >> shift;
-   encodeString(value, ptr + 4, length + charSize);
    if (destructors !== null) {
     destructors.push(_free, ptr);
    }
@@ -5250,11 +5197,11 @@ function _emscripten_get_heap_size() {
 }
 
 function _emscripten_get_sbrk_ptr() {
- return 749392;
+ return 749280;
 }
 
 function _emscripten_memcpy_big(dest, src, num) {
- HEAPU8.copyWithin(dest, src, src + num);
+ HEAPU8.set(HEAPU8.subarray(src, src + num), dest);
 }
 
 function abortOnCannotGrowMemory(requestedSize) {
@@ -5388,7 +5335,7 @@ function __isLeapYear(year) {
 
 function __arraySum(array, index) {
  var sum = 0;
- for (var i = 0; i <= index; sum += array[i++]) {}
+ for (var i = 0; i <= index; sum += array[i++]) ;
  return sum;
 }
 
@@ -5731,8 +5678,10 @@ function _sysconf(name) {
  case 52:
  case 51:
  case 46:
- case 79:
   return 200809;
+
+ case 79:
+  return 0;
 
  case 27:
  case 246:
@@ -5869,56 +5818,6 @@ function _sysconf(name) {
  return -1;
 }
 
-var FSNode = function(parent, name, mode, rdev) {
- if (!parent) {
-  parent = this;
- }
- this.parent = parent;
- this.mount = parent.mount;
- this.mounted = null;
- this.id = FS.nextInode++;
- this.name = name;
- this.mode = mode;
- this.node_ops = {};
- this.stream_ops = {};
- this.rdev = rdev;
-};
-
-var readMode = 292 | 73;
-
-var writeMode = 146;
-
-Object.defineProperties(FSNode.prototype, {
- read: {
-  get: function() {
-   return (this.mode & readMode) === readMode;
-  },
-  set: function(val) {
-   val ? this.mode |= readMode : this.mode &= ~readMode;
-  }
- },
- write: {
-  get: function() {
-   return (this.mode & writeMode) === writeMode;
-  },
-  set: function(val) {
-   val ? this.mode |= writeMode : this.mode &= ~writeMode;
-  }
- },
- isFolder: {
-  get: function() {
-   return FS.isDir(this.mode);
-  }
- },
- isDevice: {
-  get: function() {
-   return FS.isChrdev(this.mode);
-  }
- }
-});
-
-FS.FSNode = FSNode;
-
 FS.staticInit();
 
 embind_init_charCodes();
@@ -5952,6 +5851,7 @@ var asmLibraryArg = {
  "__cxa_allocate_exception": ___cxa_allocate_exception,
  "__cxa_atexit": ___cxa_atexit,
  "__cxa_throw": ___cxa_throw,
+ "__lock": ___lock,
  "__map_file": ___map_file,
  "__syscall10": ___syscall10,
  "__syscall192": ___syscall192,
@@ -5960,6 +5860,7 @@ var asmLibraryArg = {
  "__syscall5": ___syscall5,
  "__syscall54": ___syscall54,
  "__syscall91": ___syscall91,
+ "__unlock": ___unlock,
  "_embind_register_bool": __embind_register_bool,
  "_embind_register_class": __embind_register_class,
  "_embind_register_class_constructor": __embind_register_class_constructor,
@@ -6017,6 +5918,10 @@ var ___errno_location = Module["___errno_location"] = function() {
 
 var _setThrew = Module["_setThrew"] = function() {
  return (_setThrew = Module["_setThrew"] = Module["asm"]["setThrew"]).apply(null, arguments);
+};
+
+var __ZSt18uncaught_exceptionv = Module["__ZSt18uncaught_exceptionv"] = function() {
+ return (__ZSt18uncaught_exceptionv = Module["__ZSt18uncaught_exceptionv"] = Module["asm"]["_ZSt18uncaught_exceptionv"]).apply(null, arguments);
 };
 
 var ___getTypeName = Module["___getTypeName"] = function() {
@@ -6203,6 +6108,10 @@ var dynCall_iidiiiiiii = Module["dynCall_iidiiiiiii"] = function() {
  return (dynCall_iidiiiiiii = Module["dynCall_iidiiiiiii"] = Module["asm"]["dynCall_iidiiiiiii"]).apply(null, arguments);
 };
 
+var dynCall_i = Module["dynCall_i"] = function() {
+ return (dynCall_i = Module["dynCall_i"] = Module["asm"]["dynCall_i"]).apply(null, arguments);
+};
+
 var dynCall_iiii = Module["dynCall_iiii"] = function() {
  return (dynCall_iiii = Module["dynCall_iiii"] = Module["asm"]["dynCall_iiii"]).apply(null, arguments);
 };
@@ -6278,7 +6187,6 @@ function run(args) {
  function doRun() {
   if (calledRun) return;
   calledRun = true;
-  Module["calledRun"] = true;
   if (ABORT) return;
   initRuntime();
   preMain();

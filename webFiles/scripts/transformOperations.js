@@ -174,7 +174,7 @@ function setCurrnetOperation(newState) {
         return;
     }
 
-    g_mainGlobalState.mode = enum_modes.transform;
+    setMode(enum_modes.transform);
 
     g_transformState.currentTransformationOperationState = newState;
     applyTransformationEffects(newState);

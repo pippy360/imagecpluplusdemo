@@ -1,9 +1,9 @@
 let g_fragmentZoom = 1.0/1.5;
-let g_blurWidth = 3;
-let g_kernelSize = 3;
-let g_ratio = 3;
-let g_thresh = 100;
-let g_areaThresh = 200;
+let g_blurWidth;
+let g_kernelSize;
+let g_ratio;
+let g_thresh;
+let g_areaThresh;
 let g_flushCache = true;
 
 let g_leftSelected;
@@ -177,16 +177,19 @@ $("#clickandseeImageRight_ui").click(function (e) {
 function setAreaThresh() {
     const areaThresh = document.getElementById("areaThresh").value;
     g_areaThresh = parseInt(areaThresh);
+    draw();
 }
 
 function setRatioVal() {
     const ratioSize = document.getElementById("cannyRatio").value;
     g_ratio = parseInt(ratioSize);
+    draw();
 }
 
 function setBlurVal() {
     const blur_size = document.getElementById("cannyBlurSize").value;
     g_blurWidth = parseInt(blur_size);
+    draw();
 }
 
 function setKernelVal() {
@@ -194,6 +197,7 @@ function setKernelVal() {
     kernelSize += 1-(kernelSize%2);
 
     g_kernelSize = parseInt(kernelSize);
+    draw();
 }
 
 function updateLookupCanvasHeap() {
@@ -572,8 +576,43 @@ function drawOutputImageOrEdgeImage(ctx, imageName) {
 
 }
 
+function setMode(mode) {
+    g_mainGlobalState.mode = mode;
+
+    const rotationSliderWrapper = document.getElementById("rotationSliderWrapper");
+    const clickandseeListLeft = document.getElementById("clickandseeListLeft");
+    const clickandseeListRight = document.getElementById("clickandseeListRight");
+    if (g_mainGlobalState.mode == enum_modes.inspect) {
+        g_rightSelected = null;
+        g_leftSelected = null;
+        rotationSliderWrapper.style.display = "block";
+        clickandseeListLeft.innerHTML = "";
+        clickandseeListRight.innerHTML = "";
+    } else {
+        g_rightSelected = null;
+        g_leftSelected = null;
+        rotationSliderWrapper.style.display = "none";
+        clickandseeListLeft.innerHTML = "";
+        clickandseeListRight.innerHTML = "";
+    }
+
+    draw();
+}
+
 function main() {
+    g_thresh = module.get_CANNY_THRESH();
+    g_ratio = module.get_CANNY_RATIO();
+    g_kernelSize = module.get_CANNY_KERNEL_SIZE();
+    g_blurWidth = module.get_CANNY_BLUR_WIDTH();
+    g_areaThresh = module.get_CANNY_AREA_THRESH();
+
+    document.getElementById("cannyBlurSize").value = g_blurWidth;
+    document.getElementById("cannyKernelSize").value = g_kernelSize;
+    document.getElementById("cannyRatio").value = g_ratio;
+    document.getElementById("areaThresh").value = g_areaThresh;
+
     init_loadTransformStateAndImages();
+
     g_mainGlobalState = {};
     g_mainGlobalState.transformState = g_transformState;
     g_mainGlobalState.drawingImageLookup = enum_drawingImage.RBGA;

@@ -14,6 +14,10 @@
 #include "shapeNormalise.hpp"
 //#include "ImageHash.hpp"
 
+
+
+
+
 using namespace cv;
 
 class ValWrapper{
@@ -233,7 +237,7 @@ string getShapeWithPointInside(
 
     Mat src_gray;
     cvtColor( img, src_gray, COLOR_BGRA2GRAY );//FIXME: detect and assert
-    Mat canny_output = applyCanny(src_gray, thresh, kernel_size, ratio, blur_width);
+    Mat canny_output = applyCanny(src_gray, thresh, ratio, kernel_size, blur_width);
 
     vector<vector<Point>> contours;
     vector<Vec4i> hierarchy;
@@ -254,11 +258,11 @@ void encode(
         int width,
         int height,
         ValHolder *valsOut,
-        int thresh = 100,
-        int ratio=3,
-        int kernel_size=3,
-        int blur_width=3,
-        int areaThresh=200
+        int thresh=CANNY_THRESH,
+        int ratio=CANNY_RATIO,
+        int kernel_size=CANNY_KERNEL_SIZE,
+        int blur_width=CANNY_BLUR_WIDTH,
+        int areaThresh=CANNY_AREA_THRESH
                 )
 {
     Mat img_in(cv::Size(width, height), CV_8UC4, (void *) img_in_ptr, cv::Mat::AUTO_STEP);
@@ -267,7 +271,7 @@ void encode(
     Mat src_gray;
     cvtColor( img, src_gray, COLOR_BGRA2GRAY );//FIXME: detect and assert
 
-    Mat _canny_output = applyCanny(src_gray, thresh, kernel_size, ratio, blur_width);
+    Mat _canny_output = applyCanny(src_gray, thresh, ratio, kernel_size, blur_width);
     Mat imageCannyOut;
     cvtColor(_canny_output, imageCannyOut, COLOR_GRAY2RGBA);
 
@@ -336,6 +340,27 @@ void encode(
     memcpy(valsOut->edgeImage.ptr_, imageCannyOut.data, size);
 }
 
+
+int get_CANNY_THRESH() {
+    return CANNY_THRESH;
+}
+
+int get_CANNY_RATIO() {
+    return CANNY_RATIO;
+}
+
+int get_CANNY_KERNEL_SIZE() {
+    return CANNY_KERNEL_SIZE;
+}
+
+int get_CANNY_BLUR_WIDTH() {
+    return CANNY_BLUR_WIDTH;
+}
+
+int get_CANNY_AREA_THRESH() {
+    return CANNY_AREA_THRESH;
+}
+
 using namespace emscripten;
 
 EMSCRIPTEN_BINDINGS(my_value_example) {
@@ -360,5 +385,11 @@ EMSCRIPTEN_BINDINGS(my_value_example) {
     emscripten::function("getAllTheHashesForImageFromCanvas", &getAllTheHashesForImageFromCanvas);
     emscripten::function("findMatchesForImageFromCanvas", &findMatchesForImageFromCanvas);
     emscripten::function("getHashDistanceFromCanvas", &getHashDistanceFromCanvas);
+
+    emscripten::function("get_CANNY_THRESH", &get_CANNY_THRESH);
+    emscripten::function("get_CANNY_RATIO", &get_CANNY_RATIO);
+    emscripten::function("get_CANNY_KERNEL_SIZE", &get_CANNY_KERNEL_SIZE);
+    emscripten::function("get_CANNY_BLUR_WIDTH", &get_CANNY_BLUR_WIDTH);
+    emscripten::function("get_CANNY_AREA_THRESH", &get_CANNY_AREA_THRESH);
 
 }

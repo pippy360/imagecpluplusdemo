@@ -332,7 +332,7 @@
     <div>
         <div class="topPageDemoContainer clearfix">
             <div class="leftSidebar">
-                <div style="height: 700px; overflow: scroll">
+                <div style="height: 800px; overflow: scroll">
                     <div>transformations</div>
                     <hr>
                     <div class="buttonsWrapper">
@@ -369,28 +369,35 @@
                     </div>
                     <hr>
                     <div>inspect</div>
-                    <button onclick="g_mainGlobalState.mode = enum_modes.inspect">insepct</button>
+                    <button class="btn btn-secondary" style="width: 100%" onclick="setMode(enum_modes.inspect)">insepct</button>
                     <hr>
-                    <div>parameters</div>
+                    <div>Canny edge detection parameters</div>
                     <hr>
                     <div style="max-width: 200px;">
-                    <span>
-                        blur size:
-                    </span>
-                        <input type="text" style="width: 40px; display: inline-block" onchange="setBlurVal()" min="1" max="40" value="3" id="cannyBlurSize">
-
-                        <span>
-                        kernel size:
-                    </span>
-                        <input type="text" style="width: 40px; display: inline-block" onchange="setKernelVal()" min="1" max="7" value="3" id="cannyKernelSize">
-                        <span>
-                        ratio size:
-                    </span>
-                        <input type="text" style="width: 40px; display: inline-block" onchange="setRatioVal()" min="1" max="100" value="3" id="cannyRatio">
-                        <span>
-                        Area threshold:
-                    </span>
-                        <input type="text" style="width: 40px; display: inline-block" onchange="setAreaThresh()" min="1" max="1000" value="600" id="areaThresh">
+                        <div>
+                            <span>
+                                blur size:
+                            </span>
+                            <input type="text" class="form-control" style="width: 60px; display: inline-block" onchange="setBlurVal()" id="cannyBlurSize">
+                        </div>
+                        <div>
+                            <span>
+                                kernel size:
+                            </span>
+                            <input type="text" class="form-control" style="width: 60px; display: inline-block" onchange="setKernelVal()" id="cannyKernelSize">
+                        </div>
+                        <div>
+                            <span>
+                                ratio size:
+                            </span>
+                            <input type="text" class="form-control" style="width: 60px; display: inline-block" onchange="setRatioVal()" id="cannyRatio">
+                        </div>
+                        <div>
+                            <span>
+                                Area threshold:
+                            </span>
+                            <input type="text" class="form-control" style="width: 60px; display: inline-block" onchange="setAreaThresh()" id="areaThresh">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -527,7 +534,7 @@
                     <div class="clearfix">
                         <div  class="clearfix" style="margin: auto;">
                             <div id="clickandseeListLeft" style="width: 150px; height: 700px; overflow: scroll; float: left">
-                                <pre>shape list goes here...</pre>
+                                <pre></pre>
                             </div>
                             <div class="canvasWrapper" style="float: left; width: 256px; height: 256px" >
                                 <canvas id="lookupCanvasFrag" class="canvasInline" width="256" height="256"></canvas>
@@ -539,12 +546,13 @@
                                     <canvas id="databaseCanvasFrag" class="canvasInline" width="256" height="256"></canvas>
                                     <canvas id="databaseCanvasFrag_ui" class="canvasInline canvasUILayer" width="256" height="256"></canvas>
                                 </div>
-                                <div style="padding: 40px">
-                                    <input type="range" min="0" max="360" id="clickandseeRotation" oninput="drawshapefromClickandseeRight(g_lastusedClickAndSeeShapeRight, 0)" value="0">
+                                <div id="rotationSliderWrapper" style="display: none; padding: 10px 40px">
+                                    <div style="text-align: center">Rotation</div>
+                                    <input style="width: 100%; padding: 4px" type="range" min="0" max="720" id="clickandseeRotation" oninput="drawshapefromClickandseeRight(g_lastusedClickAndSeeShapeRight, 0)" value="360">
                                 </div>
                             </div>
                             <div id="clickandseeListRight" style="width: 150px; height: 700px; overflow: scroll; float: left">
-                                <pre>shape list goes here...</pre>
+                                <pre></pre>
                             </div>
                         </div>
 

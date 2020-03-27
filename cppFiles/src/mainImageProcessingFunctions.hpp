@@ -8,6 +8,8 @@
 #include "boostGeometryTypes.hpp"
 #include "shapeNormalise.hpp"
 
+#include "defaultImageValues.h"
+
 using namespace cv;
 
 Mat covertToDynamicallyAllocatedMatrix(const Matx33d transformation_matrix);
@@ -44,40 +46,25 @@ vector<tuple<ring_t, uint64_t, int>> getAllTheHashesForImageAndShapes(Mat &imgda
 
 Mat applyCanny(
         Mat &imgdata,
-        int thresh=100,
-        int kernel_size=3,
-        int ratio=3,
-        int blur_width=6
+        int thresh=CANNY_THRESH,
+        int ratio=CANNY_RATIO,
+        int kernel_size=CANNY_KERNEL_SIZE,
+        int blur_width=CANNY_BLUR_WIDTH
                 );
 
 vector<ring_t> extractShapesFromContours(
         vector<vector<Point> > contours,
-        int areaThresh=200
+        int areaThresh=CANNY_AREA_THRESH
                 );
-
-//void simplifyColors(Mat& img);
-
-/*
- *
- * //FIXME: force common config
- *
- *
- * let g_blurWidth = 3;
-let g_kernelSize = 3;
-let g_ratio = 3;
-let g_thresh = 100;
-let g_areaThresh = 200;
- *
- * */
 
 vector<tuple<ring_t, uint64_t, int>> getAllTheHashesForImage(
         Mat img_in,
         int rotations=360,
-        int thresh=100,
-        int ratio=3,
-        int kernel_size=3,
-        int blur_width=3,
-        int areaThresh=200,
+        int thresh=CANNY_THRESH,
+        int ratio=CANNY_RATIO,
+        int kernel_size=CANNY_KERNEL_SIZE,
+        int blur_width=CANNY_BLUR_WIDTH,
+        int areaThresh=CANNY_AREA_THRESH,
         bool simplify=true
 );
 
@@ -96,11 +83,11 @@ void handleForRotation2(const Mat &input_image, const ring_t &shape, int output_
 vector<tuple<ring_t, ring_t, uint64_t, uint64_t, int>> findMatches(
         Mat img_in,
         Mat img_in2,
-        int thresh=100,
-        int ratio=3,
-        int kernel_size=3,
-        int blur_width=3,
-        int areaThresh=200,
+        int thresh=CANNY_THRESH,
+        int ratio=CANNY_RATIO,
+        int kernel_size=CANNY_KERNEL_SIZE,
+        int blur_width=CANNY_BLUR_WIDTH,
+        int areaThresh=CANNY_AREA_THRESH,
         bool flushCache=true);
 
 #endif//mainImageProcessingFunctions_cpp

@@ -134,7 +134,7 @@ Mat convertToGrey(Mat img_in) {
 
 vector<ring_t> extractShapes(int thresh, int ratio, int kernel_size, int blur_width, int areaThresh, Mat &grayImg)
 {
-    Mat canny_output = applyCanny(grayImg, thresh, kernel_size, ratio, blur_width);
+    Mat canny_output = applyCanny(grayImg, thresh, ratio, kernel_size, blur_width);
 
     vector<vector<Point> > contours;
     vector<Vec4i> hierarchy;
@@ -325,8 +325,8 @@ tuple<ring_t, uint64_t, int> getHashesForShape_singleRotation(const cv::Mat& inp
 Mat applyCanny(
         Mat &src_gray,
         int thresh,
-        int kernel_size,
         int ratio,
+        int kernel_size,
         int blur_width
         )
 {

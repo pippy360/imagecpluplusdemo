@@ -132,13 +132,28 @@ Mat convertToGrey(Mat img_in) {
     return grayImg;
 }
 
+void findContoursWrapper(const Mat &canny_output, vector<vector<Point>> &contours, double epsilon, bool smooth)
+{
+    vector<Vec4i> hierarchy;
+    if (smooth) {
+        vector<vector<Point>> contours0;
+        findContours(canny_output, contours0, hierarchy, RETR_LIST, CHAIN_APPROX_SIMPLE, Point(0, 0));
+        contours.resize(contours0.size());
+        for( size_t k = 0; k < contours0.size(); k++ ) {
+            approxPolyDP(Mat(contours0[k]), contours[k], epsilon, false);//FIXME: are we sure this should be false?
+        }
+    } else {
+        findContours(canny_output, contours, hierarchy, RETR_LIST, CHAIN_APPROX_SIMPLE, Point(0, 0));
+    }
+
+}
+
 vector<ring_t> extractShapes(int thresh, int ratio, int kernel_size, int blur_width, int areaThresh, Mat &grayImg)
 {
     Mat canny_output = applyCanny(grayImg, thresh, ratio, kernel_size, blur_width);
 
-    vector<vector<Point> > contours;
-    vector<Vec4i> hierarchy;
-    findContours(canny_output, contours, hierarchy, RETR_LIST, CHAIN_APPROX_SIMPLE, Point(0, 0));
+    vector<vector<Point>> contours;
+    findContoursWrapper(canny_output, contours);
     return extractShapesFromContours(contours, areaThresh);
 }
 

@@ -90,4 +90,8 @@ vector<tuple<ring_t, ring_t, uint64_t, uint64_t, int>> findMatches(
         int areaThresh=CANNY_AREA_THRESH,
         bool flushCache=true);
 
+void findContoursWrapper(const Mat &canny_output, vector<vector<Point>> &contours,
+        double epsilon=SMOOTH_CONTOURS_EPSILON,
+        bool smooth=SMOOTH_CONTOURS_BOOL);
+
 #endif//mainImageProcessingFunctions_cpp

@@ -241,7 +241,7 @@ string getShapeWithPointInside(
 
     vector<vector<Point>> contours;
     vector<Vec4i> hierarchy;
-    findContours(canny_output, contours, hierarchy, RETR_LIST, CHAIN_APPROX_SIMPLE, Point(0, 0));
+    findContoursWrapper(canny_output, contours);
 
     vector<ring_t> shapes = extractShapesFromContours(contours, areaThresh);
 
@@ -277,7 +277,7 @@ void encode(
 
     vector<vector<Point> > contours;
     vector<Vec4i> hierarchy;
-    findContours(_canny_output, contours, hierarchy, RETR_LIST, CHAIN_APPROX_SIMPLE, Point(0, 0));
+    findContoursWrapper(_canny_output, contours);
 
     //Draw contours------
     Mat contours_img = imageCannyOut.clone();

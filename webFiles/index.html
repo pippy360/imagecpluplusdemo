@@ -398,6 +398,43 @@
                             </span>
                             <input type="text" class="form-control" style="width: 60px; display: inline-block" onchange="setAreaThresh()" id="areaThresh">
                         </div>
+                        <div>
+                            <span>
+                                Erode before size:
+                            </span>
+                            <input type="text" class="form-control" style="width: 60px; display: inline-block" onchange="set_g_EROSION_BEFORE_SIZE()" id="erodeBeforeSize">
+                        </div>
+                        <div>
+                            <span>
+                                Dilate size:
+                            </span>
+                            <input type="text" class="form-control" style="width: 60px; display: inline-block" onchange="set_g_DILATE_SIZE()" id="dilateSize">
+                        </div>
+                        <div>
+                            <span>
+                                Erode after size:
+                            </span>
+                            <input type="text" class="form-control" style="width: 60px; display: inline-block" onchange="set_g_EROSION_AFTER_SIZE()" id="erodeAfterSize">
+                        </div>
+                        <div>
+                            <span>
+                                Erode before:
+                            </span>
+                            <input type="checkbox" class="form-control" style="width: 60px; display: inline-block" onchange="set_g_USE_ERODE_BEFORE()" id="erodeBeforeBool">
+                        </div>
+                        <div>
+                            <span>
+                                Dilate:
+                            </span>
+                            <input type="checkbox" class="form-control" style="width: 60px; display: inline-block" onchange="set_g_USE_DILATE()" id="dilateBool">
+                        </div>
+                        <div>
+                            <span>
+                                Erode after:
+                            </span>
+                            <input type="checkbox" class="form-control" style="width: 60px; display: inline-block" onchange="set_g_USE_ERODE_AFTER()" id="erodeAfterBool">
+                        </div>
+
                     </div>
                 </div>
             </div>
@@ -425,22 +462,22 @@
                                                         <span>
                                                             <img src="images/basicshapes.png" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
                                                         </span>
-                                                            <span>
+                                                        <span>
                                                             <img src="images/IMG_20191024_130833.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
                                                         </span>
-                                                            <span>
+                                                        <span>
                                                             <img src="images/richandmalty.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
                                                         </span>
-                                                            <span>
+                                                        <span>
                                                             <img src="images/richandmalty400px.png" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
                                                         </span>
-                                                            <span>
+                                                        <span>
                                                             <img src="images/Total_Rickall.webp" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
                                                         </span>
-                                                            <span>
+                                                        <span>
                                                             <img src="images/googlelogo.webp" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
                                                         </span>
-                                                            <span>
+                                                        <span>
                                                             <img src="images/font.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
                                                         </span>
                                                         <span>
@@ -569,6 +606,8 @@
             </div>
         </div>
 
+        <canvas id="lookupCanvas2" class="canvasInline" width="560" height="560" style="width: 1200px; height: 1200px"></canvas>
+<!--        <canvas id="lookupCanvas2" class="canvasInline" width="560" height="560"></canvas>-->
 
     </div>
 

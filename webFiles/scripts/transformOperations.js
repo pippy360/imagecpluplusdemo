@@ -208,6 +208,7 @@ async function setDefaultTransformationValues() {
     g_transformState = await newTransformState();
 
     setCurrnetOperation(saved);
+    g_flushCache = true;
     draw();
     findMatches();
 }
@@ -738,6 +739,16 @@ function _jsonReplacer(name, val) {
     }
 }
 
+function getAngleBetweenTwoLines(point1, point2, midpoint) {
+    const x1 = point1[0] - midpoint[0];
+    const y1 = point1[1] - midpoint[1];
+
+    const x2 = point2[0] - midpoint[0];
+    const y2 = point2[1] - midpoint[1];
+    const angle = math.atan2(y2, x2) - math.atan2(x1, y1);
+    return angle * (180.0 / Math.PI);
+}
+
 function draw() {
     console.log("draw called");
 
@@ -786,6 +797,40 @@ function draw() {
     //FIXME: check active canvas and flush cache on heap update!!!
     updateLookupCanvasHeap();
     updateDatabaseCanvasHeap();
+
+    let jsonData = module.getContoursWithCurvature(lookup_canvas_wasm_heap.ptr,
+        lookup_canvas_wasm_heap.width,
+        lookup_canvas_wasm_heap.height,
+        g_thresh,
+        g_ratio, g_kernelSize, g_blurWidth, g_areaThresh,
+        g_USE_DILATE,
+        g_USE_ERODE_BEFORE,
+        g_USE_ERODE_AFTER,
+        g_EROSION_BEFORE_SIZE,
+        g_DILATE_SIZE,
+        g_EROSION_AFTER_SIZE);
+    const shapeData = JSON.parse(jsonData);
+    const c = document.getElementById("lookupCanvas2").getContext("2d");
+
+    for (let i = 0; i < shapeData['shapes'].length; i++ )
+    {
+        // const shapeToDraw = linesStrToLine(shapeData['shapes'][i]['shape']);
+        // const curves = shapeData['shapes'][i]['curves'];
+        // drawline_m(c, shapeToDraw);
+        //
+        //
+        // let prevAngle = 0;
+        // for (let j = 1; j < shapeToDraw.length-1; j++) {
+        //     const prevPoint = shapeToDraw[j-1];
+        //     const nextPoint = shapeToDraw[j+1];
+        //     const angle =  getAngleBetweenTwoLines(prevPoint, nextPoint, shapeToDraw[j]);
+        //     console.log(angle - prevAngle);
+        //     if (Math.abs(angle - prevAngle) > 85) {
+        //         drawPoint_m(c, shapeToDraw[j])
+        //     }
+        //     prevAngle = angle;
+        // }
+    }
 }
 
 //hooks

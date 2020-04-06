@@ -148,9 +148,70 @@ void findContoursWrapper(const Mat &canny_output, vector<vector<Point>> &contour
 
 }
 
-vector<ring_t> extractShapes(int thresh, int ratio, int kernel_size, int blur_width, int areaThresh, Mat &grayImg)
+
+typedef std::vector< double > state_type;
+struct push_back_state_and_time
 {
-    Mat canny_output = applyCanny(grayImg, thresh, ratio, kernel_size, blur_width);
+    std::vector< state_type >& m_states;
+    std::vector< double >& m_times;
+
+    push_back_state_and_time( std::vector< state_type > &states , std::vector< double > &times )
+            : m_states( states ) , m_times( times ) { }
+
+    void operator()( const state_type &x , double t )
+    {
+        m_states.push_back( x );
+        m_times.push_back( t );
+    }
+};
+
+vector<double> getMaximumPointsFromCurvature(linestring_t contour)
+{
+    vector<double> xs;
+    vector<double> ys;
+
+    int iter = (contour.size() < 8 )? 8 : contour.size();
+    for (int i = 0; i < iter; i++) {
+        //repeat the last point if < 8 because boost splines need 8 or more points
+        int index = (contour.size()-1 < i)? contour.size()-1 : i;
+        auto p = contour[index];
+        xs.push_back(p.get<0>());
+        ys.push_back(p.get<1>());
+    }
+
+    cardinal_quintic_b_spline<double> spline_xs(xs, 0, 1);
+    cardinal_quintic_b_spline<double> spline_ys(ys, 0, 1);
+
+    vector<double> curvatures;
+    for (int i = 0; i < xs.size(); i++) {
+      curvatures.push_back(calcCurvature(i, spline_xs, spline_ys));
+    }
+
+    return curvatures;
+}
+
+
+vector<ring_t> extractShapes(
+        int thresh,
+        int ratio,
+        int kernel_size,
+        int blur_width,
+        int areaThresh,
+        Mat &grayImg,
+        bool useDilate,
+        bool useErodeBefore,
+        bool useErodeAfter,
+        int erosion_before_size,
+        int dilate_size,
+        int erosion_after_size
+        )
+{
+    Mat canny_output = applyCanny(grayImg, thresh, ratio, kernel_size, blur_width, useDilate,
+                                  useErodeBefore,
+                                  useErodeAfter,
+                                  erosion_before_size,
+                                  dilate_size,
+                                  erosion_after_size);
 
     vector<vector<Point>> contours;
     findContoursWrapper(canny_output, contours);
@@ -165,10 +226,29 @@ vector<tuple<ring_t, uint64_t, int>> getAllTheHashesForImage(
         int kernel_size,
         int blur_width,
         int areaThresh,
-        bool simplify)
+        bool simplify,
+        bool useDilate,
+        bool useErodeBefore,
+        bool useErodeAfter,
+        int erosion_before_size,
+        int dilate_size,
+        int erosion_after_size
+        )
 {
     Mat grayImg = convertToGrey(img_in);
-    vector<ring_t> shapes = extractShapes(thresh, ratio, kernel_size, blur_width, areaThresh, grayImg);
+    vector<ring_t> shapes = extractShapes(thresh,
+            ratio,
+            kernel_size,
+            blur_width,
+            areaThresh,
+            grayImg,
+            useDilate,
+            useErodeBefore,
+            useErodeAfter,
+            erosion_before_size,
+            dilate_size,
+            erosion_after_size
+    );
 
     std::cout << "Inside cpp code the extracted shapes: " << shapes.size() << std::endl;
     return getAllTheHashesForImageAndShapes(grayImg, shapes, rotations, 1);
@@ -188,7 +268,14 @@ vector<tuple<ring_t, ring_t, uint64_t, uint64_t, int>> findMatches(
         int kernel_size,
         int blur_width,
         int areaThresh,
-        bool flushCache)
+        bool flushCache,
+        bool useDilate,
+        bool useErodeBefore,
+        bool useErodeAfter,
+        int erosion_before_size,
+        int dilate_size,
+        int erosion_after_size
+        )
 {
 
     //FIXME: this doesn't check if the data changed!!
@@ -196,7 +283,13 @@ vector<tuple<ring_t, ring_t, uint64_t, uint64_t, int>> findMatches(
     if (flushCache) {
         prevImg = img_in.data;
         Mat grayImg = convertToGrey(img_in);
-        vector<ring_t> shapes = extractShapes(thresh, ratio, kernel_size, blur_width, areaThresh, grayImg);
+        vector<ring_t> shapes = extractShapes(thresh, ratio, kernel_size, blur_width, areaThresh, grayImg,
+                useDilate,
+                                              useErodeBefore,
+                                              useErodeAfter,
+                                              erosion_before_size,
+                                              dilate_size,
+                                              erosion_after_size);
 
         g_imghashes = getAllTheHashesForImageAndShapes(grayImg, shapes, 360, 2);
         if (tree != nullptr)
@@ -215,7 +308,12 @@ vector<tuple<ring_t, ring_t, uint64_t, uint64_t, int>> findMatches(
     }
 
     Mat grayImg2 = convertToGrey(img_in2);
-    vector<ring_t> shapes2 = extractShapes(thresh, ratio, kernel_size, blur_width, areaThresh, grayImg2);
+    vector<ring_t> shapes2 = extractShapes(thresh, ratio, kernel_size, blur_width, areaThresh, grayImg2, useDilate,
+                                           useErodeBefore,
+                                           useErodeAfter,
+                                           erosion_before_size,
+                                           dilate_size,
+                                           erosion_after_size);
 
     auto img2hashes = getAllTheHashesForImageAndShapes(grayImg2, shapes2, 1, 1);
 
@@ -342,18 +440,73 @@ Mat applyCanny(
         int thresh,
         int ratio,
         int kernel_size,
-        int blur_width
+        int blur_width,
+        bool useDilate,
+        bool useErodeBefore,
+        bool useErodeAfter,
+        int erosion_before_size,
+        int dilate_size,
+        int erosion_after_size
         )
 {
     Mat canny_output;
     Mat src_gray_blur;
+    Mat erosion_dst;
+    Mat erosion_before;
+    Mat dilation_output;
+
     assert(src_gray.type() == CV_8U);
     /// Convert image to gray and blur it
     blur( src_gray, src_gray_blur, Size(blur_width, blur_width) );
 
     /// Detect edges using canny
     Canny( src_gray_blur, canny_output, thresh, thresh*ratio, kernel_size );
-    return canny_output;
+
+    if (useErodeBefore) {
+        int erosion_type;
+        int erosion_size = erosion_before_size;
+        int erosion_elem = 0;
+        if( erosion_elem == 0 ){ erosion_type = MORPH_RECT; }
+        else if( erosion_elem == 1 ){ erosion_type = MORPH_CROSS; }
+        else if( erosion_elem == 2) { erosion_type = MORPH_ELLIPSE; }
+
+        Mat element = getStructuringElement( erosion_type, Size( 2*erosion_size + 1, 2*erosion_size+1 ), Point( erosion_size, erosion_size ) );
+
+        erode( canny_output, erosion_before, element );
+    } else {
+        erosion_before = canny_output;
+    }
+
+    if (useDilate) {
+        int dilate_type;
+        int dilate_elem = 0;
+        if( dilate_elem == 0 ){ dilate_type = MORPH_RECT; }
+        else if( dilate_elem == 1 ){ dilate_type = MORPH_CROSS; }
+        else if( dilate_elem == 2) { dilate_type = MORPH_ELLIPSE; }
+
+        Mat element = getStructuringElement( dilate_type, Size( 2*dilate_size + 1, 2*dilate_size+1 ), Point( dilate_size, dilate_size ) );
+
+        dilate( erosion_before, dilation_output, element );
+    } else {
+        dilation_output = erosion_before;
+    }
+
+    if (useErodeAfter) {
+        int erosion_type;
+        int erosion_size = erosion_after_size;
+        int erosion_elem = 0;
+        if( erosion_elem == 0 ){ erosion_type = MORPH_RECT; }
+        else if( erosion_elem == 1 ){ erosion_type = MORPH_CROSS; }
+        else if( erosion_elem == 2) { erosion_type = MORPH_ELLIPSE; }
+
+        Mat element = getStructuringElement( erosion_type, Size( 2*erosion_size + 1, 2*erosion_size+1 ), Point( erosion_size, erosion_size ) );
+
+        erode( dilation_output, erosion_dst, element );
+    } else {
+        erosion_dst = dilation_output;
+    }
+
+    return erosion_dst;
 }
 
 vector<ring_t> extractShapesFromContours(

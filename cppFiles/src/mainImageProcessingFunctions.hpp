@@ -39,18 +39,54 @@ tuple<ring_t, uint64_t, int> getHashesForShape_singleRotation(const cv::Mat& inp
 
 Mat convertToGrey(Mat img_in);
 
-vector<ring_t> extractShapes(int thresh, int ratio, int kernel_size, int blur_width, int areaThresh, Mat &grayImg);
+vector<ring_t> extractShapes(
+        int thresh,
+        int ratio,
+        int kernel_size,
+        int blur_width,
+        int areaThresh,
+        Mat &grayImg,
+        bool useDilate=USE_DILATE,
+        bool useErodeBefore=USE_ERODE_BEFORE,
+        bool useErodeAfter=USE_ERODE_AFTER,
+        int erosion_before_size=EROSION_BEFORE_SIZE,
+        int dilate_size=DILATE_SIZE,
+        int erosion_after_size=EROSION_AFTER_SIZE
+                );
 
 vector<tuple<ring_t, uint64_t, int>> getAllTheHashesForImageAndShapes(Mat &imgdata, vector<ring_t> shapes,
         int rotations);
+
+#include <boost/math/interpolators/cardinal_quintic_b_spline.hpp>
+
+
+using boost::math::interpolators::cardinal_quintic_b_spline;
+
+static double calcCurvature(double arcLength, cardinal_quintic_b_spline<double> spline_xs,
+        cardinal_quintic_b_spline<double> spline_ys)
+{
+    double x_ = spline_xs.prime(arcLength);
+    double x__ = spline_xs.double_prime(arcLength);
+    double y_ = spline_ys.prime(arcLength);
+    double y__ = spline_ys.double_prime(arcLength);
+    return abs(x_ * y__ - y_ * x__) / pow(pow(x_,2) + pow(y_, 2), 3.0 / 2.0);
+}
+
+vector<double> getMaximumPointsFromCurvature(linestring_t contour);
 
 Mat applyCanny(
         Mat &imgdata,
         int thresh=CANNY_THRESH,
         int ratio=CANNY_RATIO,
         int kernel_size=CANNY_KERNEL_SIZE,
-        int blur_width=CANNY_BLUR_WIDTH
-                );
+        int blur_width=CANNY_BLUR_WIDTH,
+        bool useDilate=USE_DILATE,
+        bool useErodeBefore=USE_ERODE_BEFORE,
+        bool useErodeAfter=USE_ERODE_AFTER,
+        int erosion_before_size=EROSION_BEFORE_SIZE,
+        int dilate_size=DILATE_SIZE,
+        int erosion_after_size=EROSION_AFTER_SIZE
+        );
 
 vector<ring_t> extractShapesFromContours(
         vector<vector<Point> > contours,
@@ -65,7 +101,13 @@ vector<tuple<ring_t, uint64_t, int>> getAllTheHashesForImage(
         int kernel_size=CANNY_KERNEL_SIZE,
         int blur_width=CANNY_BLUR_WIDTH,
         int areaThresh=CANNY_AREA_THRESH,
-        bool simplify=true
+        bool simplify=true,
+        bool useDilate=USE_DILATE,
+        bool useErodeBefore=USE_ERODE_BEFORE,
+        bool useErodeAfter=USE_ERODE_AFTER,
+        int erosion_before_size=EROSION_BEFORE_SIZE,
+        int dilate_size=DILATE_SIZE,
+        int erosion_after_size=EROSION_AFTER_SIZE
 );
 
 
@@ -88,7 +130,13 @@ vector<tuple<ring_t, ring_t, uint64_t, uint64_t, int>> findMatches(
         int kernel_size=CANNY_KERNEL_SIZE,
         int blur_width=CANNY_BLUR_WIDTH,
         int areaThresh=CANNY_AREA_THRESH,
-        bool flushCache=true);
+        bool flushCache=true,
+        bool useDilate=USE_DILATE,
+        bool useErodeBefore=USE_ERODE_BEFORE,
+        bool useErodeAfter=USE_ERODE_AFTER,
+        int erosion_before_size=EROSION_BEFORE_SIZE,
+        int dilate_size=DILATE_SIZE,
+        int erosion_after_size=EROSION_AFTER_SIZE);
 
 void findContoursWrapper(const Mat &canny_output, vector<vector<Point>> &contours,
         double epsilon=SMOOTH_CONTOURS_EPSILON,

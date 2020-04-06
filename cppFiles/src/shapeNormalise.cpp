@@ -7,6 +7,8 @@
 
 #include <iostream>
 
+//#include <boost/geometry/algorithms/dissolve.hpp>
+
 //used to get the average x/y/x^2/y^2/x*y value of every point in a polygon segment
 static double customGetAverageVal(std::vector<ring_t> polyList, double (*func)(point_t p1, point_t p2)) {
     double result = 0;
@@ -200,6 +202,29 @@ std::tuple<double, double> getAandB(ring_t inPoly) {
     return  {a, b};
 }
 
+bool convert_to_boost_linestring(std::vector<cv::Point> inPoly, linestring_t &result) {
+
+    std::vector<point_t> points;
+    for (int i = 0; i < inPoly.size(); i++) {
+        points.push_back(point_t(inPoly[i].x, inPoly[i].y));
+    }
+    bg::assign_points(result, points);
+
+    //fix it up
+    bg::remove_spikes(result);
+
+    bg::correct(result);
+
+    std::string message;
+    bool valid = bg::is_valid(result, message);
+    std::cout << "is valid? " << (valid ? "yes" : "no") << std::endl;
+    if (! valid)
+    {
+        std::cout << "why not valid? " << message << std::endl;
+    }
+    return valid;
+}
+
 bool convert_to_boost(std::vector<cv::Point> inPoly, ring_t &result) {
 
     std::vector<point_t> points;
@@ -213,6 +238,13 @@ bool convert_to_boost(std::vector<cv::Point> inPoly, ring_t &result) {
 
     bg::correct(result);
 
-    return bg::is_valid(result);
+    std::string message;
+    bool valid = bg::is_valid(result, message);
+//    std::cout << "is valid? " << (valid ? "yes" : "no") << std::endl;
+    if (! valid)
+    {
+//        std::cout << "why not valid? " << message << std::endl;
+    }
+    return valid;
 }
 

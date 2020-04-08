@@ -5,12 +5,6 @@ let g_ratio;
 let g_thresh;
 let g_areaThresh;
 let g_flushCache = true;
-let g_USE_DILATE;
-let g_USE_ERODE_BEFORE;
-let g_USE_ERODE_AFTER;
-let g_EROSION_BEFORE_SIZE;
-let g_DILATE_SIZE;
-let g_EROSION_AFTER_SIZE;
 
 
 let g_leftSelected;
@@ -124,13 +118,7 @@ function getShapeWithPointInsideLeft(x, y) {
         lookup_canvas_wasm_heap.ptr,
         lookup_canvas_wasm_heap.width,
         lookup_canvas_wasm_heap.height,
-        x, y, g_thresh, g_ratio, g_kernelSize, g_blurWidth, g_areaThresh,
-        g_USE_DILATE,
-        g_USE_ERODE_BEFORE,
-        g_USE_ERODE_AFTER,
-        g_EROSION_BEFORE_SIZE,
-        g_DILATE_SIZE,
-        g_EROSION_AFTER_SIZE);
+        x, y, g_thresh, g_ratio, g_kernelSize, g_blurWidth, g_areaThresh);
 
     parseClickandseeShapesLeft(shapeStr);
 
@@ -142,13 +130,7 @@ function getShapeWithPointInsideRight(x, y) {
         canvas_inserted_in_database_wasm_heap.ptr,
         canvas_inserted_in_database_wasm_heap.width,
         canvas_inserted_in_database_wasm_heap.height,
-        x, y, g_thresh, g_ratio, g_kernelSize, g_blurWidth, g_areaThresh,
-        g_USE_DILATE,
-        g_USE_ERODE_BEFORE,
-        g_USE_ERODE_AFTER,
-        g_EROSION_BEFORE_SIZE,
-        g_DILATE_SIZE,
-        g_EROSION_AFTER_SIZE);
+        x, y, g_thresh, g_ratio, g_kernelSize, g_blurWidth, g_areaThresh);
 
     parseClickandseeShapesRight(shapeStr);
 
@@ -192,42 +174,6 @@ $("#clickandseeImageRight_ui").click(function (e) {
         g_rightSelected = getShapeWithPointInsideCommon(e, "clickandseeImageRight", getShapeWithPointInsideRight);
     }
 });
-
-function set_g_USE_DILATE() {
-    const areaThresh = document.getElementById("dilateBool").checked;
-    g_USE_DILATE = (areaThresh)? 1 : 0;
-    draw();
-}
-
-function set_g_USE_ERODE_BEFORE() {
-    const areaThresh = document.getElementById("erodeBeforeBool").checked;
-    g_USE_ERODE_BEFORE = (areaThresh)? 1 : 0;
-    draw();
-}
-
-function set_g_USE_ERODE_AFTER() {
-    const areaThresh = document.getElementById("erodeAfterBool").checked;
-    g_USE_ERODE_AFTER = (areaThresh)? 1 : 0;
-    draw();
-}
-
-function set_g_EROSION_BEFORE_SIZE() {
-    const areaThresh = document.getElementById("erodeBeforeSize").value;
-    g_EROSION_BEFORE_SIZE = parseInt(areaThresh);
-    draw();
-}
-
-function set_g_DILATE_SIZE() {
-    const areaThresh = document.getElementById("dilateSize").value;
-    g_DILATE_SIZE = parseInt(areaThresh);
-    draw();
-}
-
-function set_g_EROSION_AFTER_SIZE() {
-    const areaThresh = document.getElementById("erodeAfterSize").value;
-    g_EROSION_AFTER_SIZE = parseInt(areaThresh);
-    draw();
-}
 
 function setAreaThresh() {
     const areaThresh = document.getElementById("areaThresh").value;
@@ -478,13 +424,7 @@ function findMatches() {
         g_kernelSize,
         g_blurWidth,
         g_areaThresh,
-        g_flushCache,
-        g_USE_DILATE,
-        g_USE_ERODE_BEFORE,
-        g_USE_ERODE_AFTER,
-        g_EROSION_BEFORE_SIZE,
-        g_DILATE_SIZE,
-        g_EROSION_AFTER_SIZE
+        g_flushCache
     );
     g_flushCache = false;
 
@@ -614,13 +554,7 @@ function drawOutputImageOrEdgeImage(ctx, imageName) {
             lookup_canvas_wasm_heap.ptr,
             lookup_canvas_wasm_heap.width,
             lookup_canvas_wasm_heap.height,
-            valHolder, g_thresh, g_ratio, g_kernelSize, g_blurWidth, g_areaThresh,
-            g_USE_DILATE,
-            g_USE_ERODE_BEFORE,
-            g_USE_ERODE_AFTER,
-            g_EROSION_BEFORE_SIZE,
-            g_DILATE_SIZE,
-            g_EROSION_AFTER_SIZE);
+            valHolder, g_thresh, g_ratio, g_kernelSize, g_blurWidth, g_areaThresh);
 
         drawImageFromValHolder(width, height, valHolder, "lookupCanvas", "lookupCanvas_output",
             g_mainGlobalState.drawingImageLookup);
@@ -641,24 +575,12 @@ function drawOutputImageOrEdgeImage(ctx, imageName) {
             canvas_inserted_in_database_wasm_heap.ptr,
             canvas_inserted_in_database_wasm_heap.width,
             canvas_inserted_in_database_wasm_heap.height,
-            valHolder, g_thresh, g_ratio, g_kernelSize, g_blurWidth, g_areaThresh,
-            g_USE_DILATE,
-            g_USE_ERODE_BEFORE,
-            g_USE_ERODE_AFTER,
-            g_EROSION_BEFORE_SIZE,
-            g_DILATE_SIZE,
-            g_EROSION_AFTER_SIZE);
+            valHolder, g_thresh, g_ratio, g_kernelSize, g_blurWidth, g_areaThresh);
         let jsonData = module.getContoursWithCurvature(lookup_canvas_wasm_heap.ptr,
             lookup_canvas_wasm_heap.width,
             lookup_canvas_wasm_heap.height,
             g_thresh,
-            g_ratio, g_kernelSize, g_blurWidth, g_areaThresh,
-            g_USE_DILATE,
-            g_USE_ERODE_BEFORE,
-            g_USE_ERODE_AFTER,
-            g_EROSION_BEFORE_SIZE,
-            g_DILATE_SIZE,
-            g_EROSION_AFTER_SIZE);
+            g_ratio, g_kernelSize, g_blurWidth, g_areaThresh);
         console.log(JSON.parse(jsonData));
         drawImageFromValHolder(width, height, valHolder, "databaseCanvas", "databaseCanvas_output",
             g_mainGlobalState.drawingImageDatabase);
@@ -698,24 +620,10 @@ function main() {
     g_blurWidth = module.get_CANNY_BLUR_WIDTH();
     g_areaThresh = module.get_CANNY_AREA_THRESH();
 
-    g_USE_DILATE = module.get_USE_DILATE();
-    g_USE_ERODE_BEFORE = module.get_USE_ERODE_BEFORE();
-    g_USE_ERODE_AFTER = module.get_USE_ERODE_AFTER();
-    g_EROSION_BEFORE_SIZE = module.get_EROSION_BEFORE_SIZE();
-    g_DILATE_SIZE = module.get_DILATE_SIZE();
-    g_EROSION_AFTER_SIZE = module.get_EROSION_AFTER_SIZE();
-
     document.getElementById("cannyBlurSize").value = g_blurWidth;
     document.getElementById("cannyKernelSize").value = g_kernelSize;
     document.getElementById("cannyRatio").value = g_ratio;
     document.getElementById("areaThresh").value = g_areaThresh;
-
-    document.getElementById("erodeBeforeBool").checked = g_USE_ERODE_BEFORE;
-    document.getElementById("dilateBool").checked = g_USE_DILATE;
-    document.getElementById("erodeAfterBool").checked = g_USE_ERODE_AFTER;
-    document.getElementById("erodeBeforeSize").value = g_EROSION_BEFORE_SIZE;
-    document.getElementById("dilateSize").value = g_DILATE_SIZE;
-    document.getElementById("erodeAfterSize").value = g_EROSION_AFTER_SIZE;
 
     init_loadTransformStateAndImages();
 

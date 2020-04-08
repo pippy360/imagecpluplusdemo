@@ -112,7 +112,7 @@ vector<tuple<ring_t, uint64_t, int>> getAllTheHashesForImageAndShapes(Mat &imgda
 //#pragma omp parallel for
     for (int i = 0; i < shapes.size(); i++)
     {
-        auto shape = shapes[i];
+        ring_t shape = shapes[i];
         auto hashes = getHashesForShape(imgdata, shape, rotations, rotationJump, 32, 0, transMat, applyTransMat);
         for (int j =0; j < hashes.size(); j++) {
             ret.push_back(hashes[j]);
@@ -203,21 +203,10 @@ vector<ring_t> extractShapes(
         int kernel_size,
         int blur_width,
         int areaThresh,
-        Mat &grayImg,
-        bool useDilate,
-        bool useErodeBefore,
-        bool useErodeAfter,
-        int erosion_before_size,
-        int dilate_size,
-        int erosion_after_size
+        Mat &grayImg
         )
 {
-    Mat canny_output = applyCanny(grayImg, thresh, ratio, kernel_size, blur_width, useDilate,
-                                  useErodeBefore,
-                                  useErodeAfter,
-                                  erosion_before_size,
-                                  dilate_size,
-                                  erosion_after_size);
+    Mat canny_output = applyCanny(grayImg, thresh, ratio, kernel_size, blur_width);
 
     vector<vector<Point>> contours;
     findContoursWrapper(canny_output, contours);
@@ -263,21 +252,14 @@ vector<tuple<ring_t, uint64_t, int>> getAllTheHashesForImage(
         int kernel_size,
         int blur_width,
         int areaThresh,
-        bool simplify,
-        bool useDilate,
-        bool useErodeBefore,
-        bool useErodeAfter,
-        int erosion_before_size,
-        int dilate_size,
-        int erosion_after_size
-        )
+        bool simplify)
 {
     vector<tuple<ring_t, uint64_t, int>> v;
 
     Mat grayImg = convertToGrey(img_in);
     for (int i = 0; i < rotations; i += 1) {
         //rotate it and continue
-        cout << "Doing for rotation: " << i << endl;
+//        cout << "Doing for rotation: " << i << endl;
         vector<tuple<ring_t, uint64_t, int>> v_prime;
 
         double angle = i;
@@ -295,20 +277,8 @@ vector<tuple<ring_t, uint64_t, int>> getAllTheHashesForImage(
                                               kernel_size,
                                               blur_width,
                                               areaThresh,
-                                              dst,
-                                              useDilate,
-                                              useErodeBefore,
-                                              useErodeAfter,
-                                              erosion_before_size,
-                                              dilate_size,
-                                              erosion_after_size
-                                              );
-        Mat canny_output = applyCanny(dst, thresh, ratio, kernel_size, blur_width, useDilate,
-                                      useErodeBefore,
-                                      useErodeAfter,
-                                      erosion_before_size,
-                                      dilate_size,
-                                      erosion_after_size);
+                                              dst);
+        Mat canny_output = applyCanny(dst, thresh, ratio, kernel_size, blur_width);
 
 //        if (i == 150) {
 //            Mat imageCannyOut;
@@ -363,20 +333,14 @@ vector<tuple<ring_t, ring_t, uint64_t, uint64_t, int>> findMatches(
         int kernel_size,
         int blur_width,
         int areaThresh,
-        bool flushCache,
-        bool useDilate,
-        bool useErodeBefore,
-        bool useErodeAfter,
-        int erosion_before_size,
-        int dilate_size,
-        int erosion_after_size
+        bool flushCache
         )
 {
 
     //FIXME: this doesn't check if the data changed!!
     // use cached results
     if (flushCache) {
-        cout << "Recomping cache" << endl;
+        cout << "recomputing cache..." << endl;
 //        prevImg = img_in.data;
         g_imghashes = getAllTheHashesForImage(
                 img_in,
@@ -386,13 +350,7 @@ vector<tuple<ring_t, ring_t, uint64_t, uint64_t, int>> findMatches(
                 kernel_size,
                 blur_width,
                 areaThresh,
-                false,
-                useDilate,
-                useErodeBefore,
-                useErodeAfter,
-                erosion_before_size,
-                dilate_size,
-                erosion_after_size);
+                false);
 
         if (tree != nullptr)
             delete tree;
@@ -407,6 +365,7 @@ vector<tuple<ring_t, ring_t, uint64_t, uint64_t, int>> findMatches(
         }
 
         tree->build(20, nullptr);
+        cout << "...done" << endl;
     }
 
     auto img2hashes = getAllTheHashesForImage(
@@ -417,13 +376,7 @@ vector<tuple<ring_t, ring_t, uint64_t, uint64_t, int>> findMatches(
                 kernel_size,
                 blur_width,
                 areaThresh,
-                false,
-                useDilate,
-                useErodeBefore,
-                useErodeAfter,
-                erosion_before_size,
-                dilate_size,
-                erosion_after_size);
+                false);
 
     vector<tuple<ring_t, ring_t, uint64_t, uint64_t, int>> res;
 
@@ -477,8 +430,7 @@ vector<tuple<ring_t, uint64_t, int>> getHashesForShape(const cv::Mat& input_imag
                                                          int output_width,
                                                          int start_rotation,
                                                          trans::matrix_transformer<double, 2, 2> transMat,
-                                                         bool applyTransMat
-                                                         )
+                                                         bool applyTransMat)
 {
     point_t p;
     auto ret = vector<tuple<ring_t, uint64_t, int>>();
@@ -501,10 +453,9 @@ vector<tuple<ring_t, uint64_t, int>> getHashesForShape(const cv::Mat& input_imag
 }
 
 tuple<ring_t, uint64_t, int> getHashesForShape_singleRotation(const cv::Mat& input_image,
-                                                              const ring_t& shape,
+                                                              ring_t shape,
                                                               int rotation)
 {
-    trans::matrix_transformer<double, 2, 2> transMat;
     return getHashesForShape(input_image, shape, 1, 1, 32, rotation)[0];
 }
 
@@ -513,20 +464,11 @@ Mat applyCanny(
         int thresh,
         int ratio,
         int kernel_size,
-        int blur_width,
-        bool useDilate,
-        bool useErodeBefore,
-        bool useErodeAfter,
-        int erosion_before_size,
-        int dilate_size,
-        int erosion_after_size
+        int blur_width
         )
 {
     Mat canny_output;
     Mat src_gray_blur;
-    Mat erosion_dst;
-    Mat erosion_before;
-    Mat dilation_output;
 
     assert(src_gray.type() == CV_8U);
     /// Convert image to gray and blur it
@@ -535,51 +477,6 @@ Mat applyCanny(
     /// Detect edges using canny
     Canny( src_gray_blur, canny_output, thresh, thresh*ratio, kernel_size );
     return canny_output;
-//    if (useErodeBefore) {
-//        int erosion_type;
-//        int erosion_size = erosion_before_size;
-//        int erosion_elem = 0;
-//        if( erosion_elem == 0 ){ erosion_type = MORPH_RECT; }
-//        else if( erosion_elem == 1 ){ erosion_type = MORPH_CROSS; }
-//        else if( erosion_elem == 2) { erosion_type = MORPH_ELLIPSE; }
-//
-//        Mat element = getStructuringElement( erosion_type, Size( 2*erosion_size + 1, 2*erosion_size+1 ), Point( erosion_size, erosion_size ) );
-//
-//        erode( canny_output, erosion_before, element );
-//    } else {
-//        erosion_before = canny_output;
-//    }
-//
-//    if (useDilate) {
-//        int dilate_type;
-//        int dilate_elem = 0;
-//        if( dilate_elem == 0 ){ dilate_type = MORPH_RECT; }
-//        else if( dilate_elem == 1 ){ dilate_type = MORPH_CROSS; }
-//        else if( dilate_elem == 2) { dilate_type = MORPH_ELLIPSE; }
-//
-//        Mat element = getStructuringElement( dilate_type, Size( 2*dilate_size + 1, 2*dilate_size+1 ), Point( dilate_size, dilate_size ) );
-//
-//        dilate( erosion_before, dilation_output, element );
-//    } else {
-//        dilation_output = erosion_before;
-//    }
-//
-//    if (useErodeAfter) {
-//        int erosion_type;
-//        int erosion_size = erosion_after_size;
-//        int erosion_elem = 0;
-//        if( erosion_elem == 0 ){ erosion_type = MORPH_RECT; }
-//        else if( erosion_elem == 1 ){ erosion_type = MORPH_CROSS; }
-//        else if( erosion_elem == 2) { erosion_type = MORPH_ELLIPSE; }
-//
-//        Mat element = getStructuringElement( erosion_type, Size( 2*erosion_size + 1, 2*erosion_size+1 ), Point( erosion_size, erosion_size ) );
-//
-//        erode( dilation_output, erosion_dst, element );
-//    } else {
-//        erosion_dst = dilation_output;
-//    }
-//
-//    return erosion_dst;
 }
 
 vector<ring_t> extractShapesFromContours(

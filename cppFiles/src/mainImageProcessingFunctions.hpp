@@ -27,7 +27,7 @@ Mat _calcMatrix(
         double zoomin=1);
 
 vector<tuple<ring_t, uint64_t, int>> getHashesForShape(const cv::Mat& input_image,
-                                                       const ring_t& shape,
+                                                       ring_t shape,
                                                        int numRotations,
                                                        int rotationJump,
                                                        int output_width = 32,
@@ -36,7 +36,7 @@ vector<tuple<ring_t, uint64_t, int>> getHashesForShape(const cv::Mat& input_imag
                                                        bool applyTransMat = false);
 
 tuple<ring_t, uint64_t, int> getHashesForShape_singleRotation(const cv::Mat& input_image,
-                                                              const ring_t& shape,
+                                                              ring_t shape,
                                                               int rotation);
 
 Mat convertToGrey(Mat img_in);
@@ -47,13 +47,7 @@ vector<ring_t> extractShapes(
         int kernel_size,
         int blur_width,
         int areaThresh,
-        Mat &grayImg,
-        bool useDilate=USE_DILATE,
-        bool useErodeBefore=USE_ERODE_BEFORE,
-        bool useErodeAfter=USE_ERODE_AFTER,
-        int erosion_before_size=EROSION_BEFORE_SIZE,
-        int dilate_size=DILATE_SIZE,
-        int erosion_after_size=EROSION_AFTER_SIZE
+        Mat &grayImg
                 );
 
 //vector<tuple<ring_t, uint64_t, int>> getAllTheHashesForImageAndShapes(Mat &imgdata, vector<ring_t> shapes,
@@ -81,14 +75,8 @@ Mat applyCanny(
         int thresh=CANNY_THRESH,
         int ratio=CANNY_RATIO,
         int kernel_size=CANNY_KERNEL_SIZE,
-        int blur_width=CANNY_BLUR_WIDTH,
-        bool useDilate=USE_DILATE,
-        bool useErodeBefore=USE_ERODE_BEFORE,
-        bool useErodeAfter=USE_ERODE_AFTER,
-        int erosion_before_size=EROSION_BEFORE_SIZE,
-        int dilate_size=DILATE_SIZE,
-        int erosion_after_size=EROSION_AFTER_SIZE
-        );
+        int blur_width=CANNY_BLUR_WIDTH
+                );
 
 vector<ring_t> extractShapesFromContours(
         vector<vector<Point> > contours,
@@ -103,13 +91,7 @@ vector<tuple<ring_t, uint64_t, int>> getAllTheHashesForImage(
         int kernel_size=CANNY_KERNEL_SIZE,
         int blur_width=CANNY_BLUR_WIDTH,
         int areaThresh=CANNY_AREA_THRESH,
-        bool simplify=true,
-        bool useDilate=USE_DILATE,
-        bool useErodeBefore=USE_ERODE_BEFORE,
-        bool useErodeAfter=USE_ERODE_AFTER,
-        int erosion_before_size=EROSION_BEFORE_SIZE,
-        int dilate_size=DILATE_SIZE,
-        int erosion_after_size=EROSION_AFTER_SIZE
+        bool simplify=true
 );
 
 
@@ -132,13 +114,7 @@ vector<tuple<ring_t, ring_t, uint64_t, uint64_t, int>> findMatches(
         int kernel_size=CANNY_KERNEL_SIZE,
         int blur_width=CANNY_BLUR_WIDTH,
         int areaThresh=CANNY_AREA_THRESH,
-        bool flushCache=true,
-        bool useDilate=USE_DILATE,
-        bool useErodeBefore=USE_ERODE_BEFORE,
-        bool useErodeAfter=USE_ERODE_AFTER,
-        int erosion_before_size=EROSION_BEFORE_SIZE,
-        int dilate_size=DILATE_SIZE,
-        int erosion_after_size=EROSION_AFTER_SIZE);
+        bool flushCache=true);
 
 void findContoursWrapper(const Mat &canny_output, vector<vector<Point>> &contours,
         double epsilon=SMOOTH_CONTOURS_EPSILON,

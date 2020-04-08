@@ -27,11 +27,13 @@ Mat _calcMatrix(
         double zoomin=1);
 
 vector<tuple<ring_t, uint64_t, int>> getHashesForShape(const cv::Mat& input_image,
-                                                const ring_t& shape,
-                                                int numRotations,
-                                                int rotationJump,
-                                                int output_width=32,
-                                                int start_rotation=0);
+                                                       const ring_t& shape,
+                                                       int numRotations,
+                                                       int rotationJump,
+                                                       int output_width = 32,
+                                                       int start_rotation = 0,
+                                                       trans::matrix_transformer<double, 2, 2> transMat = trans::matrix_transformer<double, 2, 2>(),
+                                                       bool applyTransMat = false);
 
 tuple<ring_t, uint64_t, int> getHashesForShape_singleRotation(const cv::Mat& input_image,
                                                               const ring_t& shape,
@@ -54,8 +56,8 @@ vector<ring_t> extractShapes(
         int erosion_after_size=EROSION_AFTER_SIZE
                 );
 
-vector<tuple<ring_t, uint64_t, int>> getAllTheHashesForImageAndShapes(Mat &imgdata, vector<ring_t> shapes,
-        int rotations);
+//vector<tuple<ring_t, uint64_t, int>> getAllTheHashesForImageAndShapes(Mat &imgdata, vector<ring_t> shapes,
+//        int rotations);
 
 #include <boost/math/interpolators/cardinal_quintic_b_spline.hpp>
 
@@ -72,7 +74,7 @@ static double calcCurvature(double arcLength, cardinal_quintic_b_spline<double> 
     return abs(x_ * y__ - y_ * x__) / pow(pow(x_,2) + pow(y_, 2), 3.0 / 2.0);
 }
 
-vector<double> getMaximumPointsFromCurvature(linestring_t contour);
+//vector<double> getMaximumPointsFromCurvature(linestring_t contour);
 
 Mat applyCanny(
         Mat &imgdata,

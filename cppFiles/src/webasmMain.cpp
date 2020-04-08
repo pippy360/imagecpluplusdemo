@@ -56,7 +56,7 @@ public:
     ValWrapper outputImage3;
 };
 
-RNG rng(12345);
+static RNG rng(12345);
 
 string calcMatrixFromString(string shapeStr, int output_width, double zoom, int rotation) {
     ring_t shape;
@@ -345,7 +345,7 @@ string getContoursWithCurvature(
             polygonString << ",";
 
         count++;
-        auto vec = getMaximumPointsFromCurvature(outPoly);
+        vector<string> vec = {"1.0","2.0"};//getMaximumPointsFromCurvature(outPoly);//FIXME:
 
 
         polygonString << "{ \"shape\" : \"" << bg::wkt(outPoly) << "\" , \"curves\" : [";

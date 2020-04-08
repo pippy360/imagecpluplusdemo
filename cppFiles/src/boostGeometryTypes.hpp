@@ -13,4 +13,6 @@ typedef bg::model::ring<point_t> ring_t;
 typedef bg::model::linestring<point_t> linestring_t;
 typedef bg::model::box<point_t> box_t;
 
+namespace trans = bg::strategy::transform;
+
 #endif /* BOOSTGEOMETRYTYPES_H */

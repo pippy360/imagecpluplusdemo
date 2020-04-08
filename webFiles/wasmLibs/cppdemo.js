@@ -381,8 +381,8 @@ function setValue(ptr, value, type, noSafe) {
 var wasmMemory;
 
 var wasmTable = new WebAssembly.Table({
- "initial": 2025,
- "maximum": 2025 + 0,
+ "initial": 1822,
+ "maximum": 1822 + 0,
  "element": "anyfunc"
 });
 
@@ -636,7 +636,7 @@ function updateGlobalBufferAndViews(buf) {
  Module["HEAPF64"] = HEAPF64 = new Float64Array(buf);
 }
 
-var STACK_BASE = 6003952, DYNAMIC_BASE = 6003952, DYNAMICTOP_PTR = 760912;
+var STACK_BASE = 5993568, DYNAMIC_BASE = 5993568, DYNAMICTOP_PTR = 750528;
 
 var INITIAL_TOTAL_MEMORY = Module["TOTAL_MEMORY"] || 83886080;
 
@@ -5197,7 +5197,7 @@ function _emscripten_get_heap_size() {
 }
 
 function _emscripten_get_sbrk_ptr() {
- return 760912;
+ return 750528;
 }
 
 function _emscripten_memcpy_big(dest, src, num) {

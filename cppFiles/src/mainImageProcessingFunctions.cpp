@@ -16,6 +16,10 @@
 #include "PerceptualHash.hpp"
 #include "mainImageProcessingFunctions.hpp"
 
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <iostream>
+
 #include <algorithm>
 #include <chrono>
 #include <iostream>
@@ -31,6 +35,7 @@ using namespace std::chrono;
 #define PI 3.14159265
 
 using namespace cv;
+
 
 Mat covertToDynamicallyAllocatedMatrix(const Matx33d transformation_matrix)
 {
@@ -98,16 +103,17 @@ Mat calcMatrix(ring_t shape, double rotation, double output_width, double zoom) 
 vector<tuple<ring_t, uint64_t, int>> getAllTheHashesForImageAndShapes(Mat &imgdata,
         vector<ring_t> shapes,
         int rotations,
-        int rotationJump)
+        int rotationJump,
+        trans::matrix_transformer<double, 2, 2> transMat = trans::matrix_transformer<double, 2, 2>(),
+        bool applyTransMat = false)
 {
-//    vector<pair<ring_t, uint64_t>> ret(shapes.size()*rotations*4);
     vector<tuple<ring_t, uint64_t, int>> ret;
+
 //#pragma omp parallel for
     for (int i = 0; i < shapes.size(); i++)
     {
         auto shape = shapes[i];
-//        cout << "entering for shape:" << endl;
-        auto hashes = getHashesForShape(imgdata, shape, rotations, rotationJump);
+        auto hashes = getHashesForShape(imgdata, shape, rotations, rotationJump, 32, 0, transMat, applyTransMat);
         for (int j =0; j < hashes.size(); j++) {
             ret.push_back(hashes[j]);
         }
@@ -218,6 +224,37 @@ vector<ring_t> extractShapes(
     return extractShapesFromContours(contours, areaThresh);
 }
 
+bool g_useRotatedImageForHashes = true;//FIXME:
+
+
+trans::matrix_transformer<double, 2, 2> convertInvMatrixToBoost(cv::Mat inmat) {
+    vector<vector<double> > mat = {
+            {inmat.at<double>(0,0), inmat.at<double>(0,1), inmat.at<double>(0,2)},
+            {inmat.at<double>(1,0), inmat.at<double>(1,1), inmat.at<double>(1,2)},
+            {0, 0, 1}
+    };
+
+    return trans::matrix_transformer<double, 2, 2> (
+            mat[0][0], mat[0][1], mat[0][2],
+            mat[1][0], mat[1][1], mat[1][2],
+            mat[2][0], mat[2][1], mat[2][2]);
+}
+
+vector<ring_t> applyInvMatrixToPoints(vector<ring_t> shapes, trans::matrix_transformer<double, 2, 2> transMat) {
+    vector<ring_t> result;
+
+    for (auto shape : shapes) {
+        ring_t outPoly;
+        boost::geometry::transform(shape, outPoly, transMat);
+        result.push_back(outPoly);
+    }
+
+    return shapes;
+}
+
+//FIXME: remove
+static RNG rng(12345);
+
 vector<tuple<ring_t, uint64_t, int>> getAllTheHashesForImage(
         Mat img_in,
         int rotations,
@@ -235,28 +272,86 @@ vector<tuple<ring_t, uint64_t, int>> getAllTheHashesForImage(
         int erosion_after_size
         )
 {
-    Mat grayImg = convertToGrey(img_in);
-    vector<ring_t> shapes = extractShapes(thresh,
-            ratio,
-            kernel_size,
-            blur_width,
-            areaThresh,
-            grayImg,
-            useDilate,
-            useErodeBefore,
-            useErodeAfter,
-            erosion_before_size,
-            dilate_size,
-            erosion_after_size
-    );
+    vector<tuple<ring_t, uint64_t, int>> v;
 
-    std::cout << "Inside cpp code the extracted shapes: " << shapes.size() << std::endl;
-    return getAllTheHashesForImageAndShapes(grayImg, shapes, rotations, 1);
+    Mat grayImg = convertToGrey(img_in);
+    for (int i = 0; i < rotations; i += 1) {
+        //rotate it and continue
+        cout << "Doing for rotation: " << i << endl;
+        vector<tuple<ring_t, uint64_t, int>> v_prime;
+
+        double angle = i;
+        // get rotation matrix for rotating the image around its center in pixel coordinates
+        cv::Point2f center((grayImg.cols-1)/2.0, (grayImg.rows-1)/2.0);
+        cv::Mat rot = cv::getRotationMatrix2D(center, angle, 1.0);
+        cv::Rect2f bbox = cv::RotatedRect(cv::Point2f(), grayImg.size(), angle).boundingRect2f();
+        rot.at<double>(0,2) += bbox.width/2.0 - grayImg.cols/2.0;
+        rot.at<double>(1,2) += bbox.height/2.0 - grayImg.rows/2.0;
+        cv::Mat dst;
+        cv::warpAffine(grayImg, dst, rot, bbox.size());
+
+        vector<ring_t> shapes = extractShapes(thresh,
+                                              ratio,
+                                              kernel_size,
+                                              blur_width,
+                                              areaThresh,
+                                              dst,
+                                              useDilate,
+                                              useErodeBefore,
+                                              useErodeAfter,
+                                              erosion_before_size,
+                                              dilate_size,
+                                              erosion_after_size
+                                              );
+        Mat canny_output = applyCanny(dst, thresh, ratio, kernel_size, blur_width, useDilate,
+                                      useErodeBefore,
+                                      useErodeAfter,
+                                      erosion_before_size,
+                                      dilate_size,
+                                      erosion_after_size);
+
+//        if (i == 150) {
+//            Mat imageCannyOut;
+//            cvtColor(canny_output, imageCannyOut, COLOR_GRAY2RGBA);
+//
+//            vector<vector<Point> > contours;
+//            vector<Vec4i> hierarchy;
+//            findContoursWrapper(canny_output, contours);
+//
+//            //Draw contours------
+//            Mat contours_img = imageCannyOut.clone();
+//            for (int i = 0; i < contours.size(); i++) {
+//                Scalar color = Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255), 255);
+//                drawContours(contours_img, contours, i, color, 1, 8, hierarchy, 0, Point());
+//            }
+//            cv::imshow("dist", contours_img);
+//            cv::waitKey(0);
+//        }
+
+        Mat outRot;
+        cv::invertAffineTransform(rot, outRot);
+        auto invmat = convertInvMatrixToBoost(outRot);
+        g_useRotatedImageForHashes = true;
+        if (g_useRotatedImageForHashes) {
+            //pass in inv matrix
+            v_prime = getAllTheHashesForImageAndShapes(dst, shapes, 1, 1, invmat, true);
+        } else {
+
+            //apply inv transformation matrix to all shapes
+            auto newShapes = applyInvMatrixToPoints(shapes, invmat);
+            //pass in identity matrix
+            //WRONG, shape is used wrong here...
+            v_prime = getAllTheHashesForImageAndShapes(grayImg, newShapes, 1, 1);
+        }
+
+        v.reserve(v.size() + distance(v_prime.begin(),v_prime.end()));
+        v.insert(v.end(),v_prime.begin(),v_prime.end());
+    }
+    return v;
 }
 
 using namespace std::chrono;
 
-static void *prevImg;
 vector<tuple<ring_t, uint64_t, int>> g_imghashes;
 HammingWrapper *tree;
 
@@ -281,17 +376,24 @@ vector<tuple<ring_t, ring_t, uint64_t, uint64_t, int>> findMatches(
     //FIXME: this doesn't check if the data changed!!
     // use cached results
     if (flushCache) {
-        prevImg = img_in.data;
-        Mat grayImg = convertToGrey(img_in);
-        vector<ring_t> shapes = extractShapes(thresh, ratio, kernel_size, blur_width, areaThresh, grayImg,
+        cout << "Recomping cache" << endl;
+//        prevImg = img_in.data;
+        g_imghashes = getAllTheHashesForImage(
+                img_in,
+                360,
+                thresh,
+                ratio,
+                kernel_size,
+                blur_width,
+                areaThresh,
+                false,
                 useDilate,
-                                              useErodeBefore,
-                                              useErodeAfter,
-                                              erosion_before_size,
-                                              dilate_size,
-                                              erosion_after_size);
+                useErodeBefore,
+                useErodeAfter,
+                erosion_before_size,
+                dilate_size,
+                erosion_after_size);
 
-        g_imghashes = getAllTheHashesForImageAndShapes(grayImg, shapes, 360, 2);
         if (tree != nullptr)
             delete tree;
 
@@ -307,15 +409,21 @@ vector<tuple<ring_t, ring_t, uint64_t, uint64_t, int>> findMatches(
         tree->build(20, nullptr);
     }
 
-    Mat grayImg2 = convertToGrey(img_in2);
-    vector<ring_t> shapes2 = extractShapes(thresh, ratio, kernel_size, blur_width, areaThresh, grayImg2, useDilate,
-                                           useErodeBefore,
-                                           useErodeAfter,
-                                           erosion_before_size,
-                                           dilate_size,
-                                           erosion_after_size);
-
-    auto img2hashes = getAllTheHashesForImageAndShapes(grayImg2, shapes2, 1, 1);
+    auto img2hashes = getAllTheHashesForImage(
+                img_in2,
+                1,
+                thresh,
+                ratio,
+                kernel_size,
+                blur_width,
+                areaThresh,
+                false,
+                useDilate,
+                useErodeBefore,
+                useErodeAfter,
+                erosion_before_size,
+                dilate_size,
+                erosion_after_size);
 
     vector<tuple<ring_t, ring_t, uint64_t, uint64_t, int>> res;
 
@@ -326,25 +434,13 @@ vector<tuple<ring_t, ring_t, uint64_t, uint64_t, int>> findMatches(
         vector<float> unpacked(64, 0);
         tree->_unpack(&hash2, &unpacked[0]);
         tree->get_nns_by_vector(&unpacked[0], 6, -1, &result, &distances);
-//        cout << result.size() << " with distance " << ((distances.size() > 0)? distances[0] : -1 ) << endl;
         for (int i = 0; i < result.size(); i++) {
             if (distances[i] < 8) {
                 auto [shape1, hash1, rotation1] = g_imghashes[result[i]];
                 res.push_back(std::tie(shape1, shape2, hash1, hash2, rotation1));
             }
         }
-//        res.push_back(std::tie(shape1, shape2, hash1, hash2, rotation1));
     }
-
-            //    for (auto h : g_imghashes) {
-//        for (auto h2 : img2hashes) {
-//            auto [shape1, hash1, rotation1] = h;
-//            auto [shape2, hash2, rotation2] = h2;
-//            if( ImageHash::bitCount(hash1 ^ hash2) < 5 ) {
-//                res.push_back(std::tie(shape1, shape2, hash1, hash2, rotation1));
-//            }
-//        }
-//    }
 
     return res;
 }
@@ -356,9 +452,11 @@ std::tuple<double, double> getAandBWrapper(const ring_t& shape, point_t centroid
     return getAandB(transformedPoly);
 }
 
-void handleForRotation(const Mat &input_image, const ring_t &shape, int output_width,
+void handleForRotation(const Mat &input_image, ring_t shape, int output_width,
                        vector<tuple<ring_t, uint64_t, int>> &ret, const point_t centroid, double a,
-                       double b, double area, unsigned int _rotation_in) {
+                       double b, double area, unsigned int _rotation_in,
+                       trans::matrix_transformer<double, 2, 2> transMat, bool applyTransMat)
+{
     double rotation = _rotation_in;
 //        std::cout << "rotation: " << rotation << std::endl;
     Mat m = _calcMatrix(area, -centroid.get<0>(), -centroid.get<1>(), rotation, output_width, a, b);
@@ -369,61 +467,35 @@ void handleForRotation(const Mat &input_image, const ring_t &shape, int output_w
     uint64_t calculatedHash = img_hash::PHash::compute(outputImage);
 //        imshow("image", outputImage);
 //        waitKey(0);
-
     ret.push_back(tie(shape, calculatedHash, rotation));
-
-}
-
-void handleForRotation2(const Mat &input_image, const ring_t &shape, int output_width,
-                              vector<tuple<ring_t, uint64_t, int>> &ret, const point_t centroid, double a,
-                              double b, double area, unsigned int _rotation_in) {
-//    for (unsigned int j = 0; j < 4; j++) {
-//        double rotation = _rotation_in + (90*j);
-////        std::cout << "rotation: " << rotation << std::endl;
-//        Mat m = _calcMatrix(area, -centroid.get<0>(), -centroid.get<1>(), rotation, output_width, a, b);
-//
-//        Mat outputImage(output_width, output_width, CV_8UC3, Scalar(0, 0, 0));
-//        warpAffine(input_image, outputImage, m, outputImage.size());
-//
-//        uint64_t calculatedHash = img_hash::PHash::compute(outputImage);
-////        imshow("image", outputImage);
-////        waitKey(0);
-//
-//        ret.push_back(make_pair(shape, calculatedHash));
-//    }
-
-        double rotation = _rotation_in;
-//        std::cout << "rotation: " << rotation << std::endl;
-        Mat m = _calcMatrix(area, -centroid.get<0>(), -centroid.get<1>(), rotation, output_width, a, b);
-
-        Mat outputImage(output_width, output_width, CV_8UC3, Scalar(0, 0, 0));
-        warpAffine(input_image, outputImage, m, outputImage.size());
-
-    {
-        vector<uint64_t> calculatedHashs = img_hash::PHash::compute_fast(outputImage);
-//        imshow("image", outputImage);
-//        waitKey(0);
-
-        for (auto h : calculatedHashs)
-            ret.push_back(tie(shape, h, rotation));
-    }
 }
 
 vector<tuple<ring_t, uint64_t, int>> getHashesForShape(const cv::Mat& input_image,
-                                                         const ring_t& shape,
+                                                         ring_t shape,
                                                          int numRotations,
                                                          int rotationJump,
                                                          int output_width,
-                                                         int start_rotation)
+                                                         int start_rotation,
+                                                         trans::matrix_transformer<double, 2, 2> transMat,
+                                                         bool applyTransMat
+                                                         )
 {
     point_t p;
     auto ret = vector<tuple<ring_t, uint64_t, int>>();
+
+    //FIXME: test
+    if (applyTransMat) {
+        ring_t outPoly;
+        boost::geometry::transform(shape, outPoly, transMat);
+        shape = outPoly;
+    }
+
     bg::centroid(shape, p);
     auto [a, b] = getAandBWrapper(shape, p);
     double area = bg::area(shape);
     for (unsigned int i = start_rotation; i < start_rotation + numRotations; i += rotationJump)
     {
-        handleForRotation(input_image, shape, output_width, ret, p, a, b, area, i);
+        handleForRotation(input_image, shape, output_width, ret, p, a, b, area, i, transMat, applyTransMat);
     }
     return ret;
 }
@@ -432,6 +504,7 @@ tuple<ring_t, uint64_t, int> getHashesForShape_singleRotation(const cv::Mat& inp
                                                               const ring_t& shape,
                                                               int rotation)
 {
+    trans::matrix_transformer<double, 2, 2> transMat;
     return getHashesForShape(input_image, shape, 1, 1, 32, rotation)[0];
 }
 
@@ -461,52 +534,52 @@ Mat applyCanny(
 
     /// Detect edges using canny
     Canny( src_gray_blur, canny_output, thresh, thresh*ratio, kernel_size );
-
-    if (useErodeBefore) {
-        int erosion_type;
-        int erosion_size = erosion_before_size;
-        int erosion_elem = 0;
-        if( erosion_elem == 0 ){ erosion_type = MORPH_RECT; }
-        else if( erosion_elem == 1 ){ erosion_type = MORPH_CROSS; }
-        else if( erosion_elem == 2) { erosion_type = MORPH_ELLIPSE; }
-
-        Mat element = getStructuringElement( erosion_type, Size( 2*erosion_size + 1, 2*erosion_size+1 ), Point( erosion_size, erosion_size ) );
-
-        erode( canny_output, erosion_before, element );
-    } else {
-        erosion_before = canny_output;
-    }
-
-    if (useDilate) {
-        int dilate_type;
-        int dilate_elem = 0;
-        if( dilate_elem == 0 ){ dilate_type = MORPH_RECT; }
-        else if( dilate_elem == 1 ){ dilate_type = MORPH_CROSS; }
-        else if( dilate_elem == 2) { dilate_type = MORPH_ELLIPSE; }
-
-        Mat element = getStructuringElement( dilate_type, Size( 2*dilate_size + 1, 2*dilate_size+1 ), Point( dilate_size, dilate_size ) );
-
-        dilate( erosion_before, dilation_output, element );
-    } else {
-        dilation_output = erosion_before;
-    }
-
-    if (useErodeAfter) {
-        int erosion_type;
-        int erosion_size = erosion_after_size;
-        int erosion_elem = 0;
-        if( erosion_elem == 0 ){ erosion_type = MORPH_RECT; }
-        else if( erosion_elem == 1 ){ erosion_type = MORPH_CROSS; }
-        else if( erosion_elem == 2) { erosion_type = MORPH_ELLIPSE; }
-
-        Mat element = getStructuringElement( erosion_type, Size( 2*erosion_size + 1, 2*erosion_size+1 ), Point( erosion_size, erosion_size ) );
-
-        erode( dilation_output, erosion_dst, element );
-    } else {
-        erosion_dst = dilation_output;
-    }
-
-    return erosion_dst;
+    return canny_output;
+//    if (useErodeBefore) {
+//        int erosion_type;
+//        int erosion_size = erosion_before_size;
+//        int erosion_elem = 0;
+//        if( erosion_elem == 0 ){ erosion_type = MORPH_RECT; }
+//        else if( erosion_elem == 1 ){ erosion_type = MORPH_CROSS; }
+//        else if( erosion_elem == 2) { erosion_type = MORPH_ELLIPSE; }
+//
+//        Mat element = getStructuringElement( erosion_type, Size( 2*erosion_size + 1, 2*erosion_size+1 ), Point( erosion_size, erosion_size ) );
+//
+//        erode( canny_output, erosion_before, element );
+//    } else {
+//        erosion_before = canny_output;
+//    }
+//
+//    if (useDilate) {
+//        int dilate_type;
+//        int dilate_elem = 0;
+//        if( dilate_elem == 0 ){ dilate_type = MORPH_RECT; }
+//        else if( dilate_elem == 1 ){ dilate_type = MORPH_CROSS; }
+//        else if( dilate_elem == 2) { dilate_type = MORPH_ELLIPSE; }
+//
+//        Mat element = getStructuringElement( dilate_type, Size( 2*dilate_size + 1, 2*dilate_size+1 ), Point( dilate_size, dilate_size ) );
+//
+//        dilate( erosion_before, dilation_output, element );
+//    } else {
+//        dilation_output = erosion_before;
+//    }
+//
+//    if (useErodeAfter) {
+//        int erosion_type;
+//        int erosion_size = erosion_after_size;
+//        int erosion_elem = 0;
+//        if( erosion_elem == 0 ){ erosion_type = MORPH_RECT; }
+//        else if( erosion_elem == 1 ){ erosion_type = MORPH_CROSS; }
+//        else if( erosion_elem == 2) { erosion_type = MORPH_ELLIPSE; }
+//
+//        Mat element = getStructuringElement( erosion_type, Size( 2*erosion_size + 1, 2*erosion_size+1 ), Point( erosion_size, erosion_size ) );
+//
+//        erode( dilation_output, erosion_dst, element );
+//    } else {
+//        erosion_dst = dilation_output;
+//    }
+//
+//    return erosion_dst;
 }
 
 vector<ring_t> extractShapesFromContours(

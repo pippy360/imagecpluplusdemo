@@ -53,7 +53,8 @@ function _newLayer(layerImage) {
         appliedTransformationsMat: getIdentityMatrix(),
         visible: true,
         layerColour: [0, 0, 0], //used for canvas UI overlay elements
-        colour: [255, 0, 0]//used for UI elements
+        colour: [255, 0, 0],//used for UI elements
+        cachedCanvas: null
     };
 }
 
@@ -142,7 +143,8 @@ async function loadTransformationStateFromUrlData(urlData) {
         let layers = transformData.interactiveCanvasState.layers;
         for (let i = 0; i < layers.length; i++) {
             //FIXME: batch these
-            layers[i].image = await asyncLoadImage(layers[i].image)
+            layers[i].image = await asyncLoadImage(layers[i].image);
+            layers[i].cachedCanvas = null;
         }
         transformData.interactiveCanvasState.activeLayer = layers[0];
     }
@@ -151,7 +153,8 @@ async function loadTransformationStateFromUrlData(urlData) {
         let layers = transformData.databaseCanvasState.layers;
         for (let i = 0; i < layers.length; i++) {
             //FIXME: batch these
-            layers[i].image = await asyncLoadImage(layers[i].image)
+            layers[i].image = await asyncLoadImage(layers[i].image);
+            layers[i].cachedCanvas = null;
         }
         transformData.databaseCanvasState.activeLayer = layers[0];
     }
@@ -599,7 +602,7 @@ function handleMouseDownOnCanvas(pageMousePosition, canvasMousePosition) {
 function mouseMoveOnDocumentEvent(pageMousePosition) {
     if (g_transformState != null && g_transformState.isMouseDownAndClickedOnCanvas) {
         g_transformState.referenceImageHighlightedTriangle = null;
-
+        g_transformState.activeCanvas.activeLayer.cachedCanvas = null;
         g_transformState.activeCanvas.imageOutlineHighlightLayer = g_transformState.activeCanvas.activeLayer;
         handleMouseMoveOnDocument(pageMousePosition);
 
@@ -713,6 +716,19 @@ function updateClickAndSeeImage() {
 }
 
 function drawLayer(ctx, canvasState, layer) {
+    if (true || layer.cachedCanvas == null) {
+        const m_canvas = document.createElement('canvas');
+        m_canvas.width = ctx.canvas.width;
+        m_canvas.height = ctx.canvas.height;
+        const m_context = m_canvas.getContext('2d');
+
+        const transMat = layer.appliedTransformationsMat;
+        const drawingImage = cropLayerImage(layer.image, layer.nonTransformedImageOutline);
+        drawImageWithTransformations(m_context, drawingImage, transMat);
+        //set the cache
+        layer.cachedCanvas = m_canvas;
+    }
+
     const isCrop = g_transformState.currentTransformationOperationState == enum_TransformationOperation.CROP;
     const isCroppingEffectActive = g_transformState.isMouseDownAndClickedOnCanvas && isCrop;
     const isActiveCanvas = g_transformState.activeCanvas == canvasState;
@@ -720,19 +736,18 @@ function drawLayer(ctx, canvasState, layer) {
     const dontCropImage = isActiveLayer && isCroppingEffectActive && isActiveCanvas;
     const skipUiLayer = isCroppingEffectActive && isActiveCanvas && !isActiveLayer;
 
-    const transMat = layer.appliedTransformationsMat;
     if (dontCropImage) {
+        const transMat = layer.appliedTransformationsMat;
         drawImageWithTransformations(ctx, layer.image, transMat);
     } else {
-        const drawingImage = cropLayerImage(layer.image, layer.nonTransformedImageOutline);
-        drawImageWithTransformations(ctx, drawingImage, transMat);
+        drawImageWithTransformations(ctx, layer.cachedCanvas, getIdentityMatrix());
     }
 }
 
 function _jsonReplacer(name, val) {
     if (name == "image") {
         return val.src;
-    } else if (name == "activeCanvas" || name == "activeLayer") {
+    } else if (name == "activeCanvas" || name == "activeLayer" || name == "cachedCanvas") {
         return undefined;
     } else {
         return val;
@@ -798,21 +813,21 @@ function draw() {
     updateLookupCanvasHeap();
     updateDatabaseCanvasHeap();
 
-    let jsonData = module.getContoursWithCurvature(lookup_canvas_wasm_heap.ptr,
-        lookup_canvas_wasm_heap.width,
-        lookup_canvas_wasm_heap.height,
-        g_thresh,
-        g_ratio, g_kernelSize, g_blurWidth, g_areaThresh,
-        g_USE_DILATE,
-        g_USE_ERODE_BEFORE,
-        g_USE_ERODE_AFTER,
-        g_EROSION_BEFORE_SIZE,
-        g_DILATE_SIZE,
-        g_EROSION_AFTER_SIZE);
-    const shapeData = JSON.parse(jsonData);
-    const c = document.getElementById("lookupCanvas2").getContext("2d");
+    // let jsonData = module.getContoursWithCurvature(lookup_canvas_wasm_heap.ptr,
+    //     lookup_canvas_wasm_heap.width,
+    //     lookup_canvas_wasm_heap.height,
+    //     g_thresh,
+    //     g_ratio, g_kernelSize, g_blurWidth, g_areaThresh,
+    //     g_USE_DILATE,
+    //     g_USE_ERODE_BEFORE,
+    //     g_USE_ERODE_AFTER,
+    //     g_EROSION_BEFORE_SIZE,
+    //     g_DILATE_SIZE,
+    //     g_EROSION_AFTER_SIZE);
+    // const shapeData = JSON.parse(jsonData);
+    // const c = document.getElementById("lookupCanvas2").getContext("2d");
 
-    for (let i = 0; i < shapeData['shapes'].length; i++ )
+    // for (let i = 0; i < shapeData['shapes'].length; i++ )
     {
         // const shapeToDraw = linesStrToLine(shapeData['shapes'][i]['shape']);
         // const curves = shapeData['shapes'][i]['curves'];

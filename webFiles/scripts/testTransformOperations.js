@@ -16,6 +16,50 @@ const enum_TransformationOperation = {
     SKEW_Y: 7,
 };
 
+function setDatabaseCanvasSize(width, height)
+{
+//         <div class="canvasWrapperRight">
+//         <canvas id="databaseCanvas" class="canvasInline" width="560" height="560"></canvas>
+//         <canvas id="databaseCanvas_uilower" class="canvasInline canvasUILayer" width="560" height="560"></canvas>
+//         <canvas id="databaseCanvas_ui" class="canvasInline canvasUILayer" width="560" height="560"></canvas>
+//         <canvas id="databaseCanvas_uipass" class="canvasInline canvasUILayer avoid-clicks" width="560" height="560"></canvas>
+//         </div>
+
+    document.getElementById("databaseCanvas").width = width;
+    document.getElementById("databaseCanvas").height = height;
+
+    document.getElementById("databaseCanvas_uilower").width = width;
+    document.getElementById("databaseCanvas_uilower").height = height;
+
+    document.getElementById("databaseCanvas_ui").width = width;
+    document.getElementById("databaseCanvas_ui").height = height;
+
+    document.getElementById("databaseCanvas_uipass").width = width;
+    document.getElementById("databaseCanvas_uipass").height = height;
+}
+
+function setLookupCanvasSize(width, height)
+{
+//         <div class="canvasWrapperRight">
+//         <canvas id="databaseCanvas" class="canvasInline" width="560" height="560"></canvas>
+//         <canvas id="databaseCanvas_uilower" class="canvasInline canvasUILayer" width="560" height="560"></canvas>
+//         <canvas id="databaseCanvas_ui" class="canvasInline canvasUILayer" width="560" height="560"></canvas>
+//         <canvas id="databaseCanvas_uipass" class="canvasInline canvasUILayer avoid-clicks" width="560" height="560"></canvas>
+//         </div>
+
+    document.getElementById("lookupCanvas").width = width;
+    document.getElementById("lookupCanvas").height = height;
+
+    document.getElementById("lookupCanvas_uilower").width = width;
+    document.getElementById("lookupCanvas_uilower").height = height;
+
+    document.getElementById("lookupCanvas_ui").width = width;
+    document.getElementById("lookupCanvas_ui").height = height;
+
+    document.getElementById("lookupCanvas_uipass").width = width;
+    document.getElementById("lookupCanvas_uipass").height = height;
+}
+
 function convertTransformationObjectToTransformationMatrix(transformations, shapeCenter) {
     // if (!shapeCenter) {
     //     shapeCenter = transformations.transformationCenterPoint;
@@ -630,7 +674,7 @@ function mouseUpEvent() {
         g_transformState.isMouseDownAndClickedOnCanvas = false;
         draw();
 
-        findMatches();
+        // findMatches();
     }
 }
 
@@ -771,7 +815,7 @@ function draw() {
         return;
     }
 
-    window.history.pushState("object or string", "Title", "index.html?"
+    window.history.pushState("object or string", "Title", "tests.html?"
         + "transfromState="
         + JSON.stringify(g_transformState, _jsonReplacer)+"");
 
@@ -787,10 +831,10 @@ function draw() {
         drawLayer(c_lookupCanvas_ctx, g_transformState.interactiveCanvasState, layer);
     }
 
-    for (let i = 0; i < g_transformState.databaseCanvasState.layers.length; i++){
-        const layer = g_transformState.databaseCanvasState.layers[i];
-        drawLayer(c_databaseCanvas_ctx, g_transformState.databaseCanvasState, layer);
-    }
+    // for (let i = 0; i < g_transformState.databaseCanvasState.layers.length; i++){
+    //     const layer = g_transformState.databaseCanvasState.layers[i];
+    //     drawLayer(c_databaseCanvas_ctx, g_transformState.databaseCanvasState, layer);
+    // }
 
     const isCrop = g_transformState.currentTransformationOperationState == enum_TransformationOperation.CROP;
     const isCroppingEffectActive = g_transformState.isMouseDownAndClickedOnCanvas && isCrop;
@@ -807,7 +851,7 @@ function draw() {
     _c_lookupCanvas.ctx.drawImage(c_lookupCanvas, 0, 0);
     _c_databaseCanvas.ctx.drawImage(c_databaseCanvas, 0, 0);
 
-    drawOutputImageOrEdgeImage(_c_lookupCanvas.ctx);
+    drawOutputImageOrEdgeImage();
 
     //FIXME: check active canvas and flush cache on heap update!!!
     updateLookupCanvasHeap();

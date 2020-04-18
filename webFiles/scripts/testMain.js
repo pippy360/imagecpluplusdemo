@@ -14,6 +14,8 @@ let g_lastusedClickAndSeeShapeRight;
 let g_lastusedClickAndSeeShapeLeft;
 
 let g_mainGlobalState;
+let g_shapeResults;
+
 
 function getHashDistance() {
     let databaseString = g_lastusedClickAndSeeShapeRight;
@@ -39,55 +41,64 @@ function getHashDistance() {
 
 
 
-function drawshapefromClickandseeRight(shapeStr1, rotation) {
+function drawshapefromClickandseeRight(shapeStr1, dist) {
     if (shapeStr1 === undefined)
         return;
 
-    g_lastusedClickAndSeeShapeRight = shapeStr1;
-    rotation = parseInt(document.getElementById("clickandseeRotation").value);
-
-    drawShapeAndFragmentClickAndSee(
-        canvas_inserted_in_database_wasm_heap.ptr,
-        canvas_inserted_in_database_wasm_heap.width,
-        canvas_inserted_in_database_wasm_heap.height,
-        shapeStr1, 256, "databaseCanvasFrag", rotation);
-
-    getHashDistance();
+    const can = getCleanUICanvas("databaseCanvas");
+    //draw the shape
+    drawPolyFull(can.ctx_ui, shapeStrToShape(shapeStr1), 'rgb(45, 0, 255)', 'rgba(45, 0, 255, 0.6)');
 }
 
-function drawshapefromClickandseeLeft(shapeStr1, rotation) {
-    g_lastusedClickAndSeeShapeLeft = shapeStr1;
+function drawshapefromClickandseeLeft(index) {
+    // g_lastusedClickAndSeeShapeLeft = shapeStr1;
 
-    drawShapeAndFragmentClickAndSee(
-        lookup_canvas_wasm_heap.ptr,
-        lookup_canvas_wasm_heap.width,
-        lookup_canvas_wasm_heap.height,
-        shapeStr1, 256, "lookupCanvasFrag", rotation);
+    // drawShapeAndFragmentClickAndSee(
+    //     lookup_canvas_wasm_heap.ptr,
+    //     lookup_canvas_wasm_heap.width,
+    //     lookup_canvas_wasm_heap.height,
+    //     shapeStr1, 256, "lookupCanvasFrag", rotation);
+    //
+    // getHashDistance();
 
-    getHashDistance();
+    //draw this and get fill the other list
+    const cur = g_shapeResults.shapes[parseInt(index)].shapes;
+
+    const can = getCleanUICanvas("lookupCanvas");
+    drawPolyFull(can.ctx_ui, shapeStrToShape(g_shapeResults.shapes[parseInt(index)].shape1), 'rgb(45, 0, 255)', 'rgba(45, 0, 255, 0.6)');
+
+    const list = document.getElementById("clickandseeListRight");
+    list.innerHTML = "";
+
+    for (let i = 0; i < cur.length; i++)
+    {
+        let opt = "" + i;
+        let el = document.createElement("div");
+        el.innerHTML = `<div class='shapeListEl' onmouseover="drawshapefromClickandseeRight('${cur[i].shape}', ${cur[i].dist})" id='clickandseeShapeListElm${i}'>-----${i} - ${cur[i].dist}</div>`;
+        list.appendChild(el);
+    }
+    //now loop through all the shapes and populate the list
 }
 
 function parseClickandseeShapesLeft(shapes) {
     if (shapes.length == 0) {
         return;
     }
-    const lines = shapes.split('\n').filter(function (el) {
-        return el.length > 0;
-    });
+
     const list = document.getElementById("clickandseeListLeft");
     list.innerHTML = "";
 
     const can = getCleanUICanvas("lookupCanvas");
-    for (let i = 0;i < lines.length;i++) {
-        let opt = lines[i];
+    for (let i = 0;i < shapes.shapes.length;i++) {
+        let opt = ""+i;
         let el = document.createElement("div");
         el.innerHTML = `<div class='shapeListEl' onmouseover="drawshapefromClickandseeLeft('${opt}', 0)" id='clickandseeShapeListElm${i}'>-----${i}</div>`;
         list.appendChild(el);
 
         drawPolyFull(can.ctx_ui, shapeStrToShape(opt), 'rgb(45, 0, 255)', 'rgba(45, 0, 255, 0.6)');
     }
-    if (lines.length > 0)
-        drawshapefromClickandseeLeft(lines[0], 0);
+    // if (lines.length > 0)
+    //     drawshapefromClickandseeLeft(lines[0], 0);
 }
 
 function parseClickandseeShapesRight(shapes) {
@@ -538,8 +549,9 @@ function drawImageFromValHolder(width, height, valHolder, outputCanvasId, rgbId,
     }
 }
 
-function drawOutputImageOrEdgeImage(ctx, imageName) {
 
+function drawOutputImageOrEdgeImage() {
+    //FIXME: we broke the other code
     // Wasm heap must already have the canvases loaded in memory
 
     clearLowerUi();
@@ -565,28 +577,51 @@ function drawOutputImageOrEdgeImage(ctx, imageName) {
         valHolder.delete();
     }
 
-    {
-        const width = canvas_inserted_in_database_wasm_heap.width;
-        const height = canvas_inserted_in_database_wasm_heap.height;
 
-        const valHolder = new module.ValHolder(canvas_inserted_in_database_wasm_heap.width*canvas_inserted_in_database_wasm_heap.height*4);
+    let res = module.handleImageForTransformation_wrapper(
+        lookup_canvas_wasm_heap.ptr,
+        lookup_canvas_wasm_heap.width,
+        lookup_canvas_wasm_heap.height,
+        0.7,0.7,0,
+        -0.7,0.7,0
+    );
+    // console.log(res.outStr);
+    const shapeResults = JSON.parse(res.outStr);
+    const edgeImageOut5 = new ImageData(new Uint8ClampedArray(res.v),
+        res.width, res.height);
 
-        module.encode(
-            canvas_inserted_in_database_wasm_heap.ptr,
-            canvas_inserted_in_database_wasm_heap.width,
-            canvas_inserted_in_database_wasm_heap.height,
-            valHolder, g_thresh, g_ratio, g_kernelSize, g_blurWidth, g_areaThresh);
-        let jsonData = module.getContoursWithCurvature(lookup_canvas_wasm_heap.ptr,
-            lookup_canvas_wasm_heap.width,
-            lookup_canvas_wasm_heap.height,
-            g_thresh,
-            g_ratio, g_kernelSize, g_blurWidth, g_areaThresh);
-        console.log(JSON.parse(jsonData));
-        drawImageFromValHolder(width, height, valHolder, "databaseCanvas", "databaseCanvas_output",
-            g_mainGlobalState.drawingImageDatabase);
+    setDatabaseCanvasSize(res.width, res.height);
+    const databaseCanvas = getCleanCanvas("databaseCanvas");
 
-        valHolder.delete();
-    }
+    databaseCanvas.ctx.putImageData(edgeImageOut5, 0, 0);
+
+    g_shapeResults = shapeResults;
+    parseClickandseeShapesLeft(g_shapeResults);
+
+    //FIXME: res.delete();
+
+    // {
+    //     const width = canvas_inserted_in_database_wasm_heap.width;
+    //     const height = canvas_inserted_in_database_wasm_heap.height;
+    //
+    //     const valHolder = new module.ValHolder(canvas_inserted_in_database_wasm_heap.width*canvas_inserted_in_database_wasm_heap.height*4);
+    //
+    //     module.encode(
+    //         canvas_inserted_in_database_wasm_heap.ptr,
+    //         canvas_inserted_in_database_wasm_heap.width,
+    //         canvas_inserted_in_database_wasm_heap.height,
+    //         valHolder, g_thresh, g_ratio, g_kernelSize, g_blurWidth, g_areaThresh);
+    //     let jsonData = module.getContoursWithCurvature(lookup_canvas_wasm_heap.ptr,
+    //         lookup_canvas_wasm_heap.width,
+    //         lookup_canvas_wasm_heap.height,
+    //         g_thresh,
+    //         g_ratio, g_kernelSize, g_blurWidth, g_areaThresh);
+    //     console.log(JSON.parse(jsonData));
+    //     drawImageFromValHolder(width, height, valHolder, "databaseCanvas", "databaseCanvas_output",
+    //         g_mainGlobalState.drawingImageDatabase);
+    //
+    //     valHolder.delete();
+    // }
 
 }
 

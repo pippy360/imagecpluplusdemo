@@ -252,7 +252,7 @@ MatWraper handleImageForTransformation_wrapper(
                  0.0, 0.0, 1.0);
 
     auto [m, trans] = handleImageForTransformation(img_in, m_in);
-    vector<tuple<ring_t, vector<tuple<ring_t, double>>>>  res = compareImages(img_in,
+    vector<tuple<ring_t, vector<tuple<ring_t, double, int>>>>  res = compareImages(img_in,
                              m,
                              CANNY_THRESH,
                              CANNY_RATIO,
@@ -273,11 +273,11 @@ MatWraper handleImageForTransformation_wrapper(
         polygonString << "\"shapes\" : [";
 
         for (int j = 0; j < list.size(); j++) {
-            auto [shape2, dist] = list[j];
+            auto [shape2, dist, hashdist] = list[j];
             if (j > 0)
                 polygonString << ",";
 
-            polygonString << "{\"shape\" : \"" << bg::wkt(shape2) << "\", \"dist\" : " << dist << " }";
+            polygonString << "{\"shape\" : \"" << bg::wkt(shape2) << "\", \"dist\" : " << dist << ", \"hashDist\" : " << hashdist <<" }";
         }
         polygonString << "]}";
     }

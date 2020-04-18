@@ -34,7 +34,7 @@
 
 tuple<Mat, Mat> handleImageForTransformation(Mat img_in, cv::Matx33d transmat);
 
-vector<tuple<ring_t, vector<tuple<ring_t, double>>>> compareImages(Mat img_in, Mat img_in2, int thresh,
+vector<tuple<ring_t, vector<tuple<ring_t, double, int>>>> compareImages(Mat img_in, Mat img_in2, int thresh,
                    int ratio,
                    int kernel_size,
                    int blur_width,

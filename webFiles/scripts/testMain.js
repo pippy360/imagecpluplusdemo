@@ -74,7 +74,7 @@ function drawshapefromClickandseeLeft(index) {
     {
         let opt = "" + i;
         let el = document.createElement("div");
-        el.innerHTML = `<div class='shapeListEl' onmouseover="drawshapefromClickandseeRight('${cur[i].shape}', ${cur[i].dist})" id='clickandseeShapeListElm${i}'>-----${i} - ${cur[i].dist}</div>`;
+        el.innerHTML = `<div class='shapeListEl' onmouseover="drawshapefromClickandseeRight('${cur[i].shape}', ${cur[i].dist})" id='clickandseeShapeListElm${i}'>-----${i} - ${cur[i].dist} (${cur[i].hashDist})</div>`;
         list.appendChild(el);
     }
     //now loop through all the shapes and populate the list

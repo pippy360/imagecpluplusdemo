@@ -54,7 +54,7 @@ vector<tuple<ring_t, vector<tuple<ring_t, double>>>> compareShapes(vector<ring_t
 extern vector<tuple<ring_t, uint64_t, int>> g_imghashes;
 extern HammingWrapper *tree;
 
-vector<tuple<ring_t, vector<tuple<ring_t, double>>>> compareImages(Mat img_in, Mat img_in2, int thresh,
+vector<tuple<ring_t, vector<tuple<ring_t, double, int>>>> compareImages(Mat img_in, Mat img_in2, int thresh,
                    int ratio,
                    int kernel_size,
                    int blur_width,
@@ -69,7 +69,37 @@ vector<tuple<ring_t, vector<tuple<ring_t, double>>>> compareImages(Mat img_in, M
 
     //compare the shapes with the transformation matrix
     auto comparedShapes = compareShapes(shapes1, shapes2, transmat);
-    return comparedShapes;
+
+    vector<tuple<ring_t, vector<tuple<ring_t, double, int>>>> res;
+    for (auto c : comparedShapes)
+    {
+        vector<tuple<ring_t, double, int>> res_part;
+
+        auto [s, list] = c;
+        auto[a, hash1, b] = getHashesForShape_singleRotation(grayImg1, s, 0);
+        for (auto l : list)
+        {
+            //hm...we can do it for 360 degree rotations
+            auto [s2, perc] = l;
+            //getHashesForShape
+            //vector<tuple<ring_t, uint64_t, int>>
+            vector<tuple<ring_t, uint64_t, int>> hashes = getHashesForShape(grayImg2, s2, 360, 1);
+            int min_hash_distance = -1;
+            for (auto hash_c : hashes)
+            {
+                auto [ignore, hash2, rotation2] = hash_c;
+                int hash_dist = ImageHash::bitCount(hash1 ^ hash2);
+                if (min_hash_distance == -1 || hash_dist < min_hash_distance)
+                {
+                    min_hash_distance = hash_dist;
+                }
+            }
+            res_part.push_back(make_tuple(s2, perc, min_hash_distance));
+        }
+        res.push_back(make_tuple(s, res_part));
+    }
+
+    return res;
 //    //find matches but check shapes
 //    //now find the ones that match
 //    //for each shape

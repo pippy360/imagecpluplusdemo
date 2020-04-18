@@ -141,7 +141,7 @@ Mat convertToGrey(Mat img_in) {
 void findContoursWrapper(const Mat &canny_output, vector<vector<Point>> &contours, double epsilon, bool smooth)
 {
     vector<Vec4i> hierarchy;
-    if (smooth) {
+    if (false) {
         vector<vector<Point>> contours0;
         findContours(canny_output, contours0, hierarchy, RETR_LIST, CHAIN_APPROX_SIMPLE, Point(0, 0));
         contours.resize(contours0.size());
@@ -196,6 +196,35 @@ vector<double> getMaximumPointsFromCurvature(linestring_t contour)
     return curvatures;
 }
 
+vector<Point> toCVPoints(ring_t in) {
+    vector<Point> v;
+    for (auto pt: in) {
+        v.push_back(Point2d(pt.get<0>(), pt.get<1>()));
+    }
+    return v;
+}
+
+vector<vector<Point>> allToCVPoints(vector<ring_t> in) {
+    vector<vector<Point>> v;
+    for (auto pt: in) {
+        v.push_back(toCVPoints(pt));
+    }
+    return v;
+}
+
+void drawContours(const Mat &img, vector<vector<Point>> pts) {
+    int idx = 0;
+    for( ; idx < pts.size(); idx++ )
+    {
+        Scalar color( rand()&255, rand()&255, rand()&255 );
+        drawContours(img, pts, idx, color, 1, 8);
+    }
+}
+
+void drawContoursWithRing(const Mat &img, vector<ring_t> _pts) {
+    auto pts = allToCVPoints(_pts);
+    drawContours(img, pts);
+}
 
 vector<ring_t> extractShapes(
         int thresh,
@@ -252,12 +281,12 @@ vector<tuple<ring_t, uint64_t, int>> getAllTheHashesForImage(
         int kernel_size,
         int blur_width,
         int areaThresh,
-        bool simplify)
+        bool simplify,
+        int second_rotation)
 {
     vector<tuple<ring_t, uint64_t, int>> v;
-
     Mat grayImg = convertToGrey(img_in);
-    for (int i = 0; i < rotations; i += 1) {
+    for (int i = 0; i < second_rotation; i += 1) {
         //rotate it and continue
 //        cout << "Doing for rotation: " << i << endl;
         vector<tuple<ring_t, uint64_t, int>> v_prime;
@@ -279,41 +308,28 @@ vector<tuple<ring_t, uint64_t, int>> getAllTheHashesForImage(
                                               areaThresh,
                                               dst);
         Mat canny_output = applyCanny(dst, thresh, ratio, kernel_size, blur_width);
-
-//        if (i == 150) {
-//            Mat imageCannyOut;
-//            cvtColor(canny_output, imageCannyOut, COLOR_GRAY2RGBA);
-//
-//            vector<vector<Point> > contours;
-//            vector<Vec4i> hierarchy;
-//            findContoursWrapper(canny_output, contours);
-//
-//            //Draw contours------
-//            Mat contours_img = imageCannyOut.clone();
-//            for (int i = 0; i < contours.size(); i++) {
-//                Scalar color = Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255), 255);
-//                drawContours(contours_img, contours, i, color, 1, 8, hierarchy, 0, Point());
-//            }
-//            cv::imshow("dist", contours_img);
-//            cv::waitKey(0);
-//        }
-
         Mat outRot;
         cv::invertAffineTransform(rot, outRot);
         auto invmat = convertInvMatrixToBoost(outRot);
         g_useRotatedImageForHashes = true;
         if (g_useRotatedImageForHashes) {
             //pass in inv matrix
-            v_prime = getAllTheHashesForImageAndShapes(dst, shapes, 1, 1, invmat, true);
+            v_prime = getAllTheHashesForImageAndShapes(dst, shapes, rotations, 1, invmat, true);
         } else {
 
             //apply inv transformation matrix to all shapes
             auto newShapes = applyInvMatrixToPoints(shapes, invmat);
             //pass in identity matrix
             //WRONG, shape is used wrong here...
-            v_prime = getAllTheHashesForImageAndShapes(grayImg, newShapes, 1, 1);
+            v_prime = getAllTheHashesForImageAndShapes(grayImg, newShapes, rotations, 1);
         }
-
+//        for (auto v : v_prime) {
+//            auto [outRing, p, b] = v;
+//            drawContoursWithRing(img_in_c, vector<ring_t>(1, outRing));
+//        }
+//        cout << "v.size(): " << v_prime.size() << endl;
+//        imshow("outagain", img_in_c);
+//        waitKey(0);
         v.reserve(v.size() + distance(v_prime.begin(),v_prime.end()));
         v.insert(v.end(),v_prime.begin(),v_prime.end());
     }
@@ -325,7 +341,7 @@ using namespace std::chrono;
 vector<tuple<ring_t, uint64_t, int>> g_imghashes;
 HammingWrapper *tree;
 
-vector<tuple<ring_t, ring_t, uint64_t, uint64_t, int>> findMatches(
+vector<tuple<ring_t, uint64_t, int>> getHashesForMatching(
         Mat img_in,
         Mat img_in2,
         int thresh,
@@ -334,14 +350,10 @@ vector<tuple<ring_t, ring_t, uint64_t, uint64_t, int>> findMatches(
         int blur_width,
         int areaThresh,
         bool flushCache
-        )
-{
-
-    //FIXME: this doesn't check if the data changed!!
+        ) {
     // use cached results
     if (flushCache) {
         cout << "recomputing cache..." << endl;
-//        prevImg = img_in.data;
         g_imghashes = getAllTheHashesForImage(
                 img_in,
                 360,
@@ -369,14 +381,34 @@ vector<tuple<ring_t, ring_t, uint64_t, uint64_t, int>> findMatches(
     }
 
     auto img2hashes = getAllTheHashesForImage(
-                img_in2,
-                1,
-                thresh,
-                ratio,
-                kernel_size,
-                blur_width,
-                areaThresh,
-                false);
+            img_in2,
+            1,
+            thresh,
+            ratio,
+            kernel_size,
+            blur_width,
+            areaThresh,
+            false);
+
+    return img2hashes;
+}
+
+vector<tuple<ring_t, ring_t, uint64_t, uint64_t, int>> findMatches(
+        Mat img_in,
+        Mat img_in2,
+        int thresh,
+        int ratio,
+        int kernel_size,
+        int blur_width,
+        int areaThresh,
+        bool flushCache
+        )
+{
+    auto img2hashes = getHashesForMatching(
+            img_in, img_in2, thresh, ratio,
+            kernel_size, blur_width, areaThresh, flushCache);
+
+    cout << "img2hashes size:" << img2hashes.size() << endl;
 
     vector<tuple<ring_t, ring_t, uint64_t, uint64_t, int>> res;
 

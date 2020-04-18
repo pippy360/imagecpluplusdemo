@@ -22,7 +22,8 @@ add_executable(
         src/ImageHash.cpp
 #        src/imghash/phash.cpp
         tests/accuracytest2.cpp
-)
+        src/commonTestFunctions.cpp
+        src/defaultImageValues.h tests/paperTests.cpp)
 
 add_executable(
         demo
@@ -37,7 +38,9 @@ add_executable(
         src/mainImageProcessingFunctions.cpp
         src/ImageHash.cpp
 #        src/imghash/phash.cpp
-)
+        src/defaultImageValues.h src/commonTestFunctions.cpp src/commonTestFunctions.h)
+
+
 
 target_include_directories(runtests PUBLIC "." ./externalDependencies googletest/googletest/include/ ${JPEG_INCLUDE_DIR} ${OpenCV_INCLUDE_DIRS})
 target_include_directories(demo PUBLIC "." ./externalDependencies ${JPEG_INCLUDE_DIR} ${OpenCV_INCLUDE_DIRS})

@@ -14,6 +14,7 @@
 #include "shapeNormalise.hpp"
 //#include "ImageHash.hpp"
 
+#include "commonTestFunctions.h"
 
 
 using namespace cv;
@@ -55,6 +56,7 @@ public:
     ValWrapper outputImage2;
     ValWrapper outputImage3;
 };
+
 
 static RNG rng(12345);
 
@@ -109,13 +111,7 @@ std::string findMatchesForImageFromCanvas(
         int kernel_size,
         int blur_width,
         int areaThresh,
-        bool flush_cache,
-        bool useDilate,
-        bool useErodeBefore,
-        bool useErodeAfter,
-        int erosion_before_size,
-        int dilate_size,
-        int erosion_after_size
+        bool flush_cache
         )
 {
     Mat image(cv::Size(img_in_width, img_in_height), CV_8UC4, (void *) img_in, cv::Mat::AUTO_STEP);
@@ -128,13 +124,7 @@ std::string findMatchesForImageFromCanvas(
             kernel_size,
             blur_width,
             areaThresh,
-            flush_cache,
-            useDilate,
-            useErodeBefore,
-            useErodeAfter,
-            erosion_before_size,
-            dilate_size,
-            erosion_after_size
+            flush_cache
     );
     std::cout << "findMatchesForImageFromCanvas called, with this many matches: " << vec.size() << std::endl;
 
@@ -191,13 +181,7 @@ std::string getAllTheHashesForImageFromCanvas(
         int thresh,
         int ratio,
         int kernel_size,
-        int blur_width,
-        bool useDilate,
-        bool useErodeBefore,
-        bool useErodeAfter,
-        int erosion_before_size,
-        int dilate_size,
-        int erosion_after_size
+        int blur_width
 ) {
     std::cout << "getAllTheHashesForImageFromCanvas called" << std::endl;
 
@@ -208,13 +192,7 @@ std::string getAllTheHashesForImageFromCanvas(
             thresh,
             ratio,
             kernel_size,
-            blur_width,
-            useDilate,
-            useErodeBefore,
-            useErodeAfter,
-            erosion_before_size,
-            dilate_size,
-            erosion_after_size
+            blur_width
     );
 
     //FIXME: rotate the image here rather than doing it for each fragment later
@@ -236,6 +214,81 @@ std::string getAllTheHashesForImageFromCanvas(
     return polygonString.str();
 }
 
+class MatWraper {
+    //FIXME: remember to call delete on this!!!
+public:
+    string outStr;
+    unsigned char *m_data;
+    emscripten::val v;
+    int m_height, m_width;
+
+    MatWraper(unsigned char *data, size_t size, int height, int width):
+            m_width(width),
+            m_height(height),
+            m_data(data),
+            v(emscripten::typed_memory_view(size, data))
+    {};
+
+    ~MatWraper() {
+        free(m_data);
+    }
+};
+
+MatWraper handleImageForTransformation_wrapper(
+        uintptr_t img_in_ptr,
+        int width,
+        int height,
+        double a,
+        double b,
+        double c,
+        double d,
+        double e,
+        double f)
+{
+    Mat img_in(cv::Size(width, height), CV_8UC4, (void *) img_in_ptr, cv::Mat::AUTO_STEP);
+
+    cv::Matx33d m_in(a, b, c,
+                     d, e, f,
+                 0.0, 0.0, 1.0);
+
+    auto [m, trans] = handleImageForTransformation(img_in, m_in);
+    vector<tuple<ring_t, vector<tuple<ring_t, double>>>>  res = compareImages(img_in,
+                             m,
+                             CANNY_THRESH,
+                             CANNY_RATIO,
+                             CANNY_KERNEL_SIZE,
+                             CANNY_BLUR_WIDTH,
+                             CANNY_AREA_THRESH,
+                             trans);
+
+    std::stringstream polygonString;
+
+    polygonString << "{ \"shapes\" : [";
+    for (int i = 0; i < res.size(); i++) {
+        auto [shape1, list] = res[i];
+        if (i > 0)
+            polygonString << ",";
+
+        polygonString << "{" << " \"shape1\" : \"" << bg::wkt(shape1) << "\",";
+        polygonString << "\"shapes\" : [";
+
+        for (int j = 0; j < list.size(); j++) {
+            auto [shape2, dist] = list[j];
+            if (j > 0)
+                polygonString << ",";
+
+            polygonString << "{\"shape\" : \"" << bg::wkt(shape2) << "\", \"dist\" : " << dist << " }";
+        }
+        polygonString << "]}";
+    }
+    polygonString << "]}";
+
+    unsigned char *data = (unsigned char *) malloc(m.total() * m.elemSize());
+    memcpy(data, m.data, m.total() * m.elemSize());
+    MatWraper ret(data, m.total() * m.elemSize(), m.cols, m.rows);
+    ret.outStr = polygonString.str();
+    return ret;
+}
 
 string getShapeWithPointInside(
         uintptr_t img_in_ptr,
@@ -247,14 +300,8 @@ string getShapeWithPointInside(
         int ratio,
         int kernel_size,
         int blur_width,
-        int areaThresh,
-        bool useDilate,
-        bool useErodeBefore,
-        bool useErodeAfter,
-        int erosion_before_size,
-        int dilate_size,
-        int erosion_after_size
-) {
+        int areaThresh)
+{
     Mat img_in(cv::Size(width, height), CV_8UC4, (void *) img_in_ptr, cv::Mat::AUTO_STEP);
     Mat img = img_in.clone();
 
@@ -264,14 +311,7 @@ string getShapeWithPointInside(
                                   thresh,
                                   ratio,
                                   kernel_size,
-                                  blur_width,
-                                  useDilate,
-                                  useErodeBefore,
-                                  useErodeAfter,
-                                  erosion_before_size,
-                                  dilate_size,
-                                  erosion_after_size
-                                  );
+                                  blur_width);
 
     vector<vector<Point>> contours;
     vector<Vec4i> hierarchy;
@@ -295,14 +335,8 @@ string getContoursWithCurvature(
         int ratio,
         int kernel_size,
         int blur_width,
-        int areaThresh,
-        bool useDilate,
-        bool useErodeBefore,
-        bool useErodeAfter,
-        int erosion_before_size,
-        int dilate_size,
-        int erosion_after_size
-) {
+        int areaThresh)
+{
     Mat img_in(cv::Size(width, height), CV_8UC4, (void *) img_in_ptr, cv::Mat::AUTO_STEP);
     Mat img = img_in.clone();
     Mat src_gray;
@@ -312,14 +346,7 @@ string getContoursWithCurvature(
                                    thresh,
                                    ratio,
                                    kernel_size,
-                                   blur_width,
-                                   useDilate,
-                                   useErodeBefore,
-                                   useErodeAfter,
-                                   erosion_before_size,
-                                   dilate_size,
-                                   erosion_after_size
-                                   );
+                                   blur_width);
     Mat imageCannyOut;
     cvtColor(_canny_output, imageCannyOut, COLOR_GRAY2RGBA);
 
@@ -372,14 +399,8 @@ void encode(
         int ratio,
         int kernel_size,
         int blur_width,
-        int areaThresh,
-        bool useDilate,
-        bool useErodeBefore,
-        bool useErodeAfter,
-        int erosion_before_size,
-        int dilate_size,
-        int erosion_after_size
-) {
+        int areaThresh)
+{
     Mat img_in(cv::Size(width, height), CV_8UC4, (void *) img_in_ptr, cv::Mat::AUTO_STEP);
     Mat img = img_in.clone();
 
@@ -390,14 +411,7 @@ void encode(
                                    thresh,
                                    ratio,
                                    kernel_size,
-                                   blur_width,
-                                   useDilate,
-                                   useErodeBefore,
-                                   useErodeAfter,
-                                   erosion_before_size,
-                                   dilate_size,
-                                   erosion_after_size
-                                   );
+                                   blur_width);
 
     Mat imageCannyOut;
     cvtColor(_canny_output, imageCannyOut, COLOR_GRAY2RGBA);
@@ -485,30 +499,6 @@ int get_CANNY_AREA_THRESH() {
     return CANNY_AREA_THRESH;
 }
 
-int get_USE_DILATE() {
-    return USE_DILATE;
-}
-
-int get_USE_ERODE_BEFORE() {
-    return USE_ERODE_BEFORE;
-}
-
-int get_USE_ERODE_AFTER() {
-    return USE_ERODE_AFTER;
-}
-
-int get_EROSION_BEFORE_SIZE() {
-    return EROSION_BEFORE_SIZE;
-}
-
-int get_DILATE_SIZE() {
-    return DILATE_SIZE;
-}
-
-int get_EROSION_AFTER_SIZE() {
-    return EROSION_AFTER_SIZE;
-}
-
 using namespace emscripten;
 
 EMSCRIPTEN_BINDINGS(my_value_example) {
@@ -539,12 +529,14 @@ EMSCRIPTEN_BINDINGS(my_value_example) {
         emscripten::function("get_CANNY_BLUR_WIDTH", &get_CANNY_BLUR_WIDTH);
         emscripten::function("get_CANNY_AREA_THRESH", &get_CANNY_AREA_THRESH);
 
-        emscripten::function("get_USE_DILATE", &get_USE_DILATE);
-        emscripten::function("get_USE_ERODE_BEFORE", &get_USE_ERODE_BEFORE);
-        emscripten::function("get_USE_ERODE_AFTER", &get_USE_ERODE_AFTER);
-        emscripten::function("get_EROSION_BEFORE_SIZE", &get_EROSION_BEFORE_SIZE);
-        emscripten::function("get_DILATE_SIZE", &get_DILATE_SIZE);
-        emscripten::function("get_EROSION_AFTER_SIZE", &get_EROSION_AFTER_SIZE);
-
         emscripten::function("getContoursWithCurvature", &getContoursWithCurvature);
+
+        class_<MatWraper>("MatWraper")
+                .constructor<unsigned char *, size_t, int, int>()
+                .property("outStr", &MatWraper::outStr)
+                .property("v", &MatWraper::v)
+                .property("width", &MatWraper::m_width)
+                .property("height", &MatWraper::m_height)
+        ;
+        emscripten::function("handleImageForTransformation_wrapper", &handleImageForTransformation_wrapper);
 }

@@ -32,7 +32,7 @@ class HammingWrapper : public AnnoyIndexInterface<int32_t, float> {
 public:
 
 	int32_t _f_external, _f_internal;
-  AnnoyIndex<int32_t, uint64_t, Hamming, Kiss64Random> _index;
+  AnnoyIndex<int32_t, uint64_t, ::Hamming, Kiss64Random> _index;
   void _pack(const float* src, uint64_t* dst) const {
 	for (int32_t i = 0; i < _f_internal; i++) {
 	  dst[i] = 0;

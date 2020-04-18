@@ -26,6 +26,8 @@ Mat _calcMatrix(
         double b,
         double zoomin=1);
 
+trans::matrix_transformer<double, 2, 2> convertInvMatrixToBoost(cv::Mat inmat);
+
 vector<tuple<ring_t, uint64_t, int>> getHashesForShape(const cv::Mat& input_image,
                                                        ring_t shape,
                                                        int numRotations,
@@ -49,6 +51,16 @@ vector<ring_t> extractShapes(
         int areaThresh,
         Mat &grayImg
                 );
+
+vector<tuple<ring_t, uint64_t, int>> getHashesForMatching(
+        Mat img_in,
+        Mat img_in2,
+        int thresh,
+        int ratio,
+        int kernel_size,
+        int blur_width,
+        int areaThresh,
+        bool flushCache);
 
 //vector<tuple<ring_t, uint64_t, int>> getAllTheHashesForImageAndShapes(Mat &imgdata, vector<ring_t> shapes,
 //        int rotations);
@@ -91,7 +103,8 @@ vector<tuple<ring_t, uint64_t, int>> getAllTheHashesForImage(
         int kernel_size=CANNY_KERNEL_SIZE,
         int blur_width=CANNY_BLUR_WIDTH,
         int areaThresh=CANNY_AREA_THRESH,
-        bool simplify=true
+        bool simplify=true,
+        int second_rotations=1
 );
 
 

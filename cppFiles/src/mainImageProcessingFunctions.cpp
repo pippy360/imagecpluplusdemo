@@ -420,7 +420,7 @@ vector<tuple<ring_t, ring_t, uint64_t, uint64_t, int>> findMatches(
         tree->_unpack(&hash2, &unpacked[0]);
         tree->get_nns_by_vector(&unpacked[0], 6, -1, &result, &distances);
         for (int i = 0; i < result.size(); i++) {
-            if (distances[i] < 8) {
+            if (distances[i] < MATCHING_HASH_DIST) {
                 auto [shape1, hash1, rotation1] = g_imghashes[result[i]];
                 res.push_back(std::tie(shape1, shape2, hash1, hash2, rotation1));
             }

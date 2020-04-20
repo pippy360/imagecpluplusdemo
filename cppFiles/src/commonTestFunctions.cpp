@@ -100,50 +100,30 @@ vector<tuple<ring_t, vector<tuple<ring_t, double, int>>>> compareImages(Mat img_
     }
 
     return res;
-//    //find matches but check shapes
-//    //now find the ones that match
-//    //for each shape
-//    for (auto &s1 : shapes1)
-//    {
-//        //so we basically do a find matches? and then check out the results?
-//
-//        //get all the matches and check if they're valid
-//        //hm...if they have more than one match it won't be valid, that's a problem in testing
-//        //ok confirm the match by checking overlap
-//    }
-//
-//    //FIXME: make sure image order /img1/img2 is right
-//    //FIXME: make sure image 1 is lookup image
-//    //FIXME: we still haven't fixed collision issues......do that now
-//
-//    auto img2hashes = getHashesForMatching(
-//            img_in, img_in2, thresh, ratio,
-//            kernel_size, blur_width, areaThresh, true);
-//
-//    cout << "img2hashes size: " << img2hashes.size() << endl;
-//
-//    //This is valid matches
-//
-//    vector<tuple<ring_t, ring_t, uint64_t, uint64_t, int>> res;
-//
-//    for (auto h2 : img2hashes) {
-//        vector<int32_t> result;
-//        vector<float> distances;
-//        auto [shape2, hash2, rotation2] = h2;
-//        vector<float> unpacked(64, 0);
-//        tree->_unpack(&hash2, &unpacked[0]);
-//        tree->get_nns_by_vector(&unpacked[0], 6, -1, &result, &distances);
-//        for (int i = 0; i < result.size(); i++) {
-//            if (distances[i] < 8) {
-//                auto [shape1, hash1, rotation1] = g_imghashes[result[i]];
-//
-//                res.push_back(std::tie(shape1, shape2, hash1, hash2, rotation1));
-//            } else {
-//
-//            }
-//        }
-//    }
-//    return res;
+}
+
+vector<tuple<ring_t, ring_t, uint64_t, uint64_t, int, int>> findInvalidMatches(Mat img_in, Mat img_in2, Mat t)
+{
+    vector<tuple<ring_t, ring_t, uint64_t, uint64_t, int>> test = findMatches(img_in, img_in2);
+    vector<tuple<ring_t, ring_t, uint64_t, uint64_t, int, int>> ret;
+
+    auto invmat = convertInvMatrixToBoost(t);
+
+
+    for (auto r : test)
+    {
+        auto [s1, s2, hash1, hash2, rotation] = r;
+
+        //need to transform s2
+        ring_t outPoly;
+        boost::geometry::transform(s1, outPoly, invmat);
+
+        int dist = ImageHash::bitCount(hash1 ^ hash2);
+        if (dist < MATCHING_HASH_DIST && getPerctageOverlap(outPoly, s2) < .90) {
+            ret.push_back(make_tuple(s1, s2, hash1, hash2, rotation, dist));
+        }
+    }
+    return ret;
 }
 
 tuple<Mat, Mat> handleImageForTransformation(Mat img_in, cv::Matx33d transmat) {

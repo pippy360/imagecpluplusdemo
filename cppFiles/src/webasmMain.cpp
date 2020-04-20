@@ -131,7 +131,8 @@ std::string findMatchesForImageFromCanvas(
     std::stringstream polygonString;
     polygonString << "{ ";
 
-    for (int i = 0; i < vec.size(); i++) {
+    for (int i = 0; i < vec.size(); i++)
+    {
         auto v = vec[i];
         //FIXME: we need to check that no two hashes are the same, otherwise we can create invalid json
         auto[shape1, shape2, hash1, hash2, rotation] = v;
@@ -280,6 +281,22 @@ MatWraper handleImageForTransformation_wrapper(
             polygonString << "{\"shape\" : \"" << bg::wkt(shape2) << "\", \"dist\" : " << dist << ", \"hashDist\" : " << hashdist <<" }";
         }
         polygonString << "]}";
+    }
+    polygonString << "],";
+
+    vector<tuple<ring_t, ring_t, uint64_t, uint64_t, int, int>> invalids = findInvalidMatches(img_in, m, trans);
+
+    polygonString << "\"invalid\": [";
+    for (int i = 0; i < invalids.size(); i++)
+    {
+        auto [s1, s2, hash1, hash2, rot, dist] = invalids[i];
+        if (i > 0) {
+            polygonString << ",";
+        }
+
+        polygonString << "{\"s1\": \"" << bg::wkt(s1) << "\", \"s2\": \"" << bg::wkt(s2) << "\", \"hash1\": \""
+                      << ImageHash::convertHashToString(hash1) << "\", \"hash2\": \"" << ImageHash::convertHashToString(hash2)
+                      << "\", \"dist\": " << dist << "}";
     }
     polygonString << "]}";
 

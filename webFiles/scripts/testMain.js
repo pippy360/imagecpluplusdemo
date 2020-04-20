@@ -80,6 +80,17 @@ function drawshapefromClickandseeLeft(index) {
     //now loop through all the shapes and populate the list
 }
 
+function drawshapefromClickandseeLeftRepeat(_shape1, _shape2) {
+    const shape1 = shapeStrToShape(_shape1);
+    const shape2 = shapeStrToShape(_shape2);
+    //draw this and get fill the other list
+    const can = getCleanUICanvas("lookupCanvas");
+    drawPolyFull(can.ctx_ui, shape1, 'rgb(45, 0, 255)', 'rgba(45, 0, 255, 0.6)');
+    const can2 = getCleanUICanvas("databaseCanvas");
+    drawPolyFull(can2.ctx_ui, shape2, 'rgb(45, 0, 255)', 'rgba(45, 0, 255, 0.6)');
+    //now loop through all the shapes and populate the list
+}
+
 function parseClickandseeShapesLeft(shapes) {
     if (shapes.length == 0) {
         return;
@@ -422,51 +433,51 @@ function drawMatches() {
 }
 
 function findMatches() {
-    let db = module.findMatchesForImageFromCanvas(
-        canvas_inserted_in_database_wasm_heap.ptr,
-        canvas_inserted_in_database_wasm_heap.width,
-        canvas_inserted_in_database_wasm_heap.height,
-        lookup_canvas_wasm_heap.ptr,
-        lookup_canvas_wasm_heap.width,
-        lookup_canvas_wasm_heap.height,
-        360,
-        g_thresh,
-        g_ratio,
-        g_kernelSize,
-        g_blurWidth,
-        g_areaThresh,
-        g_flushCache
-    );
-    g_flushCache = false;
-
-    let dbObj = JSON.parse(db);
-    g_matchesObj = dbObj;
-
-    const list = document.getElementById('shapelist2');
-    list.innerHTML = "";
-    let keys = Object.keys(g_matchesObj);
-    for (let i = 0; i < keys.length; i++) {
-        var key = keys[i];
-        let opt = g_matchesObj[key];
-        const color = "" + randomColor();
-
-        {
-            let el = document.createElement("div");
-            el.innerHTML = `<div class='shapeListEl' style="background-color: hsl(${color})" onmouseover="drawshapefromResult('${opt[1]}', '${opt[0]}', ${opt[2]}, ${opt[3]})" id='shapeListEl${i}'>${i}</div>`;
-            list.appendChild(el);
-        }
-
-        {
-            const lookup = getCanvas("lookupCanvas");
-            const database = getCanvas("databaseCanvas");
-
-            const stroke = 'hsl('+ color +')';
-            const fill  = 'hsla('+ color +', 0.8)';
-            drawPolyFull(lookup.ctx_ui,  shapeStrToShape(opt[1]), stroke, fill );
-            drawPolyFull(database.ctx_ui,  shapeStrToShape(opt[0]), stroke, fill );
-        }
-    }
-    drawMatches();
+    // let db = module.findMatchesForImageFromCanvas(
+    //     canvas_inserted_in_database_wasm_heap.ptr,
+    //     canvas_inserted_in_database_wasm_heap.width,
+    //     canvas_inserted_in_database_wasm_heap.height,
+    //     lookup_canvas_wasm_heap.ptr,
+    //     lookup_canvas_wasm_heap.width,
+    //     lookup_canvas_wasm_heap.height,
+    //     360,
+    //     g_thresh,
+    //     g_ratio,
+    //     g_kernelSize,
+    //     g_blurWidth,
+    //     g_areaThresh,
+    //     g_flushCache
+    // );
+    // g_flushCache = false;
+    //
+    // let dbObj = JSON.parse(db);
+    // g_matchesObj = dbObj;
+    //
+    // const list = document.getElementById('shapelist2');
+    // list.innerHTML = "";
+    // let keys = Object.keys(g_matchesObj);
+    // for (let i = 0; i < keys.length; i++) {
+    //     var key = keys[i];
+    //     let opt = g_matchesObj[key];
+    //     const color = "" + randomColor();
+    //
+    //     {
+    //         let el = document.createElement("div");
+    //         el.innerHTML = `<div class='shapeListEl' style="background-color: hsl(${color})" onmouseover="drawshapefromResult('${opt[1]}', '${opt[0]}', ${opt[2]}, ${opt[3]})" id='shapeListEl${i}'>${i}</div>`;
+    //         list.appendChild(el);
+    //     }
+    //
+    //     {
+    //         const lookup = getCanvas("lookupCanvas");
+    //         const database = getCanvas("databaseCanvas");
+    //
+    //         const stroke = 'hsl('+ color +')';
+    //         const fill  = 'hsla('+ color +', 0.8)';
+    //         drawPolyFull(lookup.ctx_ui,  shapeStrToShape(opt[1]), stroke, fill );
+    //         drawPolyFull(database.ctx_ui,  shapeStrToShape(opt[0]), stroke, fill );
+    //     }
+    // }
+    // drawMatches();
 }
 
 function shapeStrToShape(shapeStr) {
@@ -590,6 +601,9 @@ function drawOutputImageOrEdgeImage() {
     const edgeImageOut5 = new ImageData(new Uint8ClampedArray(res.v),
         res.width, res.height);
 
+    console.log("shapeResults.invalid");
+    console.log(shapeResults.invalid);
+
     setDatabaseCanvasSize(res.width, res.height);
     const databaseCanvas = getCleanCanvas("databaseCanvas");
 
@@ -597,6 +611,22 @@ function drawOutputImageOrEdgeImage() {
 
     g_shapeResults = shapeResults;
     parseClickandseeShapesLeft(g_shapeResults);
+
+
+    const list = document.getElementById('shapelist2');
+    list.innerHTML = "";
+    for (let i = 0; i < shapeResults.invalid.length; i++) {
+        var obj = shapeResults.invalid[i];
+        const color = "" + randomColor();
+
+        {
+            let el = document.createElement("div");
+            // el.innerHTML = `<div class='shapeListEl' style="background-color: hsl(${color})" onmouseover="drawshapefromResult('${opt[1]}', '${opt[0]}', ${opt[2]}, ${opt[3]})" id='shapeListEl${i}'>${i}</div>`;
+
+            el.innerHTML = `<div class='shapeListEl' style="background-color: hsl(${color})" onmouseover="drawshapefromClickandseeLeftRepeat('${obj.s1}','${obj.s2}')" id='shapeListEl___${i}'>${i} -- (${obj.dist})</div>`;
+            list.appendChild(el);
+        }
+    }
 
     //FIXME: res.delete();
 

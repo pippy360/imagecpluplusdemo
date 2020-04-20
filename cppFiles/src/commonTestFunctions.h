@@ -41,6 +41,8 @@ vector<tuple<ring_t, vector<tuple<ring_t, double, int>>>> compareImages(Mat img_
                    int areaThresh,
                    Mat transmat);
 
+vector<tuple<ring_t, ring_t, uint64_t, uint64_t, int, int>> findInvalidMatches(Mat img_in, Mat img_in2, Mat t);
+
 double getPerctageOverlap(ring_t s1, ring_t s2);
 
 #endif //IMAGECPLUPLUSDEMO2_COMMONTESTFUNCTIONS_H

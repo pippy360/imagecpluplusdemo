@@ -16,4 +16,9 @@
 
 #define MATCHING_HASH_DIST 8
 
+//FIXME: group all these default and comment each group
+#define NUMBER_OF_IMAGE_RESIZES 1 //FIXME: comment all these in this file
+#define PERCENTAGE_IMAGE_RESIZE .7
+
+
 #endif //IMAGECPLUPLUSDEMO2_DEFAULTIMAGEVALUES_H

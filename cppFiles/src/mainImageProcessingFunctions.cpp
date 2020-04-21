@@ -235,11 +235,42 @@ vector<ring_t> extractShapes(
         Mat &grayImg
         )
 {
-    Mat canny_output = applyCanny(grayImg, thresh, ratio, kernel_size, blur_width);
+    //re-run the image at different sizes to get better results
+    vector<ring_t> result;
+    double resizePerc = 1;
 
-    vector<vector<Point>> contours;
-    findContoursWrapper(canny_output, contours);
-    return extractShapesFromContours(contours, areaThresh);
+    //FIXME: WE DON't need to resize for query image
+    for (int i = 0; i < NUMBER_OF_IMAGE_RESIZES; i++, resizePerc *= PERCENTAGE_IMAGE_RESIZE) {
+        Mat dst;
+        if (i > 0) {
+            Size size(grayImg.cols * resizePerc, grayImg.rows * resizePerc);
+            resize(grayImg,dst,size);//resize image
+        } else {
+            dst = grayImg;
+        }
+
+        Mat canny_output = applyCanny(dst, thresh, ratio, kernel_size, blur_width);
+
+        vector<vector<Point>> contours;
+        findContoursWrapper(canny_output, contours);
+        auto v_prime = extractShapesFromContours(contours, areaThresh);
+
+        if (i > 0) {
+            vector<ring_t> scaleFixedShapes;
+            trans::scale_transformer<double, 2, 2> scale(1.0/resizePerc);
+            for (auto s :  v_prime) {
+                ring_t outPoly;
+                boost::geometry::transform(s, outPoly, scale);
+                scaleFixedShapes.push_back(outPoly);
+            }
+            v_prime = scaleFixedShapes;
+        }
+
+        result.reserve(result.size() + distance(v_prime.begin(),v_prime.end()));
+        result.insert(result.end(),v_prime.begin(),v_prime.end());
+    }
+
+    return result;
 }
 
 bool g_useRotatedImageForHashes = true;//FIXME:

@@ -38,7 +38,7 @@ add_executable(
         src/mainImageProcessingFunctions.cpp
         src/ImageHash.cpp
 #        src/imghash/phash.cpp
-        src/defaultImageValues.h src/commonTestFunctions.cpp src/commonTestFunctions.h)
+        src/defaultImageValues.h src/commonTestFunctions.cpp src/commonTestFunctions.h src/search.cpp src/search.h)
 
 
 

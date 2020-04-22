@@ -5,6 +5,7 @@
 #include "annoymodule.cc"
 #include "commonTestFunctions.h"
 
+#include "search.h"
 
 double getPerctageOverlap(ring_t s1, ring_t s2, double s1_area) {
     double s2_area = bg::area(s2);
@@ -104,12 +105,10 @@ vector<tuple<ring_t, vector<tuple<ring_t, double, int>>>> compareImages(Mat img_
 
 vector<tuple<ring_t, ring_t, uint64_t, uint64_t, int, int>> findInvalidMatches(Mat img_in, Mat img_in2, Mat t)
 {
-    vector<tuple<ring_t, ring_t, uint64_t, uint64_t, int>> test = findMatches(img_in, img_in2);
+    vector<tuple<ring_t, ring_t, uint64_t, uint64_t, int>> test = findMatchesBetweenTwoImages(img_in, img_in2);
+
     vector<tuple<ring_t, ring_t, uint64_t, uint64_t, int, int>> ret;
-
     auto invmat = convertInvMatrixToBoost(t);
-
-
     for (auto r : test)
     {
         auto [s1, s2, hash1, hash2, rotation] = r;

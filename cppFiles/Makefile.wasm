@@ -2,27 +2,40 @@
 #emcc -I./externalDependencies/ -I/usr/local/opt/opencv/include/opencv4/ \
 #  -std=c++17 ./lib/libopencv* -o ../webFiles/wasmLibs/cppdemo.js \
 # -O3 -s WASM=1  -s DISABLE_EXCEPTION_CATCHING=2   -s TOTAL_MEMORY=149880832  -s ASSERTIONS=1  -s EXTRA_EXPORTED_RUNTIME_METHODS='["cwrap"]' --bind
+#-s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=1
+#-s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=1 -pthread
+#--clear-cache
 
-CC=emcc
-CFLAGS=-I./externalDependencies/ -I. -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=1 -Wl,--no-check-features  -O2 -g --profiling -std=c++17 -I/usr/local/opt/opencv/include/opencv4/ -O3 -s WASM=1 \
-    -s TOTAL_MEMORY=149880832  -s ASSERTIONS=1 \
+CC=~/git/image/emscripten/emcc
+CFLAGS=-I./externalDependencies/   -I.  \
+    -std=c++17 -I/usr/local/opt/opencv/include/opencv4/ -O2 -s WASM=1 \
+    --profiling -g \
+    -s TOTAL_MEMORY=150MB \
     -s EXTRA_EXPORTED_RUNTIME_METHODS='["cwrap"]' --bind
 
 cppdemo: webasmMain.o \
       shapeNormalise.o \
       phash.o \
       ImageHash.o \
-      mainImageProcessingFunctions.o
-	$(CC) $(CFLAGS) ./lib/libopencv* webasmMain.o ImageHash.o phash.o mainImageProcessingFunctions.o shapeNormalise.o -o ../webFiles/wasmLibs/cppdemo.js
+      mainImageProcessingFunctions.o \
+      search.o \
+      commonTestFunctions.o
+	$(CC) $(CFLAGS) ./opencv_default/lib/libopencv_* webasmMain.o commonTestFunctions.o search.o ImageHash.o phash.o mainImageProcessingFunctions.o shapeNormalise.o -o ../webFiles/wasmLibs/cppdemo.js
 
 mainImageProcessingFunctions.o: ./src/mainImageProcessingFunctions.cpp ./src/mainImageProcessingFunctions.hpp
 	$(CC) $(CFLAGS) -c ./src/mainImageProcessingFunctions.cpp
+
+commonTestFunctions.o: ./src/commonTestFunctions.cpp ./src/commonTestFunctions.h
+	$(CC) $(CFLAGS) -c ./src/commonTestFunctions.cpp
 
 phash.o: ./src/img_hash_opencv_module/phash.cpp
 	$(CC) $(CFLAGS) -c ./src/img_hash_opencv_module/phash.cpp
 
 ImageHash.o: ./src/ImageHash.cpp
 	$(CC) $(CFLAGS) -c ./src/ImageHash.cpp
+
+search.o: ./src/search.cpp ./src/search.h
+	$(CC) $(CFLAGS) -c ./src/search.cpp
 
 webasmMain.o: ./src/webasmMain.cpp ./src/mainImageProcessingFunctions.hpp
 	$(CC) $(CFLAGS) -c ./src/webasmMain.cpp

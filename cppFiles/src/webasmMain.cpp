@@ -12,7 +12,7 @@
 #include "mainImageProcessingFunctions.hpp"
 
 #include "shapeNormalise.hpp"
-//#include "ImageHash.hpp"
+#include "search.h"
 
 #include "commonTestFunctions.h"
 
@@ -116,7 +116,9 @@ std::string findMatchesForImageFromCanvas(
 {
     Mat image(cv::Size(img_in_width, img_in_height), CV_8UC4, (void *) img_in, cv::Mat::AUTO_STEP);
     Mat image2(cv::Size(img_in2_width, img_in2_height), CV_8UC4, (void *) img_in2, cv::Mat::AUTO_STEP);
-    auto vec = findMatches(
+
+    //FIXME: the database is the wrong one here...
+    auto vec = findMatchesBetweenTwoImages(
             image,
             image2,
             thresh,

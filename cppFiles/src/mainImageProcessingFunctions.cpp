@@ -4,11 +4,6 @@
 #include <stdio.h>
 #include <math.h>       /* pow, atan2 */
 
-
-#include "annoylib.h"
-#include "annoymodule.cc"
-
-
 #include "ImageHash.hpp"
 #include "boostGeometryTypes.hpp"
 #include "miscUtils.hpp"
@@ -26,11 +21,6 @@
 
 using namespace std;
 using namespace std::chrono;
-
-#define NUM_OF_ROTATIONS 1
-#define HASH_SIZE 8
-#define FRAGMENT_WIDTH 60*.86
-#define FRAGMENT_HEIGHT 60
 
 #define PI 3.14159265
 
@@ -154,48 +144,6 @@ void findContoursWrapper(const Mat &canny_output, vector<vector<Point>> &contour
 
 }
 
-
-typedef std::vector< double > state_type;
-struct push_back_state_and_time
-{
-    std::vector< state_type >& m_states;
-    std::vector< double >& m_times;
-
-    push_back_state_and_time( std::vector< state_type > &states , std::vector< double > &times )
-            : m_states( states ) , m_times( times ) { }
-
-    void operator()( const state_type &x , double t )
-    {
-        m_states.push_back( x );
-        m_times.push_back( t );
-    }
-};
-
-vector<double> getMaximumPointsFromCurvature(linestring_t contour)
-{
-    vector<double> xs;
-    vector<double> ys;
-
-    int iter = (contour.size() < 8 )? 8 : contour.size();
-    for (int i = 0; i < iter; i++) {
-        //repeat the last point if < 8 because boost splines need 8 or more points
-        int index = (contour.size()-1 < i)? contour.size()-1 : i;
-        auto p = contour[index];
-        xs.push_back(p.get<0>());
-        ys.push_back(p.get<1>());
-    }
-
-    cardinal_quintic_b_spline<double> spline_xs(xs, 0, 1);
-    cardinal_quintic_b_spline<double> spline_ys(ys, 0, 1);
-
-    vector<double> curvatures;
-    for (int i = 0; i < xs.size(); i++) {
-      curvatures.push_back(calcCurvature(i, spline_xs, spline_ys));
-    }
-
-    return curvatures;
-}
-
 vector<Point> toCVPoints(ring_t in) {
     vector<Point> v;
     for (auto pt: in) {
@@ -301,9 +249,6 @@ vector<ring_t> applyInvMatrixToPoints(vector<ring_t> shapes, trans::matrix_trans
     return shapes;
 }
 
-//FIXME: remove
-static RNG rng(12345);
-
 vector<tuple<ring_t, uint64_t, int>> getAllTheHashesForImage(
         Mat img_in,
         int rotations,
@@ -312,14 +257,12 @@ vector<tuple<ring_t, uint64_t, int>> getAllTheHashesForImage(
         int kernel_size,
         int blur_width,
         int areaThresh,
-        bool simplify,
         int second_rotation)
 {
     vector<tuple<ring_t, uint64_t, int>> v;
     Mat grayImg = convertToGrey(img_in);
-    for (int i = 0; i < second_rotation; i += 1) {
-        //rotate it and continue
-//        cout << "Doing for rotation: " << i << endl;
+    for (int i = 0; i < second_rotation; i += 1)
+    {
         vector<tuple<ring_t, uint64_t, int>> v_prime;
 
         double angle = i;
@@ -365,100 +308,6 @@ vector<tuple<ring_t, uint64_t, int>> getAllTheHashesForImage(
         v.insert(v.end(),v_prime.begin(),v_prime.end());
     }
     return v;
-}
-
-using namespace std::chrono;
-
-vector<tuple<ring_t, uint64_t, int>> g_imghashes;
-HammingWrapper *tree;
-
-vector<tuple<ring_t, uint64_t, int>> getHashesForMatching(
-        Mat img_in,
-        Mat img_in2,
-        int thresh,
-        int ratio,
-        int kernel_size,
-        int blur_width,
-        int areaThresh,
-        bool flushCache
-        ) {
-    // use cached results
-    if (flushCache) {
-        cout << "recomputing cache..." << endl;
-        g_imghashes = getAllTheHashesForImage(
-                img_in,
-                360,
-                thresh,
-                ratio,
-                kernel_size,
-                blur_width,
-                areaThresh,
-                false);
-
-        if (tree != nullptr)
-            delete tree;
-
-        tree = new HammingWrapper(64);
-        int count = 0;
-        for (auto h : g_imghashes) {
-            auto [shape1, hash1, rotation1] = h;
-            vector<float> unpacked(64, 0);
-            tree->_unpack(&hash1, &unpacked[0]);
-            tree->add_item(count++, &unpacked[0], nullptr);
-        }
-
-        tree->build(20, nullptr);
-        cout << "...done" << endl;
-    }
-
-    auto img2hashes = getAllTheHashesForImage(
-            img_in2,
-            1,
-            thresh,
-            ratio,
-            kernel_size,
-            blur_width,
-            areaThresh,
-            false);
-
-    return img2hashes;
-}
-
-vector<tuple<ring_t, ring_t, uint64_t, uint64_t, int>> findMatches(
-        Mat img_in,
-        Mat img_in2,
-        int thresh,
-        int ratio,
-        int kernel_size,
-        int blur_width,
-        int areaThresh,
-        bool flushCache
-        )
-{
-    auto img2hashes = getHashesForMatching(
-            img_in, img_in2, thresh, ratio,
-            kernel_size, blur_width, areaThresh, flushCache);
-
-    cout << "img2hashes size:" << img2hashes.size() << endl;
-
-    vector<tuple<ring_t, ring_t, uint64_t, uint64_t, int>> res;
-
-    for (auto h2 : img2hashes) {
-        vector<int32_t> result;
-        vector<float> distances;
-        auto [shape2, hash2, rotation2] = h2;
-        vector<float> unpacked(64, 0);
-        tree->_unpack(&hash2, &unpacked[0]);
-        tree->get_nns_by_vector(&unpacked[0], 6, -1, &result, &distances);
-        for (int i = 0; i < result.size(); i++) {
-            if (distances[i] < MATCHING_HASH_DIST) {
-                auto [shape1, hash1, rotation1] = g_imghashes[result[i]];
-                res.push_back(std::tie(shape1, shape2, hash1, hash2, rotation1));
-            }
-        }
-    }
-
-    return res;
 }
 
 std::tuple<double, double> getAandBWrapper(const ring_t& shape, point_t centroid) {
@@ -565,30 +414,4 @@ vector<ring_t> extractShapesFromContours(
 
     return result;
 }
-
-//inline uchar reduceVal(const uchar val)
-//{
-////    if (val < 64) return 0;
-//    if (val < 128) return 0;
-//    return 255;
-//}
-
-//FIXME: consider adding this back in
-void simplifyColors(Mat& img)
-{
-    return;
-//    uchar* pixelPtr = img.data;
-//    for (int i = 0; i < img.rows; i++)
-//    {
-//        for (int j = 0; j < img.cols; j++)
-//        {
-//            const int pi = i*img.cols*4 + j*4;
-//            pixelPtr[pi + 0] = reduceVal(pixelPtr[pi + 0]); // B
-//            pixelPtr[pi + 1] = reduceVal(pixelPtr[pi + 1]); // G
-//            pixelPtr[pi + 2] = reduceVal(pixelPtr[pi + 2]); // R
-////            pixelPtr[pi + 3] = reduceVal(pixelPtr[pi + 3]); // A
-//        }
-//    }
-}
-
 

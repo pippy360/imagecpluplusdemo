@@ -105,21 +105,23 @@ vector<tuple<ring_t, vector<tuple<ring_t, double, int>>>> compareImages(Mat img_
 
 vector<tuple<ring_t, ring_t, uint64_t, uint64_t, int, int>> findInvalidMatches(Mat img_in, Mat img_in2, Mat t)
 {
-    vector<tuple<ring_t, ring_t, uint64_t, uint64_t, int>> test = findMatchesBetweenTwoImages(img_in, img_in2);
 
+    auto test = findMatchesBetweenTwoImages(img_in, img_in2);
     vector<tuple<ring_t, ring_t, uint64_t, uint64_t, int, int>> ret;
     auto invmat = convertInvMatrixToBoost(t);
-    for (auto r : test)
+    for (auto [ignore, v] : test)
     {
-        auto [s1, s2, hash1, hash2, rotation] = r;
+        for (auto r : v) {
+            auto [s1, s2, hash1, hash2, rotation] = r;
 
-        //need to transform s2
-        ring_t outPoly;
-        boost::geometry::transform(s1, outPoly, invmat);
+            //need to transform s2
+            ring_t outPoly;
+            boost::geometry::transform(s1, outPoly, invmat);
 
-        int dist = ImageHash::bitCount(hash1 ^ hash2);
-        if (dist < MATCHING_HASH_DIST && getPerctageOverlap(outPoly, s2) < .90) {
-            ret.push_back(make_tuple(s1, s2, hash1, hash2, rotation, dist));
+            int dist = ImageHash::bitCount(hash1 ^ hash2);
+            if (dist < MATCHING_HASH_DIST && getPerctageOverlap(outPoly, s2) < .90) {
+                ret.push_back(make_tuple(s1, s2, hash1, hash2, rotation, dist));
+            }
         }
     }
     return ret;

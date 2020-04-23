@@ -133,19 +133,29 @@ std::string findMatchesForImageFromCanvas(
     std::stringstream polygonString;
     polygonString << "{ ";
 
-    for (int i = 0; i < vec.size(); i++)
+    bool firstRun = true;
+    for (auto [hash, l] : vec)
     {
-        auto v = vec[i];
         //FIXME: we need to check that no two hashes are the same, otherwise we can create invalid json
-        auto[shape1, shape2, hash1, hash2, rotation] = v;
-        if (i > 0) {
+        if (!firstRun) {
             polygonString << ",";
         }
+        firstRun = false;
 
-        polygonString << "\"" << ImageHash::convertHashToString(hash1)
-                      << "\" : [\"" << bg::wkt(shape1) << "\", \"" << bg::wkt(shape2) << "\", \""
-                      << ImageHash::bitCount(hash1 ^ hash2) << "\", \""
-                      << rotation << "\"]";
+        polygonString << "\"" << ImageHash::convertHashToString(hash)
+                      << "\" : [";
+
+        for (int j = 0; j < l.size(); j++) {
+            if (j > 0) {
+                polygonString << ",";
+            }
+
+            auto [shape1, shape2, hash1, hash2, rotation] = l[j];
+            polygonString << "[\"" << bg::wkt(shape1) << "\", \"" << bg::wkt(shape2) << "\", \""
+                          << ImageHash::bitCount(hash1 ^ hash2) << "\", \""
+                          << rotation << "\"]";
+        }
+        polygonString << "]";
     }
     polygonString << "} ";
     return polygonString.str();

@@ -436,24 +436,29 @@ function findMatches() {
     let keys = Object.keys(g_matchesObj);
     for (let i = 0; i < keys.length; i++) {
         var key = keys[i];
-        let opt = g_matchesObj[key];
+        let opts = g_matchesObj[key];
         const color = "" + randomColor();
-
+        for (let j = 0; j < opts.length; j++)
         {
-            let el = document.createElement("div");
-            el.innerHTML = `<div class='shapeListEl' style="background-color: hsl(${color})" onmouseover="drawshapefromResult('${opt[1]}', '${opt[0]}', ${opt[2]}, ${opt[3]})" id='shapeListEl${i}'>${i}</div>`;
-            list.appendChild(el);
+            const opt = opts[j];
+
+            {
+                let el = document.createElement("div");
+                el.innerHTML = `<div class='shapeListEl' style="background-color: hsl(${color})" onmouseover="drawshapefromResult('${opt[1]}', '${opt[0]}', ${opt[2]}, ${opt[3]})" id='shapeListEl${i}'>${i}</div>`;
+                list.appendChild(el);
+            }
+
+            {
+                const lookup = getCanvas("lookupCanvas");
+                const database = getCanvas("databaseCanvas");
+
+                const stroke = 'hsl('+ color +')';
+                const fill  = 'hsla('+ color +', 0.8)';
+                drawPolyFull(lookup.ctx_ui,  shapeStrToShape(opt[1]), stroke, fill );
+                drawPolyFull(database.ctx_ui,  shapeStrToShape(opt[0]), stroke, fill );
+            }
         }
 
-        {
-            const lookup = getCanvas("lookupCanvas");
-            const database = getCanvas("databaseCanvas");
-
-            const stroke = 'hsl('+ color +')';
-            const fill  = 'hsla('+ color +', 0.8)';
-            drawPolyFull(lookup.ctx_ui,  shapeStrToShape(opt[1]), stroke, fill );
-            drawPolyFull(database.ctx_ui,  shapeStrToShape(opt[0]), stroke, fill );
-        }
     }
     drawMatches();
 }

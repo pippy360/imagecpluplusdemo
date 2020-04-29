@@ -3,9 +3,6 @@
 
 #include "search.h"
 
-#include "annoylib.h"
-#include "annoymodule.cc"
-
 #include "boostGeometryTypes.hpp"
 #include "defaultImageValues.h"
 
@@ -15,27 +12,15 @@
 using namespace std;
 using namespace cv;
 
-class ImageHashDatabase {
-public:
-    vector<string> imagePaths;
-    vector<tuple<ring_t, string, int>> shapesStrCache;
-    vector<tuple<int, uint64_t, double>> database;
-    HammingWrapper tree;
-
-    ImageHashDatabase () :
-        tree(64)
-    {};
-};
-
 void addImageToSearchTree(
         ImageHashDatabase &database,
+        string imageName,
         Mat img_in,
         int thresh,
         int ratio,
         int kernel_size,
         int blur_width,
-        int areaThresh,
-        string imageName)
+        int areaThresh)
 {
     int imageIdx = database.imagePaths.size();
 
@@ -50,11 +35,12 @@ void addImageToSearchTree(
             blur_width,
             areaThresh);
 
+    int count = 0;
     for (auto [shape1, shape1hashes] : imghashes) {
         std::stringstream ss;
         ss << bg::wkt(shape1);
         database.shapesStrCache.push_back(make_tuple(shape1, ss.str(), imageIdx));
-        cout << "doing shape : " << ss.str() << " - " << shape1hashes.size() << endl;
+
         for (int j = 0; j < shape1hashes.size(); j++)
         {
             uint64_t hash1 = shape1hashes[j];
@@ -63,10 +49,11 @@ void addImageToSearchTree(
 
             database.database.push_back(make_tuple(database.shapesStrCache.size() - 1, hash1, j));
             database.tree.add_item(database.database.size(), &unpacked[0], nullptr);
+            count++;
         }
     }
 
-    cout << "Added " << imghashes.size() << " hashes to the search database " << endl;
+    cout << "Added " << count << " hashes to the search database " << endl;
 }
 
 map<string, map<string, map<string, vector< tuple<uint64_t, uint64_t, int> >>>> findDetailedMatches(
@@ -93,14 +80,15 @@ map<string, map<string, map<string, vector< tuple<uint64_t, uint64_t, int> >>>> 
     {
         std::stringstream ss;
         ss << bg::wkt(queryShape);
-        cout << "shapehashes.size(): " << shapehashes.size() << " - " << ss.str() << endl;
-        for (auto queryHash : shapehashes) {
-            vector<float> unpacked(64, 0);
-            database.tree._unpack(&queryHash, &unpacked[0]);
 
+        for (auto queryHash : shapehashes)
+        {
             vector<int64_t> result;
             vector<float> distances;
+            vector<float> unpacked(64, 0);
+
             //TODO: is 40 too much here? how does this affect performace? 10 was too little when we have so many rotations
+            database.tree._unpack(&queryHash, &unpacked[0]);
             database.tree.get_nns_by_vector(&unpacked[0], 40, -1, &result, &distances);
 
             //Sort the results into our map
@@ -110,15 +98,13 @@ map<string, map<string, map<string, vector< tuple<uint64_t, uint64_t, int> >>>> 
                 {
                     auto [shapeIdx, resHash, rotation] = database.database[result[i] - 1];
                     auto [resShape, resShapeStr, resImgIdx] = database.shapesStrCache[shapeIdx];
-
                     string imgPath = database.imagePaths[resImgIdx];
+
                     if ( m.find(imgPath) == m.end() )
                         m[imgPath] = map<string, map<string, vector< tuple<uint64_t, uint64_t, int> >>>();
 
                     if ( m[imgPath].find(ss.str()) == m[imgPath].end() )
                         m[imgPath][ss.str()] = map<string, vector< tuple<uint64_t, uint64_t, int> >>();
-
-                    cout << "filling with hash: " << resHash << " and rotation: " << rotation << " shape: " << resShapeStr << endl;
 
                     if ( m[imgPath][ss.str()].find(resShapeStr) == m[imgPath][ss.str()].end() )
                         m[imgPath][ss.str()][resShapeStr] = vector< tuple<uint64_t, uint64_t, int> >();
@@ -155,13 +141,13 @@ map<string, map<string, vector< tuple<uint64_t, uint64_t, int> >>> findMatchesBe
         cachedDatabase = new ImageHashDatabase();
         addImageToSearchTree(
                 *cachedDatabase,
+                "None",
                 img_in,
                 thresh,
                 ratio,
                 kernel_size,
                 blur_width,
-                areaThresh,
-                "None");
+                areaThresh);
 
         cachedDatabase->tree.build(20, nullptr);
         cout << "...done" << endl;

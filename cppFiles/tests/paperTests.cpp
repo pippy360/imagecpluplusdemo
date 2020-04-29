@@ -13,6 +13,8 @@
 
 #include <src/defaultImageValues.h>
 
+#include <src/search.h>
+
 TEST(papertest, basic) {
     const cv::Mat rickandmortyImage = cv::imread("../webFiles/images/download_3.png", cv::IMREAD_GRAYSCALE);
     assert(rickandmortyImage.data);
@@ -54,3 +56,47 @@ TEST(papertest, pc_overlap) {
     double res2 = getPerctageOverlap(ring2, ring2);
     EXPECT_EQ(res2, 0.1);
 }
+
+TEST(papertest, findDetailedMatches) {
+//    findDetailedMatches
+    ImageHashDatabase database;
+
+    {
+        const cv::Mat rickandmortyImage = cv::imread("../webFiles/images/download_3.png", cv::IMREAD_GRAYSCALE);
+        addImageToSearchTree(database, "../webFiles/images/download_3.png", rickandmortyImage);
+    }
+
+    {
+        const cv::Mat rickandmortyImage = cv::imread("../webFiles/images/richandmalty.jpg", cv::IMREAD_GRAYSCALE);
+        addImageToSearchTree(database, "../webFiles/images/richandmalty.jpg", rickandmortyImage);
+    }
+
+    {
+        const cv::Mat rickandmortyImage = cv::imread("../webFiles/images/tech.png", cv::IMREAD_GRAYSCALE);
+        addImageToSearchTree(database, "../webFiles/images/tech.png", rickandmortyImage);
+    }
+
+    database.tree.build(20, nullptr);
+
+    {
+        const cv::Mat rickandmortyImage = cv::imread("../webFiles/images/richandmalty.jpg", cv::IMREAD_GRAYSCALE);
+
+        cv::Matx33d m_in(0.7, 0.7, -100,
+                         -0.7, 0.7, -2,
+                         0.0, 0.0, 1.0);
+        auto [img2, dyntrans] = handleImageForTransformation(rickandmortyImage, m_in);
+
+        auto res = findDetailedMatches(database, img2);
+
+        cout << endl << "Results:" << endl;
+        for (auto [k, v] : res) {
+            cout << k << " : " << v.size() << endl;
+        }
+        /*
+         *  Results:
+            ../webFiles/images/richandmalty.jpg : 8
+         */
+    }
+}
+
+

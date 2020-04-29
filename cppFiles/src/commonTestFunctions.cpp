@@ -2,7 +2,6 @@
 // Created by Tom Murphy on 2020-04-10.
 //
 
-#include "annoymodule.cc"
 #include "commonTestFunctions.h"
 
 #include "search.h"

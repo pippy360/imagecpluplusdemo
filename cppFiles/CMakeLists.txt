@@ -20,6 +20,7 @@ add_executable(
         src/mainImageProcessingFunctions.cpp
         tests/hashtests.cpp
         src/ImageHash.cpp
+        src/search.cpp
 #        src/imghash/phash.cpp
         tests/accuracytest2.cpp
         src/commonTestFunctions.cpp

@@ -28,16 +28,14 @@ Mat _calcMatrix(
 
 trans::matrix_transformer<double, 2, 2> convertInvMatrixToBoost(cv::Mat inmat);
 
-vector<tuple<ring_t, uint64_t, int>> getHashesForShape(const cv::Mat& input_image,
+vector<uint64_t> getHashesForShape(const cv::Mat& input_image,
                                                        ring_t shape,
                                                        int numRotations,
                                                        int rotationJump,
                                                        int output_width = 32,
-                                                       int start_rotation = 0,
-                                                       trans::matrix_transformer<double, 2, 2> transMat = trans::matrix_transformer<double, 2, 2>(),
-                                                       bool applyTransMat = false);
+                                                       int start_rotation = 0);
 
-tuple<ring_t, uint64_t, int> getHashesForShape_singleRotation(const cv::Mat& input_image,
+uint64_t getHashesForShape_singleRotation(const cv::Mat& input_image,
                                                               ring_t shape,
                                                               int rotation);
 
@@ -65,7 +63,7 @@ vector<ring_t> extractShapesFromContours(
         int areaThresh=CANNY_AREA_THRESH
             );
 
-vector<tuple<ring_t, uint64_t, int>> getAllTheHashesForImage(
+vector<tuple<ring_t, vector<uint64_t>>> getAllTheHashesForImage(
         Mat img_in,
         int rotations=360,
         int thresh=CANNY_THRESH,

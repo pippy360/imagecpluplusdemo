@@ -11,7 +11,7 @@
 #include "mainImageProcessingFunctions.hpp"
 
 
-map<uint64_t, vector<tuple<ring_t, ring_t, uint64_t, uint64_t, int>>> findMatchesBetweenTwoImages(
+map<string, map<string, vector< tuple<uint64_t, uint64_t, int> >>> findMatchesBetweenTwoImages(
         cv::Mat img_in,
         cv::Mat img_in2,
         int thresh=CANNY_THRESH,

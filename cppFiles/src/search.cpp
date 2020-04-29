@@ -18,24 +18,34 @@
 using namespace std;
 using namespace cv;
 
-vector<tuple<ring_t, uint64_t, int>> g_imghashes;
+//TODO: remove this
 
-map<uint64_t, list<tuple<ring_t, uint64_t, int>>> g_database;
+//TODO: comment
+vector<string> g_images;
+vector<tuple<ring_t, string, int>> g_shapesStrCache;
+
+vector<tuple<int, uint64_t, double>> g_database;
+vector<uint64_t> g_hashes;
+
 
 //FIXME: this shouldn't be a global variable
 HammingWrapper *g_tree;
-vector<uint64_t> g_hashes;
 
-vector<tuple<ring_t, uint64_t, int>> addImageToSearchTree(
+void addImageToSearchTree(
         HammingWrapper *tree,
         Mat img_in,
         int thresh,
         int ratio,
         int kernel_size,
         int blur_width,
-        int areaThresh
-) {
-    auto imghashes = getAllTheHashesForImage(
+        int areaThresh,
+        string imageName)
+{
+    int imageIdx = g_images.size();
+
+    g_images.push_back(imageName);
+
+    vector<tuple<ring_t, vector<uint64_t>>> imghashes = getAllTheHashesForImage(
             img_in,
             360,
             thresh,
@@ -44,22 +54,28 @@ vector<tuple<ring_t, uint64_t, int>> addImageToSearchTree(
             blur_width,
             areaThresh);
 
-    int count = 0;
-    for (auto h : imghashes) {
-        auto[shape1, hash1, rotation1] = h;
-        vector<float> unpacked(64, 0);
-        tree->_unpack(&hash1, &unpacked[0]);
-        g_hashes.push_back(hash1);
-        tree->add_item(g_hashes.size(), &unpacked[0], nullptr);
+    for (auto [shape1, shape1hashes] : imghashes) {
+        std::stringstream ss;
+        ss << bg::wkt(shape1);
+        g_shapesStrCache.push_back( make_tuple(shape1, ss.str(), imageIdx));
+        cout << "doing shape : " << ss.str() << " - " << shape1hashes.size() << endl;
+        for (int j = 0; j < shape1hashes.size(); j++)
+        {
+            uint64_t hash1 = shape1hashes[j];
+            vector<float> unpacked(64, 0);
+            tree->_unpack(&hash1, &unpacked[0]);
+
+            g_database.push_back(make_tuple(g_shapesStrCache.size() - 1, hash1, j));
+            tree->add_item(g_database.size(), &unpacked[0], nullptr);
+        }
     }
 
     cout << "Added " << imghashes.size() << " hashes to the search tree." << endl;
-    return imghashes;
 }
 
 //FIXME: it's weird that img_in is the database image....this is probably a bug
 //FIXME: this is messy and can be cleaned up
-map<uint64_t, vector<tuple<ring_t, ring_t, uint64_t, uint64_t, int>>> findMatchesBetweenTwoImages(
+map<string, map<string, vector< tuple<uint64_t, uint64_t, int> >>> findMatchesBetweenTwoImages(
         Mat img_in,
         Mat img_in2,
         int thresh,
@@ -76,28 +92,21 @@ map<uint64_t, vector<tuple<ring_t, ring_t, uint64_t, uint64_t, int>>> findMatche
             delete g_tree;
 
         g_tree = new HammingWrapper(64);
-        g_imghashes = addImageToSearchTree(
+        addImageToSearchTree(
                 g_tree,
                 img_in,
                 thresh,
                 ratio,
                 kernel_size,
                 blur_width,
-                areaThresh);
-
-        for (auto [s, h, rot] : g_imghashes)
-        {
-            if ( g_database.find(h) == g_database.end() )
-                g_database[h] = list<tuple<ring_t, uint64_t, int>>();
-
-            g_database[h].push_back(make_tuple(s, h, rot));
-        }
+                areaThresh,
+                "None");
 
         g_tree->build(20, nullptr);
         cout << "...done" << endl;
     }
 
-    auto img2hashes = getAllTheHashesForImage(
+    auto queryImageHashes = getAllTheHashesForImage(
             img_in2,
             1,
             thresh,
@@ -106,26 +115,33 @@ map<uint64_t, vector<tuple<ring_t, ring_t, uint64_t, uint64_t, int>>> findMatche
             blur_width,
             areaThresh);
 
-    map<uint64_t, vector<tuple<ring_t, ring_t, uint64_t, uint64_t, int>>> m;
-    for (auto [shape2, hash2, rotation2] : img2hashes)
+    map<string, map<string, vector< tuple<uint64_t, uint64_t, int> >>> m;
+    for (auto [queryShape, shapehashes] : queryImageHashes)
     {
-        vector<float> unpacked(64, 0);
-        g_tree->_unpack(&hash2, &unpacked[0]);
+        std::stringstream ss;
+        ss << bg::wkt(queryShape);
+        cout << "shapehashes.size(): " << shapehashes.size() << " - " << ss.str() << endl;
+        for (auto queryHash : shapehashes) {
+            vector<float> unpacked(64, 0);
+            g_tree->_unpack(&queryHash, &unpacked[0]);
 
-        if ( m.find(hash2) == m.end() )
-            m[hash2] = vector<tuple<ring_t, ring_t, uint64_t, uint64_t, int>>();
+            if ( m.find(ss.str()) == m.end() )
+                m[ss.str()] = map<string, vector< tuple<uint64_t, uint64_t, int> >>();
 
-        vector<int64_t> result;
-        vector<float> distances;
-        //TODO: is 10 too much here? how does this affect performace?
-        g_tree->get_nns_by_vector(&unpacked[0], 10, -1, &result, &distances);
-        for (int i = 0; i < result.size(); i++) {
-            if (distances[i] < MATCHING_HASH_DIST) {
-                auto foundHash = g_hashes[ result[i] - 1 ];
-                auto resList = g_database[ foundHash ];
+            vector<int64_t> result;
+            vector<float> distances;
+            //TODO: is 40 too much here? how does this affect performace? 10 was too little when we have so many rotations
+            g_tree->get_nns_by_vector(&unpacked[0], 40, -1, &result, &distances);
+            for (int i = 0; i < result.size(); i++) {
+                if (distances[i] < MATCHING_HASH_DIST) {
+                    auto [shapeIdx, resHash, rotation] = g_database[result[i] - 1];
+                    auto [resShape, resShapeStr, resImgIdx] = g_shapesStrCache[shapeIdx];
+                    cout << "filling with hash: " << resHash << " and rotation: " << rotation << " shape: " << resShapeStr << endl;
 
-                for (auto [shape1, hash1, rotation1] : resList) {
-                    m[hash2].push_back(make_tuple(shape1, shape2, hash1, hash2, rotation1));
+                    if ( m.find(ss.str()) == m.end() )
+                        m[ss.str()][resShapeStr] = vector< tuple<uint64_t, uint64_t, int> >();
+
+                    m[ss.str()][resShapeStr].push_back(make_tuple(resHash, queryHash, rotation));
                 }
             }
         }

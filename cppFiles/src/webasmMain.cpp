@@ -134,7 +134,7 @@ std::string findMatchesForImageFromCanvas(
     polygonString << "{ ";
 
     bool firstRun = true;
-    for (auto [hash, l] : vec)
+    for (auto [shapeStr, l] : vec)
     {
         //FIXME: we need to check that no two hashes are the same, otherwise we can create invalid json
         if (!firstRun) {
@@ -142,18 +142,26 @@ std::string findMatchesForImageFromCanvas(
         }
         firstRun = false;
 
-        polygonString << "\"" << ImageHash::convertHashToString(hash)
+        polygonString << "\"" << shapeStr
                       << "\" : [";
 
-        for (int j = 0; j < l.size(); j++) {
-            if (j > 0) {
+        bool _firstRun2 = true;
+        for (auto [matchesShape, hashMatches] : l ) {
+            if (!_firstRun2) {
                 polygonString << ",";
             }
+            _firstRun2 = false;
+            polygonString << "{\"" << matchesShape
+                          << "\" : [";
+            for (int j = 0; j < hashMatches.size(); j++) {
+                if (j > 0) {
+                    polygonString << ",";
+                }
 
-            auto [shape1, shape2, hash1, hash2, rotation] = l[j];
-            polygonString << "[\"" << bg::wkt(shape1) << "\", \"" << bg::wkt(shape2) << "\", \""
-                          << ImageHash::bitCount(hash1 ^ hash2) << "\", \""
-                          << rotation << "\"]";
+                auto [hash1, queryHash, rot] = hashMatches[j];
+                polygonString << "[\"" << ImageHash::bitCount(hash1 ^ queryHash) << "\", " << rot << "]";
+            }
+            polygonString << "]}";
         }
         polygonString << "]";
     }
@@ -181,50 +189,9 @@ int getHashDistanceFromCanvas(
     Mat image_db(cv::Size(db_width, db_height), CV_8UC4, (void *) database_img_in, cv::Mat::AUTO_STEP);
     Mat image_lk(cv::Size(lk_width, lk_height), CV_8UC4, (void *) lookup_img_in, cv::Mat::AUTO_STEP);
 
-    auto[a, hash1, b] = getHashesForShape_singleRotation(image_db, shape_db, rotation);
-    auto[c, hash2, d] = getHashesForShape_singleRotation(image_lk, shape_lk, 0);
+    uint64_t hash1 = getHashesForShape_singleRotation(image_db, shape_db, rotation);
+    uint64_t hash2 = getHashesForShape_singleRotation(image_lk, shape_lk, 0);
     return ImageHash::bitCount(hash1 ^ hash2);
-}
-
-std::string getAllTheHashesForImageFromCanvas(
-        uintptr_t img_in,
-        int width,
-        int height,
-        int rotation,
-        int thresh,
-        int ratio,
-        int kernel_size,
-        int blur_width
-) {
-    std::cout << "getAllTheHashesForImageFromCanvas called" << std::endl;
-
-    Mat image(cv::Size(width, height), CV_8UC4, (void *) img_in, cv::Mat::AUTO_STEP);
-    auto vec = getAllTheHashesForImage(
-            image,
-            rotation,
-            thresh,
-            ratio,
-            kernel_size,
-            blur_width
-    );
-
-    //FIXME: rotate the image here rather than doing it for each fragment later
-    std::stringstream polygonString;
-    polygonString << "{ ";
-    for (int i = 0; i < vec.size(); i++) {
-        auto v = vec[i];
-        //FIXME: we need to check that no two hashes are the same, otherwise we can create invalid json
-        auto[shape, hash, rotation] = v;
-        if (i > 0) {
-            polygonString << ",";
-        }
-
-        polygonString << "\"" << ImageHash::convertHashToString(hash) << "\" : [\""
-                      << bg::wkt(shape) << "\", \""
-                      << rotation << "\"]" << endl;
-    }
-    polygonString << "} ";
-    return polygonString.str();
 }
 
 class MatWraper {
@@ -548,7 +515,6 @@ EMSCRIPTEN_BINDINGS(my_value_example) {
         emscripten::function("getShapeWithPointInside", &getShapeWithPointInside, allow_raw_pointers());
         emscripten::function("getImageFragmentFromShape", &getImageFragmentFromShape, allow_raw_pointers());
         emscripten::function("calcMatrixFromString", &calcMatrixFromString);
-        emscripten::function("getAllTheHashesForImageFromCanvas", &getAllTheHashesForImageFromCanvas);
         emscripten::function("findMatchesForImageFromCanvas", &findMatchesForImageFromCanvas);
         emscripten::function("getHashDistanceFromCanvas", &getHashDistanceFromCanvas);
 

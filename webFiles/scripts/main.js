@@ -1,4 +1,4 @@
-let g_fragmentZoom = 1.0/1.5;
+let g_fragmentZoom = 1.0 / 1.5;
 let g_blurWidth;
 let g_kernelSize;
 let g_ratio;
@@ -34,9 +34,8 @@ function getHashDistance() {
         lookup_canvas_wasm_heap.width,
         lookup_canvas_wasm_heap.height,
     );
-    document.getElementById("hammingDistanceForResult").innerHTML = "Hash distance: "+distance;
+    document.getElementById("hammingDistanceForResult").innerHTML = "Hash distance: " + distance;
 }
-
 
 
 function drawshapefromClickandseeRight(shapeStr1, rotation) {
@@ -78,7 +77,7 @@ function parseClickandseeShapesLeft(shapes) {
     list.innerHTML = "";
 
     const can = getCleanUICanvas("lookupCanvas");
-    for (let i = 0;i < lines.length;i++) {
+    for (let i = 0; i < lines.length; i++) {
         let opt = lines[i];
         let el = document.createElement("div");
         el.innerHTML = `<div class='shapeListEl' onmouseover="drawshapefromClickandseeLeft('${opt}', 0)" id='clickandseeShapeListElm${i}'>-----${i}</div>`;
@@ -101,7 +100,7 @@ function parseClickandseeShapesRight(shapes) {
     list.innerHTML = "";
 
     const can = getCleanUICanvas("databaseCanvas");
-    for (let i = 0;i < lines.length;i++) {
+    for (let i = 0; i < lines.length; i++) {
         let opt = lines[i];
         let el = document.createElement("div");
         el.innerHTML = `<div class='shapeListEl' onmouseover="drawshapefromClickandseeRight('${opt}', 0)" id='clickandseeShapeListElm${i}'>-----${i}</div>`;
@@ -138,7 +137,7 @@ function getShapeWithPointInsideRight(x, y) {
 }
 
 function getShapeWithPointInsideCommon(e, canvasId, getShapeWithPointInsideFunc) {
-    var canvasElem = $("#"+canvasId+"_ui")[0];
+    var canvasElem = $("#" + canvasId + "_ui")[0];
     const canvasMousePosition = getCurrentCanvasMousePosition(e, canvasElem);
     let canvasElemObj = getCleanUICanvas(canvasId);
 
@@ -194,8 +193,8 @@ function setBlurVal() {
 }
 
 function setKernelVal() {
-    let kernelSize = parseInt(document.getElementById("cannyKernelSize").value)+1;
-    kernelSize += 1-(kernelSize%2);
+    let kernelSize = parseInt(document.getElementById("cannyKernelSize").value) + 1;
+    kernelSize += 1 - (kernelSize % 2);
 
     g_kernelSize = parseInt(kernelSize);
     draw();
@@ -246,9 +245,9 @@ async function addLayerToActiveCanvas(src) {
 }
 
 function drawShapeAndFragmentClickAndSee(imageHeap, width, height, shapeStr, shapeSize, canvasId, rotation) {
-    const zoom = 1.0/1.5;
+    const zoom = 1.0 / 1.5;
 
-    var valHolder = new module.ValHolder(shapeSize*shapeSize*4);
+    var valHolder = new module.ValHolder(shapeSize * shapeSize * 4);
     module.getImageFragmentFromShape(
         imageHeap, width, height,
         valHolder, shapeStr, shapeSize, zoom, rotation);
@@ -268,13 +267,13 @@ function drawShapeAndFragmentClickAndSee(imageHeap, width, height, shapeStr, sha
 }
 
 function drawShapeAndFragment(imageHeap, width, height, shapeStr, shapeSize, canvasId, rotation) {
-    const zoom = 1.0/1.5;
+    const zoom = 1.0 / 1.5;
 
-    var valHolder = new module.ValHolder(shapeSize*shapeSize*4);
+    var valHolder = new module.ValHolder(shapeSize * shapeSize * 4);
     module.getImageFragmentFromShape(imageHeap, width, height, valHolder, shapeStr, shapeSize, zoom, rotation);
 
     const edgeImageOut5 = new ImageData(new Uint8ClampedArray(valHolder.outputImage2.val_),
-            shapeSize, shapeSize);
+        shapeSize, shapeSize);
 
     const ctxOutImage200 = getCleanCanvas(canvasId);
 
@@ -288,7 +287,7 @@ function drawShapeAndFragment(imageHeap, width, height, shapeStr, shapeSize, can
     valHolder.delete();
 }
 
-function drawshapefromResult(shapeStr1, shapeStr2, hashDistance, rotation) {
+function drawshapefromResult(shapeStr1, shapeStr2, hashDistance, numberRotationMatches, rotation) {
     {
         const canctx = document.getElementById("lookupCanvas_uilower").getContext("2d");
         canctx.clearRect(0, 0, canctx.canvas.width, canctx.canvas.height);
@@ -325,11 +324,11 @@ function drawshapefromlist(index, shapeStr, rotation) {
     const ctxEdge = getCleanUICanvas("canvasImgEdge");
     drawPolyFull(ctxEdge.ctx_ui, global_shapes[index]);
 
-    const zoom = 1.0/1.5;
+    const zoom = 1.0 / 1.5;
 
     let shapeSize = 400;
 
-    var valHolder = new module.ValHolder(shapeSize*shapeSize*4);
+    var valHolder = new module.ValHolder(shapeSize * shapeSize * 4);
 
     module.getImageFragmentFromShape(
         lookup_canvas_wasm_heap.ptr,
@@ -348,7 +347,7 @@ function drawshapefromlist(index, shapeStr, rotation) {
 
 
     shapeSize = 200;
-    var valHolder2 = new module.ValHolder(shapeSize*shapeSize*4);
+    var valHolder2 = new module.ValHolder(shapeSize * shapeSize * 4);
     module.getImageFragmentFromShape(
         lookup_canvas_wasm_heap.ptr,
         lookup_canvas_wasm_heap.width,
@@ -367,7 +366,7 @@ function drawshapefromlist(index, shapeStr, rotation) {
 
 
     shapeSize = 32;
-    var valHolder3 = new module.ValHolder(shapeSize*shapeSize*4);
+    var valHolder3 = new module.ValHolder(shapeSize * shapeSize * 4);
     module.getImageFragmentFromShape(
         lookup_canvas_wasm_heap.ptr,
         lookup_canvas_wasm_heap.width,
@@ -437,26 +436,29 @@ function findMatches() {
     for (let i = 0; i < keys.length; i++) {
         var key = keys[i];
         let opts = g_matchesObj[key];
-        const color = "" + randomColor();
-        for (let j = 0; j < opts.length; j++)
-        {
+        for (let j = 0; j < opts.length; j++) {
+            const color = "" + randomColor();
             const opt = opts[j];
+            const numRotationMatches = opt[Object.keys(opt)[0]].length;
 
-            {
+            for (let p = 0; p < numRotationMatches; p++) {
                 let el = document.createElement("div");
-                el.innerHTML = `<div class='shapeListEl' style="background-color: hsl(${color})" onmouseover="drawshapefromResult('${opt[1]}', '${opt[0]}', ${opt[2]}, ${opt[3]})" id='shapeListEl${i}'>${i}</div>`;
+                let rotation = opt[Object.keys(opt)[0]][p][1];
+                let two = opt[Object.keys(opt)[0]][p];
+                let shape_in = Object.keys(opt)[0];
+                el.innerHTML = `<div class='shapeListEl' style="background-color: hsl(${color})" onmouseover="drawshapefromResult('${key}', '${shape_in}', '${two}', ${numRotationMatches}, ${rotation})" id='shapeListEl${i}'>${i} - ${j} - num ${numRotationMatches}</div>`;
                 list.appendChild(el);
             }
 
-            {
-                const lookup = getCanvas("lookupCanvas");
-                const database = getCanvas("databaseCanvas");
-
-                const stroke = 'hsl('+ color +')';
-                const fill  = 'hsla('+ color +', 0.8)';
-                drawPolyFull(lookup.ctx_ui,  shapeStrToShape(opt[1]), stroke, fill );
-                drawPolyFull(database.ctx_ui,  shapeStrToShape(opt[0]), stroke, fill );
-            }
+            // {
+            //     const lookup = getCanvas("lookupCanvas");
+            //     const database = getCanvas("databaseCanvas");
+            //
+            //     const stroke = 'hsl('+ color +')';
+            //     const fill  = 'hsla('+ color +', 0.8)';
+            //     drawPolyFull(lookup.ctx_ui,  shapeStrToShape(opt[1]), stroke, fill );
+            //     drawPolyFull(database.ctx_ui,  shapeStrToShape(opt[0]), stroke, fill );
+            // }
         }
 
     }
@@ -464,26 +466,26 @@ function findMatches() {
 }
 
 function shapeStrToShape(shapeStr) {
-    return shapeStr.substring(9, shapeStr.length-2).split(',').map(x => x.split(' ').map(y => parseInt(y)));
+    return shapeStr.substring(9, shapeStr.length - 2).split(',').map(x => x.split(' ').map(y => parseInt(y)));
 }
 
 function linesStrToLine(shapeStr) {
-    return shapeStr.substring(11, shapeStr.length-1).split(',').map(x => x.split(' ').map(y => parseInt(y)));
+    return shapeStr.substring(11, shapeStr.length - 1).split(',').map(x => x.split(' ').map(y => parseInt(y)));
 }
 
 function parseGlobalShapes(ctx, shapes) {
     var lines = shapes.split('\n');
     global_shapes = [];
-    for(var i = 0;i < lines.length;i++){
+    for (var i = 0; i < lines.length; i++) {
         const vals = shapeStrToShape(lines[i]);
         // console.log(vals);
         let stroke1 = `rgba\(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)},`;
-        drawPolyFull(ctx, vals, stroke1+" 1)", stroke1+" .3)");
+        drawPolyFull(ctx, vals, stroke1 + " 1)", stroke1 + " .3)");
         global_shapes.push(vals)
     }
     const list = document.getElementById('shapelist');
     list.innerHTML = "";
-    for(let i = 0;i < lines.length;i++) {
+    for (let i = 0; i < lines.length; i++) {
         let opt = lines[i];
         let el = document.createElement("div");
         el.innerHTML = `<div class='shapeListEl' onmouseover="drawshapefromlist(${i}, '${lines[i]}')" id='shapeListEl${i}'>${opt}</div>`;
@@ -553,7 +555,7 @@ function drawOutputImageOrEdgeImage(ctx, imageName) {
         const width = lookup_canvas_wasm_heap.width;
         const height = lookup_canvas_wasm_heap.height;
 
-        const valHolder = new module.ValHolder(lookup_canvas_wasm_heap.width*lookup_canvas_wasm_heap.height*4);
+        const valHolder = new module.ValHolder(lookup_canvas_wasm_heap.width * lookup_canvas_wasm_heap.height * 4);
 
         module.encode(
             lookup_canvas_wasm_heap.ptr,
@@ -574,7 +576,7 @@ function drawOutputImageOrEdgeImage(ctx, imageName) {
         const width = canvas_inserted_in_database_wasm_heap.width;
         const height = canvas_inserted_in_database_wasm_heap.height;
 
-        const valHolder = new module.ValHolder(canvas_inserted_in_database_wasm_heap.width*canvas_inserted_in_database_wasm_heap.height*4);
+        const valHolder = new module.ValHolder(canvas_inserted_in_database_wasm_heap.width * canvas_inserted_in_database_wasm_heap.height * 4);
 
         module.encode(
             canvas_inserted_in_database_wasm_heap.ptr,

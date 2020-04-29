@@ -90,23 +90,27 @@ Mat calcMatrix(ring_t shape, double rotation, double output_width, double zoom) 
     return _calcMatrix(area, -p.get<0>(), -p.get<1>(), rotation, output_width, a, b, zoom);
 }
 
-vector<tuple<ring_t, uint64_t, int>> getAllTheHashesForImageAndShapes(Mat &imgdata,
+vector<tuple<ring_t, vector<uint64_t>>> getAllTheHashesForImageAndShapes(Mat &imgdata,
         vector<ring_t> shapes,
         int rotations,
         int rotationJump,
         trans::matrix_transformer<double, 2, 2> transMat = trans::matrix_transformer<double, 2, 2>(),
         bool applyTransMat = false)
 {
-    vector<tuple<ring_t, uint64_t, int>> ret;
+    vector<tuple<ring_t, vector<uint64_t>>> ret;
 
 //#pragma omp parallel for
     for (int i = 0; i < shapes.size(); i++)
     {
         ring_t shape = shapes[i];
-        auto hashes = getHashesForShape(imgdata, shape, rotations, rotationJump, 32, 0, transMat, applyTransMat);
-        for (int j =0; j < hashes.size(); j++) {
-            ret.push_back(hashes[j]);
+        if (applyTransMat) {
+            ring_t outPoly;
+            boost::geometry::transform(shape, outPoly, transMat);
+            shape = outPoly;
         }
+
+        vector<uint64_t> hashes = getHashesForShape(imgdata, shape, rotations, rotationJump, 32, 0);
+        ret.push_back(make_tuple(shape, hashes));
     }
     return ret;
 }
@@ -249,7 +253,7 @@ vector<ring_t> applyInvMatrixToPoints(vector<ring_t> shapes, trans::matrix_trans
     return shapes;
 }
 
-vector<tuple<ring_t, uint64_t, int>> getAllTheHashesForImage(
+vector<tuple<ring_t, vector<uint64_t>>> getAllTheHashesForImage(
         Mat img_in,
         int rotations,
         int thresh,
@@ -259,11 +263,11 @@ vector<tuple<ring_t, uint64_t, int>> getAllTheHashesForImage(
         int areaThresh,
         int second_rotation)
 {
-    vector<tuple<ring_t, uint64_t, int>> v;
+    vector<tuple<ring_t, vector<uint64_t>>> v;
     Mat grayImg = convertToGrey(img_in);
     for (int i = 0; i < second_rotation; i += 1)
     {
-        vector<tuple<ring_t, uint64_t, int>> v_prime;
+        vector<tuple<ring_t, vector<uint64_t>>> v_prime;
 
         double angle = i;
         // get rotation matrix for rotating the image around its center in pixel coordinates
@@ -317,54 +321,40 @@ std::tuple<double, double> getAandBWrapper(const ring_t& shape, point_t centroid
     return getAandB(transformedPoly);
 }
 
-void handleForRotation(const Mat &input_image, ring_t shape, int output_width,
-                       vector<tuple<ring_t, uint64_t, int>> &ret, const point_t centroid, double a,
-                       double b, double area, unsigned int _rotation_in,
-                       trans::matrix_transformer<double, 2, 2> transMat, bool applyTransMat)
+uint64_t handleForRotation(const Mat &input_image, ring_t shape, int output_width,
+                       const point_t centroid, double a,
+                       double b, double area, unsigned int _rotation_in)
 {
     double rotation = _rotation_in;
-//        std::cout << "rotation: " << rotation << std::endl;
     Mat m = _calcMatrix(area, -centroid.get<0>(), -centroid.get<1>(), rotation, output_width, a, b);
 
     Mat outputImage(output_width, output_width, CV_8UC3, Scalar(0, 0, 0));
     warpAffine(input_image, outputImage, m, outputImage.size());
 
-    uint64_t calculatedHash = img_hash::PHash::compute(outputImage);
-//        imshow("image", outputImage);
-//        waitKey(0);
-    ret.push_back(tie(shape, calculatedHash, rotation));
+    return img_hash::PHash::compute(outputImage);
 }
 
-vector<tuple<ring_t, uint64_t, int>> getHashesForShape(const cv::Mat& input_image,
-                                                         ring_t shape,
-                                                         int numRotations,
-                                                         int rotationJump,
-                                                         int output_width,
-                                                         int start_rotation,
-                                                         trans::matrix_transformer<double, 2, 2> transMat,
-                                                         bool applyTransMat)
+vector<uint64_t> getHashesForShape(const cv::Mat& input_image,
+                                     ring_t shape,
+                                     int numRotations,
+                                     int rotationJump,
+                                     int output_width,
+                                     int start_rotation)
 {
     point_t p;
-    auto ret = vector<tuple<ring_t, uint64_t, int>>();
-
-    //FIXME: test
-    if (applyTransMat) {
-        ring_t outPoly;
-        boost::geometry::transform(shape, outPoly, transMat);
-        shape = outPoly;
-    }
-
     bg::centroid(shape, p);
     auto [a, b] = getAandBWrapper(shape, p);
     double area = bg::area(shape);
+
+    auto ret = vector<uint64_t>();
     for (unsigned int i = start_rotation; i < start_rotation + numRotations; i += rotationJump)
     {
-        handleForRotation(input_image, shape, output_width, ret, p, a, b, area, i, transMat, applyTransMat);
+        ret.push_back(handleForRotation(input_image, shape, output_width, p, a, b, area, i));
     }
     return ret;
 }
 
-tuple<ring_t, uint64_t, int> getHashesForShape_singleRotation(const cv::Mat& input_image,
+uint64_t getHashesForShape_singleRotation(const cv::Mat& input_image,
                                                               ring_t shape,
                                                               int rotation)
 {

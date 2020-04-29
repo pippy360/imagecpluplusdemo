@@ -77,18 +77,17 @@ vector<tuple<ring_t, vector<tuple<ring_t, double, int>>>> compareImages(Mat img_
         vector<tuple<ring_t, double, int>> res_part;
 
         auto [s, list] = c;
-        auto[a, hash1, b] = getHashesForShape_singleRotation(grayImg1, s, 0);
+        uint64_t hash1= getHashesForShape_singleRotation(grayImg1, s, 0);
         for (auto l : list)
         {
             //hm...we can do it for 360 degree rotations
             auto [s2, perc] = l;
             //getHashesForShape
             //vector<tuple<ring_t, uint64_t, int>>
-            vector<tuple<ring_t, uint64_t, int>> hashes = getHashesForShape(grayImg2, s2, 360, 1);
+            vector<uint64_t> hashes = getHashesForShape(grayImg2, s2, 360, 1);
             int min_hash_distance = -1;
-            for (auto hash_c : hashes)
+            for (uint64_t hash2 : hashes)
             {
-                auto [ignore, hash2, rotation2] = hash_c;
                 int hash_dist = ImageHash::bitCount(hash1 ^ hash2);
                 if (min_hash_distance == -1 || hash_dist < min_hash_distance)
                 {
@@ -106,21 +105,25 @@ vector<tuple<ring_t, vector<tuple<ring_t, double, int>>>> compareImages(Mat img_
 vector<tuple<ring_t, ring_t, uint64_t, uint64_t, int, int>> findInvalidMatches(Mat img_in, Mat img_in2, Mat t)
 {
 
-    auto test = findMatchesBetweenTwoImages(img_in, img_in2);
+    map<string, map<string, vector< tuple<uint64_t, uint64_t, int> >>> test = findMatchesBetweenTwoImages(img_in, img_in2);
     vector<tuple<ring_t, ring_t, uint64_t, uint64_t, int, int>> ret;
     auto invmat = convertInvMatrixToBoost(t);
-    for (auto [ignore, v] : test)
+    for (auto [s1_str, v] : test)
     {
-        for (auto r : v) {
-            auto [s1, s2, hash1, hash2, rotation] = r;
+        ring_t s1;
+        bg::read_wkt(s1_str, s1);
+        for (auto [s2_str, ml] : v) {
+            for (auto [hash1, hash2, ignore] : ml) {
+                ring_t s2;
+                bg::read_wkt(s2_str, s2);
+                //need to transform s2
+                ring_t outPoly;
+                boost::geometry::transform(s1, outPoly, invmat);
 
-            //need to transform s2
-            ring_t outPoly;
-            boost::geometry::transform(s1, outPoly, invmat);
-
-            int dist = ImageHash::bitCount(hash1 ^ hash2);
-            if (dist < MATCHING_HASH_DIST && getPerctageOverlap(outPoly, s2) < .90) {
-                ret.push_back(make_tuple(s1, s2, hash1, hash2, rotation, dist));
+                int dist = ImageHash::bitCount(hash1 ^ hash2);
+                if (dist < MATCHING_HASH_DIST && getPerctageOverlap(outPoly, s2) < .90) {
+                    ret.push_back(make_tuple(s1, s2, hash1, hash2, 0, dist));
+                }
             }
         }
     }

@@ -57,45 +57,55 @@ TEST(papertest, pc_overlap) {
     EXPECT_EQ(res2, 0.1);
 }
 
-TEST(papertest, findDetailedMatches) {
-//    findDetailedMatches
-    ImageHashDatabase database;
-
+void loadDatabase(ImageHashDatabase &database, vector<string> files)
+{
+    for (auto file : files)
     {
-        const cv::Mat rickandmortyImage = cv::imread("../webFiles/images/download_3.png", cv::IMREAD_GRAYSCALE);
-        addImageToSearchTree(database, "../webFiles/images/download_3.png", rickandmortyImage);
-    }
-
-    {
-        const cv::Mat rickandmortyImage = cv::imread("../webFiles/images/richandmalty.jpg", cv::IMREAD_GRAYSCALE);
-        addImageToSearchTree(database, "../webFiles/images/richandmalty.jpg", rickandmortyImage);
-    }
-
-    {
-        const cv::Mat rickandmortyImage = cv::imread("../webFiles/images/tech.png", cv::IMREAD_GRAYSCALE);
-        addImageToSearchTree(database, "../webFiles/images/tech.png", rickandmortyImage);
+        const cv::Mat rickandmortyImage = cv::imread(file, cv::IMREAD_GRAYSCALE);
+        addImageToSearchTree(database, file, rickandmortyImage);
     }
 
     database.tree.build(20, nullptr);
+}
 
+#define SIN(x) sin(x * 3.141592653589/180)
+#define COS(x) cos(x * 3.141592653589/180)
+
+void searchWithRotation(ImageHashDatabase &database, string imagePath, double rotation)
+{
+    const cv::Mat queryImage = cv::imread(imagePath, cv::IMREAD_GRAYSCALE);
+
+    auto m33 = Matx33f(COS(rotation), SIN(rotation), 0,
+                       -SIN(rotation), COS(rotation), 0,
+                       0, 0, 1);
+
+    auto [img2, dyntrans] = handleImageForTransformation(queryImage, m33);
+
+    auto res = findDetailedMatches(database, img2);
+
+    cout << endl << "Results:" << endl;
+    for (auto [k, v] : res) {
+        cout << k << " : " << v.size() << endl;
+    }
+    /*
+     *  Results:
+        ../webFiles/images/richandmalty.jpg : 8
+     */
+}
+
+TEST(papertest, findDetailedMatches)
+{
+    ImageHashDatabase database;
+
+    loadDatabase(database, {
+            "../webFiles/images/download_3.png",
+            "../webFiles/images/richandmalty.jpg",
+            "../webFiles/images/tech.png"
+    });
+
+    for (int i = 0; i < 360; i++)
     {
-        const cv::Mat rickandmortyImage = cv::imread("../webFiles/images/richandmalty.jpg", cv::IMREAD_GRAYSCALE);
-
-        cv::Matx33d m_in(0.7, 0.7, -100,
-                         -0.7, 0.7, -2,
-                         0.0, 0.0, 1.0);
-        auto [img2, dyntrans] = handleImageForTransformation(rickandmortyImage, m_in);
-
-        auto res = findDetailedMatches(database, img2);
-
-        cout << endl << "Results:" << endl;
-        for (auto [k, v] : res) {
-            cout << k << " : " << v.size() << endl;
-        }
-        /*
-         *  Results:
-            ../webFiles/images/richandmalty.jpg : 8
-         */
+        searchWithRotation(database, "../webFiles/images/richandmalty.jpg", i);
     }
 }
 

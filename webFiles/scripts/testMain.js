@@ -5,6 +5,7 @@ let g_ratio;
 let g_thresh;
 let g_areaThresh;
 let g_flushCache = true;
+let g_zoom = 1.0 / 1.5;
 
 
 let g_leftSelected;
@@ -591,6 +592,7 @@ function drawOutputImageOrEdgeImage() {
 
     let res = module.transfromImage_keepVisable_wrapper(
         lookup_canvas_wasm_heap.ptr,
+        g_zoom,
         lookup_canvas_wasm_heap.width,
         lookup_canvas_wasm_heap.height,
         0.7,0.7,0,

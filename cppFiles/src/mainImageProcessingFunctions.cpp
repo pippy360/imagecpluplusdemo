@@ -169,7 +169,7 @@ void drawContours(const Mat &img, vector<vector<Point>> pts) {
     for( ; idx < pts.size(); idx++ )
     {
         Scalar color( rand()&255, rand()&255, rand()&255 );
-        drawContours(img, pts, idx, color, 1, 8);
+        drawContours(img, pts, idx, color, 4, 8);
     }
 }
 
@@ -228,20 +228,15 @@ vector<ring_t> extractShapes(
 bool g_useRotatedImageForHashes = true;//FIXME:
 
 
-trans::matrix_transformer<double, 2, 2> convertInvMatrixToBoost(cv::Mat inmat) {
-    vector<vector<double> > mat = {
-            {inmat.at<double>(0,0), inmat.at<double>(0,1), inmat.at<double>(0,2)},
-            {inmat.at<double>(1,0), inmat.at<double>(1,1), inmat.at<double>(1,2)},
-            {0, 0, 1}
-    };
-
+trans::matrix_transformer<double, 2, 2> convertCVMatrixToBoost(cv::Mat inmat)
+{
     return trans::matrix_transformer<double, 2, 2> (
-            mat[0][0], mat[0][1], mat[0][2],
-            mat[1][0], mat[1][1], mat[1][2],
-            mat[2][0], mat[2][1], mat[2][2]);
+            inmat.at<double>(0,0), inmat.at<double>(0,1), inmat.at<double>(0,2),
+            inmat.at<double>(1,0), inmat.at<double>(1,1), inmat.at<double>(1,2),
+            0, 0, 1);
 }
 
-vector<ring_t> applyInvMatrixToPoints(vector<ring_t> shapes, trans::matrix_transformer<double, 2, 2> transMat) {
+vector<ring_t> applyMatrixToPoints(vector<ring_t> shapes, trans::matrix_transformer<double, 2, 2> transMat) {
     vector<ring_t> result;
 
     for (auto shape : shapes) {
@@ -253,6 +248,7 @@ vector<ring_t> applyInvMatrixToPoints(vector<ring_t> shapes, trans::matrix_trans
     return shapes;
 }
 
+//FIXME: this code is such a mess
 vector<tuple<ring_t, vector<uint64_t>>> getAllTheHashesForImage(
         Mat img_in,
         int rotations,
@@ -288,7 +284,8 @@ vector<tuple<ring_t, vector<uint64_t>>> getAllTheHashesForImage(
         Mat canny_output = applyCanny(dst, thresh, ratio, kernel_size, blur_width);
         Mat outRot;
         cv::invertAffineTransform(rot, outRot);
-        auto invmat = convertInvMatrixToBoost(outRot);
+        auto invmat = convertCVMatrixToBoost(outRot);
+
         g_useRotatedImageForHashes = true;
         if (g_useRotatedImageForHashes) {
             //pass in inv matrix
@@ -296,7 +293,7 @@ vector<tuple<ring_t, vector<uint64_t>>> getAllTheHashesForImage(
         } else {
 
             //apply inv transformation matrix to all shapes
-            auto newShapes = applyInvMatrixToPoints(shapes, invmat);
+            auto newShapes = applyMatrixToPoints(shapes, invmat);
             //pass in identity matrix
             //WRONG, shape is used wrong here...
             v_prime = getAllTheHashesForImageAndShapes(grayImg, newShapes, rotations, 1);

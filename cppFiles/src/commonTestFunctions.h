@@ -32,7 +32,7 @@
 #include <iostream>
 
 
-tuple<Mat, Mat> handleImageForTransformation(Mat img_in, cv::Matx33d transmat);
+tuple<Mat, Mat> transfromImage_keepVisable(Mat img_in, cv::Matx33d transmat);
 
 vector<tuple<ring_t, vector<tuple<ring_t, double, int>>>> compareImages(Mat img_in, Mat img_in2, int thresh,
                    int ratio,
@@ -41,7 +41,7 @@ vector<tuple<ring_t, vector<tuple<ring_t, double, int>>>> compareImages(Mat img_
                    int areaThresh,
                    Mat transmat);
 
-vector<tuple<ring_t, ring_t, uint64_t, uint64_t, int, int>> findInvalidMatches(Mat img_in, Mat img_in2, Mat t);
+double getPerctageOverlap(ring_t s1, ring_t s2, double s1_area);
 
 double getPerctageOverlap(ring_t s1, ring_t s2);
 

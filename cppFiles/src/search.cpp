@@ -8,6 +8,7 @@
 
 #include "mainImageProcessingFunctions.hpp"
 
+#include "commonTestFunctions.h"
 
 using namespace std;
 using namespace cv;
@@ -56,9 +57,15 @@ void addImageToSearchTree(
     cout << "Added " << count << " hashes to the search database " << endl;
 }
 
+string shapeToString(ring_t shape) {
+    std::stringstream ss;
+    ss << bg::wkt(shape);
+    return ss.str();
+}
+
 map<string, map<string, map<string, vector< tuple<uint64_t, uint64_t, int> >>>> findDetailedMatches(
         ImageHashDatabase &database,
-        Mat img_in2,
+        Mat queryImg,
         int thresh,
         int ratio,
         int kernel_size,
@@ -67,7 +74,7 @@ map<string, map<string, map<string, vector< tuple<uint64_t, uint64_t, int> >>>> 
         )
 {
     auto queryImageHashes = getAllTheHashesForImage(
-            img_in2,
+            queryImg,
             1,
             thresh,
             ratio,
@@ -76,13 +83,15 @@ map<string, map<string, map<string, vector< tuple<uint64_t, uint64_t, int> >>>> 
             areaThresh);
 
     map<string, map<string, map<string, vector< tuple<uint64_t, uint64_t, int> >>>> m;
-    for (auto [queryShape, shapehashes] : queryImageHashes)
+    for (auto [queryShape, shapeHashes] : queryImageHashes)
     {
-        std::stringstream ss;
-        ss << bg::wkt(queryShape);
+        string queryShape_str = shapeToString(queryShape);
 
-        for (auto queryHash : shapehashes)
+        for (auto queryHash : shapeHashes)
         {
+            /*
+             * Search the database for matches
+             */
             vector<int64_t> result;
             vector<float> distances;
             vector<float> unpacked(64, 0);
@@ -90,6 +99,10 @@ map<string, map<string, map<string, vector< tuple<uint64_t, uint64_t, int> >>>> 
             //TODO: is 40 too much here? how does this affect performace? 10 was too little when we have so many rotations
             database.tree._unpack(&queryHash, &unpacked[0]);
             database.tree.get_nns_by_vector(&unpacked[0], 40, -1, &result, &distances);
+
+            /*
+             * Handle the matches
+             */
 
             //Sort the results into our map
             for (int i = 0; i < result.size(); i++)
@@ -103,13 +116,13 @@ map<string, map<string, map<string, vector< tuple<uint64_t, uint64_t, int> >>>> 
                     if ( m.find(imgPath) == m.end() )
                         m[imgPath] = map<string, map<string, vector< tuple<uint64_t, uint64_t, int> >>>();
 
-                    if ( m[imgPath].find(ss.str()) == m[imgPath].end() )
-                        m[imgPath][ss.str()] = map<string, vector< tuple<uint64_t, uint64_t, int> >>();
+                    if ( m[imgPath].find(queryShape_str) == m[imgPath].end() )
+                        m[imgPath][queryShape_str] = map<string, vector< tuple<uint64_t, uint64_t, int> >>();
 
-                    if ( m[imgPath][ss.str()].find(resShapeStr) == m[imgPath][ss.str()].end() )
-                        m[imgPath][ss.str()][resShapeStr] = vector< tuple<uint64_t, uint64_t, int> >();
+                    if ( m[imgPath][queryShape_str].find(resShapeStr) == m[imgPath][queryShape_str].end() )
+                        m[imgPath][queryShape_str][resShapeStr] = vector< tuple<uint64_t, uint64_t, int> >();
 
-                    m[imgPath][ss.str()][resShapeStr].push_back(make_tuple(resHash, queryHash, rotation));
+                    m[imgPath][queryShape_str][resShapeStr].push_back(make_tuple(resHash, queryHash, rotation));
                 }
             }
         }
@@ -165,3 +178,55 @@ map<string, map<string, vector< tuple<uint64_t, uint64_t, int> >>> findMatchesBe
 
     return resmap.begin()->second;
 }
+
+map<string, map<string, tuple<ring_t, ring_t, vector<tuple<uint64_t, uint64_t, int, int>>> >> findInvalidMatches(
+        Mat queryImage,
+        Mat databaseImage,
+        Mat databaseToQuery_CVMat)
+{
+    //FIXME: allow passing in a preloaded database
+    ImageHashDatabase localDatabase;
+    addImageToSearchTree(
+            localDatabase,
+            "None",
+            databaseImage);
+
+    localDatabase.tree.build(20, nullptr);
+
+    auto matches = findDetailedMatches(
+            localDatabase,
+            queryImage);
+
+    map<string, map<string, tuple<ring_t, ring_t, vector<tuple<uint64_t, uint64_t, int, int>>> >> ret;
+    auto databaseToQuery_boostMat = convertCVMatrixToBoost(databaseToQuery_CVMat);
+
+    for (auto [queryImageShape_str, v] : matches["None"])
+    {
+        ring_t queryImageShape;
+        bg::read_wkt(queryImageShape_str, queryImageShape);
+
+        for (auto [databaseShape_str, ml] : v) {
+            for (auto [hash1, hash2, rotation] : ml) {
+                ring_t databaseShape;
+                bg::read_wkt(databaseShape_str, databaseShape);
+                ring_t outPoly;
+                boost::geometry::transform(databaseShape, outPoly, databaseToQuery_boostMat);
+
+                int dist = ImageHash::bitCount(hash1 ^ hash2);
+                if (dist < MATCHING_HASH_DIST && getPerctageOverlap(outPoly, queryImageShape) < .90)
+                {
+                    if ( ret.find(queryImageShape_str) == ret.end() )
+                        ret[queryImageShape_str] = map<string, tuple<ring_t, ring_t, vector<tuple<uint64_t, uint64_t, int, int>>> >();
+
+                    if ( ret[queryImageShape_str].find(databaseShape_str) == ret[queryImageShape_str].end() )
+                        ret[queryImageShape_str][databaseShape_str] =
+                                make_tuple(queryImageShape, databaseShape, vector<tuple<uint64_t, uint64_t, int, int>>());
+
+                    get<2>(ret[queryImageShape_str][databaseShape_str]).push_back(make_tuple(hash1, hash2, rotation, dist));
+                }
+            }
+        }
+    }
+    return ret;
+}
+

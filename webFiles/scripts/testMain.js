@@ -589,7 +589,7 @@ function drawOutputImageOrEdgeImage() {
     }
 
 
-    let res = module.handleImageForTransformation_wrapper(
+    let res = module.transfromImage_keepVisable_wrapper(
         lookup_canvas_wasm_heap.ptr,
         lookup_canvas_wasm_heap.width,
         lookup_canvas_wasm_heap.height,

@@ -46,7 +46,7 @@ void addImageToSearchTree(
         int kernel_size=CANNY_KERNEL_SIZE,
         int blur_width=CANNY_BLUR_WIDTH,
         int areaThresh=CANNY_AREA_THRESH
-        );
+            );
 
 map<string, map<string, map<string, vector< tuple<uint64_t, uint64_t, int> >>>> findDetailedMatches(
         ImageHashDatabase &database,
@@ -56,6 +56,12 @@ map<string, map<string, map<string, vector< tuple<uint64_t, uint64_t, int> >>>> 
         int kernel_size=CANNY_KERNEL_SIZE,
         int blur_width=CANNY_BLUR_WIDTH,
         int areaThresh=CANNY_AREA_THRESH
-        );
+            );
+
+map<string, map<string, tuple<ring_t, ring_t, vector<tuple<uint64_t, uint64_t, int, int>>> >> findInvalidMatches(
+        Mat queryImage,
+        Mat databaseImage,
+        Mat databaseToQuery_CVMat
+            );
 
 #endif //IMAGECPLUPLUSDEMO2_SEARCH_H

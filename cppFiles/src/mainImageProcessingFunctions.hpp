@@ -26,7 +26,7 @@ Mat _calcMatrix(
         double b,
         double zoomin=1);
 
-trans::matrix_transformer<double, 2, 2> convertInvMatrixToBoost(cv::Mat inmat);
+trans::matrix_transformer<double, 2, 2> convertCVMatrixToBoost(cv::Mat inmat);
 
 vector<uint64_t> getHashesForShape(const cv::Mat& input_image,
                                                        ring_t shape,
@@ -74,6 +74,7 @@ vector<tuple<ring_t, vector<uint64_t>>> getAllTheHashesForImage(
         int second_rotations=1
             );
 
+void drawContoursWithRing(const Mat &img, vector<ring_t> _pts);
 
 //only in this header file for testing
 std::tuple<double, double> getAandBWrapper(const ring_t& shape, point_t centroid);

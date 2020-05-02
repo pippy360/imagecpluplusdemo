@@ -214,7 +214,7 @@ public:
     }
 };
 
-MatWraper handleImageForTransformation_wrapper(
+MatWraper transfromImage_keepVisable_wrapper(
         uintptr_t img_in_ptr,
         int width,
         int height,
@@ -231,7 +231,7 @@ MatWraper handleImageForTransformation_wrapper(
                      d, e, f,
                  0.0, 0.0, 1.0);
 
-    auto [m, trans] = handleImageForTransformation(img_in, m_in);
+    auto [m, trans] = transfromImage_keepVisable(img_in, m_in);
     vector<tuple<ring_t, vector<tuple<ring_t, double, int>>>>  res = compareImages(img_in,
                              m,
                              CANNY_THRESH,
@@ -263,19 +263,27 @@ MatWraper handleImageForTransformation_wrapper(
     }
     polygonString << "],";
 
-    vector<tuple<ring_t, ring_t, uint64_t, uint64_t, int, int>> invalids = findInvalidMatches(img_in, m, trans);
+    map<string, map<string, tuple<ring_t, ring_t, vector<tuple<uint64_t, uint64_t, int, int>>> >> invalids = findInvalidMatches(m, img_in, trans);
 
     polygonString << "\"invalid\": [";
-    for (int i = 0; i < invalids.size(); i++)
+    int firstRun = true;
+    for (auto [queryImgStr, v] : invalids)
     {
-        auto [s1, s2, hash1, hash2, rot, dist] = invalids[i];
-        if (i > 0) {
-            polygonString << ",";
-        }
+        for (auto [databaseImgStr, t] : v)
+        {
+            auto[_i, __i, _v] = t;
+            auto [hash1, hash2, rot, dist] = _v[0];
 
-        polygonString << "{\"s1\": \"" << bg::wkt(s1) << "\", \"s2\": \"" << bg::wkt(s2) << "\", \"hash1\": \""
-                      << ImageHash::convertHashToString(hash1) << "\", \"hash2\": \"" << ImageHash::convertHashToString(hash2)
-                      << "\", \"dist\": " << dist << "}";
+            if (!firstRun) {
+                polygonString << ",";
+            }
+            firstRun = false;
+
+            polygonString << "{\"s1\": \"" << databaseImgStr << "\", \"s2\": \"" << queryImgStr << "\", \"hash1\": \""
+                          << ImageHash::convertHashToString(hash1) << "\", \"hash2\": \""
+                          << ImageHash::convertHashToString(hash2)
+                          << "\", \"dist\": " << dist << ", \"rotationMatches\": " << _v.size() << "}";
+        }
     }
     polygonString << "]}";
 
@@ -533,5 +541,5 @@ EMSCRIPTEN_BINDINGS(my_value_example) {
                 .property("width", &MatWraper::m_width)
                 .property("height", &MatWraper::m_height)
         ;
-        emscripten::function("handleImageForTransformation_wrapper", &handleImageForTransformation_wrapper);
+        emscripten::function("transfromImage_keepVisable_wrapper", &transfromImage_keepVisable_wrapper);
 }

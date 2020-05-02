@@ -29,7 +29,7 @@ vector<tuple<ring_t, vector<tuple<ring_t, double>>>> compareShapes(vector<ring_t
 
     Mat outRot;
     cv::invertAffineTransform(trans, outRot);
-    auto invmat = convertInvMatrixToBoost(trans);
+    auto invmat = convertCVMatrixToBoost(trans);
 
     for (auto _s : img1shape) {
         ring_t outPoly;
@@ -101,41 +101,14 @@ vector<tuple<ring_t, vector<tuple<ring_t, double, int>>>> compareImages(Mat img_
     return res;
 }
 
-vector<tuple<ring_t, ring_t, uint64_t, uint64_t, int, int>> findInvalidMatches(Mat img_in, Mat img_in2, Mat t)
+//FIXME: test this with different image types
+tuple<Mat, Mat> transfromImage_keepVisable(Mat img_in, cv::Matx33d transmat)
 {
-
-    map<string, map<string, vector< tuple<uint64_t, uint64_t, int> >>> test = findMatchesBetweenTwoImages(img_in, img_in2);
-    vector<tuple<ring_t, ring_t, uint64_t, uint64_t, int, int>> ret;
-    auto invmat = convertInvMatrixToBoost(t);
-    for (auto [s1_str, v] : test)
-    {
-        ring_t s1;
-        bg::read_wkt(s1_str, s1);
-        for (auto [s2_str, ml] : v) {
-            for (auto [hash1, hash2, ignore] : ml) {
-                ring_t s2;
-                bg::read_wkt(s2_str, s2);
-                //need to transform s2
-                ring_t outPoly;
-                boost::geometry::transform(s1, outPoly, invmat);
-
-                int dist = ImageHash::bitCount(hash1 ^ hash2);
-                if (dist < MATCHING_HASH_DIST && getPerctageOverlap(outPoly, s2) < .90) {
-                    ret.push_back(make_tuple(s1, s2, hash1, hash2, 0, dist));
-                }
-            }
-        }
-    }
-    return ret;
-}
-
-tuple<Mat, Mat> handleImageForTransformation(Mat img_in, cv::Matx33d transmat) {
-    //apply the transformation and return the image
+    std::vector<Point2f> vec;
+    std::vector<Point2f> outvec;
 
     Mat dynTransMat = covertToDynamicallyAllocatedMatrix(transmat);
 
-    std::vector<Point2f> vec;
-    std::vector<Point2f> outvec;
     // points or a circle
     vec.push_back(Point2f(0, 0));
     vec.push_back(Point2f(0, img_in.rows));
@@ -160,7 +133,8 @@ tuple<Mat, Mat> handleImageForTransformation(Mat img_in, cv::Matx33d transmat) {
     }
 
     //so we need to calculate the size of the output image? right?
-    Mat outputImage(r.y+r.height, r.x+r.width, CV_8UC4, Scalar(0, 0, 0, 0));
+    //FIXME: test this type stuff here...will this work with jpgs????
+    Mat outputImage = Mat::zeros(r.y+r.height, r.x+r.width, img_in.type());
     warpAffine(img_in, outputImage, dynTransMat, outputImage.size());
 
     return make_tuple(outputImage, dynTransMat);

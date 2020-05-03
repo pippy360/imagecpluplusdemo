@@ -14,30 +14,22 @@ using namespace cv;
 
 Mat covertToDynamicallyAllocatedMatrix(const Matx33d transformation_matrix);
 
-Mat calcMatrix(ring_t shape, double rotation, double output_width, double zoom=1);
-
-Mat _calcMatrix(
-        double areaFix,
-        double transx,
-        double transy,
-        double rotation,
-        double output_width,
-        double a,
-        double b,
-        double zoomin=1);
+Mat calcMatrix(ring_t shape, double rotation, double output_width, double zoom);
 
 trans::matrix_transformer<double, 2, 2> convertCVMatrixToBoost(cv::Mat inmat);
 
 vector<uint64_t> getHashesForShape(const cv::Mat& input_image,
-                                                       ring_t shape,
-                                                       int numRotations,
-                                                       int rotationJump,
-                                                       int output_width = 32,
-                                                       int start_rotation = 0);
+                                   ring_t shape,
+                                   int numRotations,
+                                   int rotationJump,
+                                   int output_width = 32,
+                                   int start_rotation = 0,
+                                   double zoom=1);
 
 uint64_t getHashesForShape_singleRotation(const cv::Mat& input_image,
-                                                              ring_t shape,
-                                                              int rotation);
+                                          ring_t shape,
+                                          int rotation,
+                                          double zoom);
 
 Mat convertToGrey(Mat img_in);
 
@@ -71,7 +63,8 @@ vector<tuple<ring_t, vector<uint64_t>>> getAllTheHashesForImage(
         int kernel_size=CANNY_KERNEL_SIZE,
         int blur_width=CANNY_BLUR_WIDTH,
         int areaThresh=CANNY_AREA_THRESH,
-        int second_rotations=1
+        int second_rotations=1,
+        double zoom=HASH_ZOOM
             );
 
 void drawContoursWithRing(const Mat &img, vector<ring_t> _pts);

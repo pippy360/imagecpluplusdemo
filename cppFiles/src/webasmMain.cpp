@@ -111,6 +111,7 @@ std::string findMatchesForImageFromCanvas(
         int kernel_size,
         int blur_width,
         int areaThresh,
+        double zoom,
         bool flush_cache
         )
 {
@@ -126,6 +127,7 @@ std::string findMatchesForImageFromCanvas(
             kernel_size,
             blur_width,
             areaThresh,
+            zoom,
             flush_cache
     );
     std::cout << "findMatchesForImageFromCanvas called, with this many matches: " << vec.size() << std::endl;
@@ -178,8 +180,9 @@ int getHashDistanceFromCanvas(
         string string2,
         uintptr_t lookup_img_in,
         int lk_width,
-        int lk_height
-) {
+        int lk_height,
+        double zoom)
+{
     ring_t shape_db;
     bg::read_wkt(string1, shape_db);
 
@@ -189,8 +192,8 @@ int getHashDistanceFromCanvas(
     Mat image_db(cv::Size(db_width, db_height), CV_8UC4, (void *) database_img_in, cv::Mat::AUTO_STEP);
     Mat image_lk(cv::Size(lk_width, lk_height), CV_8UC4, (void *) lookup_img_in, cv::Mat::AUTO_STEP);
 
-    uint64_t hash1 = getHashesForShape_singleRotation(image_db, shape_db, rotation);
-    uint64_t hash2 = getHashesForShape_singleRotation(image_lk, shape_lk, 0);
+    uint64_t hash1 = getHashesForShape_singleRotation(image_db, shape_db, rotation, zoom);
+    uint64_t hash2 = getHashesForShape_singleRotation(image_lk, shape_lk, 0, zoom);
     return ImageHash::bitCount(hash1 ^ hash2);
 }
 
@@ -216,6 +219,7 @@ public:
 
 MatWraper transfromImage_keepVisable_wrapper(
         uintptr_t img_in_ptr,
+        double zoom,
         int width,
         int height,
         double a,
@@ -239,6 +243,7 @@ MatWraper transfromImage_keepVisable_wrapper(
                              CANNY_KERNEL_SIZE,
                              CANNY_BLUR_WIDTH,
                              CANNY_AREA_THRESH,
+                             zoom,
                              trans);
 
     std::stringstream polygonString;
@@ -263,7 +268,17 @@ MatWraper transfromImage_keepVisable_wrapper(
     }
     polygonString << "],";
 
-    map<string, map<string, tuple<ring_t, ring_t, vector<tuple<uint64_t, uint64_t, int, int>>> >> invalids = findInvalidMatches(m, img_in, trans);
+    map<string, map<string, tuple<ring_t, ring_t, vector<tuple<uint64_t, uint64_t, int, int>>> >> invalids =
+            findInvalidMatches(
+                    m,
+                    img_in,
+                    trans,
+                    CANNY_THRESH,
+                    CANNY_RATIO,
+                    CANNY_KERNEL_SIZE,
+                    CANNY_BLUR_WIDTH,
+                    CANNY_AREA_THRESH,
+                    HASH_ZOOM);
 
     polygonString << "\"invalid\": [";
     int firstRun = true;
@@ -394,6 +409,7 @@ string getContoursWithCurvature(
     return polygonString.str();
 }
 
+//FIXME: rename now...
 void encode(
         uintptr_t img_in_ptr,
         int width,
@@ -503,6 +519,10 @@ int get_CANNY_AREA_THRESH() {
     return CANNY_AREA_THRESH;
 }
 
+double get_HASH_ZOOM() {
+    return HASH_ZOOM;
+}
+
 using namespace emscripten;
 
 EMSCRIPTEN_BINDINGS(my_value_example) {
@@ -531,6 +551,8 @@ EMSCRIPTEN_BINDINGS(my_value_example) {
         emscripten::function("get_CANNY_KERNEL_SIZE", &get_CANNY_KERNEL_SIZE);
         emscripten::function("get_CANNY_BLUR_WIDTH", &get_CANNY_BLUR_WIDTH);
         emscripten::function("get_CANNY_AREA_THRESH", &get_CANNY_AREA_THRESH);
+
+        emscripten::function("get_HASH_ZOOM", &get_HASH_ZOOM);
 
         emscripten::function("getContoursWithCurvature", &getContoursWithCurvature);
 

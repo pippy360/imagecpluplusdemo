@@ -7,14 +7,10 @@
 
 #include "annoylib.h"
 
-
 #include <vector>
 #include <opencv2/opencv.hpp>
 #include <stdio.h>
 #include <math.h>
-
-
-
 
 #include "ImageHash.hpp"
 #include "boostGeometryTypes.hpp"
@@ -34,11 +30,13 @@
 
 tuple<Mat, Mat> transfromImage_keepVisable(Mat img_in, cv::Matx33d transmat);
 
-vector<tuple<ring_t, vector<tuple<ring_t, double, int>>>> compareImages(Mat img_in, Mat img_in2, int thresh,
+vector<tuple<ring_t, vector<tuple<ring_t, double, int>>>> compareImages(Mat img_in, Mat img_in2,
+                   int thresh,
                    int ratio,
                    int kernel_size,
                    int blur_width,
                    int areaThresh,
+                   double zoom,
                    Mat transmat);
 
 double getPerctageOverlap(ring_t s1, ring_t s2, double s1_area);

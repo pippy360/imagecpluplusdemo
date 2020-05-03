@@ -39,7 +39,7 @@ Mat covertToDynamicallyAllocatedMatrix(const Matx33d transformation_matrix)
     return m;
 }
 
-Mat _calcMatrix(
+static Mat _calcMatrix(
         double areaFix,
         double transx,
         double transy,
@@ -65,7 +65,8 @@ Mat _calcMatrix(
                             0.0, 0.0, 1.0);
 
     //FIXME: explain all the variables here
-    double scaleFix = zoomin*output_width;///(sqrt(areaFix))
+    double scaleFix = zoomin*output_width;
+
     cv::Matx33d transpose_scale(
                             scaleFix/sqrt(areaFix), 0.0, 0.0,
                             0.0, scaleFix/sqrt(areaFix), 0.0,
@@ -94,6 +95,7 @@ vector<tuple<ring_t, vector<uint64_t>>> getAllTheHashesForImageAndShapes(Mat &im
         vector<ring_t> shapes,
         int rotations,
         int rotationJump,
+        double zoom,
         trans::matrix_transformer<double, 2, 2> transMat = trans::matrix_transformer<double, 2, 2>(),
         bool applyTransMat = false)
 {
@@ -109,7 +111,7 @@ vector<tuple<ring_t, vector<uint64_t>>> getAllTheHashesForImageAndShapes(Mat &im
             shape = outPoly;
         }
 
-        vector<uint64_t> hashes = getHashesForShape(imgdata, shape, rotations, rotationJump, 32, 0);
+        vector<uint64_t> hashes = getHashesForShape(imgdata, shape, rotations, rotationJump, 32, 0, zoom);
         ret.push_back(make_tuple(shape, hashes));
     }
     return ret;
@@ -257,7 +259,8 @@ vector<tuple<ring_t, vector<uint64_t>>> getAllTheHashesForImage(
         int kernel_size,
         int blur_width,
         int areaThresh,
-        int second_rotation)
+        int second_rotation,
+        double zoom)
 {
     vector<tuple<ring_t, vector<uint64_t>>> v;
     Mat grayImg = convertToGrey(img_in);
@@ -289,14 +292,14 @@ vector<tuple<ring_t, vector<uint64_t>>> getAllTheHashesForImage(
         g_useRotatedImageForHashes = true;
         if (g_useRotatedImageForHashes) {
             //pass in inv matrix
-            v_prime = getAllTheHashesForImageAndShapes(dst, shapes, rotations, 1, invmat, true);
+            v_prime = getAllTheHashesForImageAndShapes(dst, shapes, rotations, 1, zoom, invmat, true);
         } else {
 
             //apply inv transformation matrix to all shapes
             auto newShapes = applyMatrixToPoints(shapes, invmat);
             //pass in identity matrix
             //WRONG, shape is used wrong here...
-            v_prime = getAllTheHashesForImageAndShapes(grayImg, newShapes, rotations, 1);
+            v_prime = getAllTheHashesForImageAndShapes(grayImg, newShapes, rotations, 1, zoom);
         }
 //        for (auto v : v_prime) {
 //            auto [outRing, p, b] = v;
@@ -320,10 +323,10 @@ std::tuple<double, double> getAandBWrapper(const ring_t& shape, point_t centroid
 
 uint64_t handleForRotation(const Mat &input_image, ring_t shape, int output_width,
                        const point_t centroid, double a,
-                       double b, double area, unsigned int _rotation_in)
+                       double b, double area, unsigned int _rotation_in, double zoom)
 {
     double rotation = _rotation_in;
-    Mat m = _calcMatrix(area, -centroid.get<0>(), -centroid.get<1>(), rotation, output_width, a, b);
+    Mat m = _calcMatrix(area, -centroid.get<0>(), -centroid.get<1>(), rotation, output_width, a, b, zoom);
 
     Mat outputImage(output_width, output_width, CV_8UC3, Scalar(0, 0, 0));
     warpAffine(input_image, outputImage, m, outputImage.size());
@@ -336,7 +339,8 @@ vector<uint64_t> getHashesForShape(const cv::Mat& input_image,
                                      int numRotations,
                                      int rotationJump,
                                      int output_width,
-                                     int start_rotation)
+                                     int start_rotation,
+                                     double zoom)
 {
     point_t p;
     bg::centroid(shape, p);
@@ -346,16 +350,17 @@ vector<uint64_t> getHashesForShape(const cv::Mat& input_image,
     auto ret = vector<uint64_t>();
     for (unsigned int i = start_rotation; i < start_rotation + numRotations; i += rotationJump)
     {
-        ret.push_back(handleForRotation(input_image, shape, output_width, p, a, b, area, i));
+        ret.push_back(handleForRotation(input_image, shape, output_width, p, a, b, area, i, zoom));
     }
     return ret;
 }
 
 uint64_t getHashesForShape_singleRotation(const cv::Mat& input_image,
-                                                              ring_t shape,
-                                                              int rotation)
+                                          ring_t shape,
+                                          int rotation,
+                                          double zoom)
 {
-    return getHashesForShape(input_image, shape, 1, 1, 32, rotation)[0];
+    return getHashesForShape(input_image, shape, 1, 1, 32, rotation, zoom)[0];
 }
 
 Mat applyCanny(

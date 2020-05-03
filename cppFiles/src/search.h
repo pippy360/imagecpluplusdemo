@@ -34,6 +34,7 @@ map<string, map<string, vector< tuple<uint64_t, uint64_t, int> >>> findMatchesBe
         int kernel_size=CANNY_KERNEL_SIZE,
         int blur_width=CANNY_BLUR_WIDTH,
         int areaThresh=CANNY_AREA_THRESH,
+        double zoom=HASH_ZOOM,
         bool flushCache=true
                 );
 
@@ -45,7 +46,8 @@ void addImageToSearchTree(
         int ratio=CANNY_RATIO,
         int kernel_size=CANNY_KERNEL_SIZE,
         int blur_width=CANNY_BLUR_WIDTH,
-        int areaThresh=CANNY_AREA_THRESH
+        int areaThresh=CANNY_AREA_THRESH,
+        double zoom=HASH_ZOOM
             );
 
 map<string, map<string, map<string, vector< tuple<uint64_t, uint64_t, int> >>>> findDetailedMatches(
@@ -55,13 +57,20 @@ map<string, map<string, map<string, vector< tuple<uint64_t, uint64_t, int> >>>> 
         int ratio=CANNY_RATIO,
         int kernel_size=CANNY_KERNEL_SIZE,
         int blur_width=CANNY_BLUR_WIDTH,
-        int areaThresh=CANNY_AREA_THRESH
+        int areaThresh=CANNY_AREA_THRESH,
+        double zoom=HASH_ZOOM
             );
 
 map<string, map<string, tuple<ring_t, ring_t, vector<tuple<uint64_t, uint64_t, int, int>>> >> findInvalidMatches(
         Mat queryImage,
         Mat databaseImage,
-        Mat databaseToQuery_CVMat
+        Mat databaseToQuery_CVMat,
+        int thresh=CANNY_THRESH,
+        int ratio=CANNY_RATIO,
+        int kernel_size=CANNY_KERNEL_SIZE,
+        int blur_width=CANNY_BLUR_WIDTH,
+        int areaThresh=CANNY_AREA_THRESH,
+        double zoom=HASH_ZOOM
             );
 
 #endif //IMAGECPLUPLUSDEMO2_SEARCH_H

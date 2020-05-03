@@ -31,6 +31,7 @@ TEST(papertest, basic) {
            CANNY_KERNEL_SIZE,
            CANNY_BLUR_WIDTH,
            CANNY_AREA_THRESH,
+           HASH_ZOOM,
            dyntrans);
 
     //ok so we know which shapes match
@@ -87,8 +88,8 @@ tuple<int, map<string, int>> searchWithRotation(ImageHashDatabase &database, str
     tuple<int, map<string, int>> res;
 
     {
-        map<string, map<string, tuple<ring_t, ring_t, vector<tuple<uint64_t, uint64_t, int, int>>> >> invalids = findInvalidMatches(queryImg,
-                databaseImg, queryImgToDatabase_mat);
+        map<string, map<string, tuple<ring_t, ring_t, vector<tuple<uint64_t, uint64_t, int, int>>> >> invalids =
+                findInvalidMatches(queryImg, databaseImg, queryImgToDatabase_mat);
 
 //        for (auto [queryImgStr, v] : invalids)
 //        {

@@ -51,14 +51,13 @@ vector<tuple<ring_t, vector<tuple<ring_t, double>>>> compareShapes(vector<ring_t
     return res;
 }
 
-extern vector<tuple<ring_t, uint64_t, int>> g_imghashes;
-extern HammingWrapper *tree;
-
-vector<tuple<ring_t, vector<tuple<ring_t, double, int>>>> compareImages(Mat img_in, Mat img_in2, int thresh,
+vector<tuple<ring_t, vector<tuple<ring_t, double, int>>>> compareImages(Mat img_in, Mat img_in2,
+                   int thresh,
                    int ratio,
                    int kernel_size,
                    int blur_width,
                    int areaThresh,
+                   double zoom,
                    Mat transmat)
 {
     Mat grayImg1 = convertToGrey(img_in);
@@ -76,14 +75,14 @@ vector<tuple<ring_t, vector<tuple<ring_t, double, int>>>> compareImages(Mat img_
         vector<tuple<ring_t, double, int>> res_part;
 
         auto [s, list] = c;
-        uint64_t hash1= getHashesForShape_singleRotation(grayImg1, s, 0);
+        uint64_t hash1= getHashesForShape_singleRotation(grayImg1, s, 0, zoom);
         for (auto l : list)
         {
             //hm...we can do it for 360 degree rotations
             auto [s2, perc] = l;
             //getHashesForShape
             //vector<tuple<ring_t, uint64_t, int>>
-            vector<uint64_t> hashes = getHashesForShape(grayImg2, s2, 360, 1);
+            vector<uint64_t> hashes = getHashesForShape(grayImg2, s2, 360, 1, 32, 0, zoom);
             int min_hash_distance = -1;
             for (uint64_t hash2 : hashes)
             {

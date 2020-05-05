@@ -1,5 +1,4 @@
 #include <opencv2/core.hpp>
-#include <opencv2/imgcodecs.hpp>
 
 #include "search.h"
 
@@ -191,9 +190,10 @@ map<string, map<string, vector< tuple<uint64_t, uint64_t, int> >>> findMatchesBe
     return resmap.begin()->second;
 }
 
-map<string, map<string, tuple<ring_t, ring_t, vector<tuple<uint64_t, uint64_t, int, int>>> >> findInvalidMatches(
+map<string, map<string, tuple<ring_t, ring_t, vector<tuple<uint64_t, uint64_t, int, int>>> >> findInvalidMatches_prepopulatedDatabase(
         Mat queryImage,
-        Mat databaseImage,
+        ImageHashDatabase &localDatabase,
+        string databaseImgKey,
         Mat databaseToQuery_CVMat,
         int thresh,
         int ratio,
@@ -202,20 +202,6 @@ map<string, map<string, tuple<ring_t, ring_t, vector<tuple<uint64_t, uint64_t, i
         int areaThresh,
         double zoom)
 {
-    //FIXME: allow passing in a preloaded database
-    ImageHashDatabase localDatabase;
-    addImageToSearchTree(
-            localDatabase,
-            "None",
-            databaseImage,
-            thresh,
-            ratio,
-            kernel_size,
-            blur_width,
-            areaThresh,
-            zoom);
-
-    localDatabase.tree.build(20, nullptr);
 
     auto matches = findDetailedMatches(
             localDatabase,
@@ -230,7 +216,7 @@ map<string, map<string, tuple<ring_t, ring_t, vector<tuple<uint64_t, uint64_t, i
     map<string, map<string, tuple<ring_t, ring_t, vector<tuple<uint64_t, uint64_t, int, int>>> >> ret;
     auto databaseToQuery_boostMat = convertCVMatrixToBoost(databaseToQuery_CVMat);
 
-    for (auto [queryImageShape_str, v] : matches["None"])
+    for (auto [queryImageShape_str, v] : matches[databaseImgKey])
     {
         ring_t queryImageShape;
         bg::read_wkt(queryImageShape_str, queryImageShape);
@@ -258,5 +244,46 @@ map<string, map<string, tuple<ring_t, ring_t, vector<tuple<uint64_t, uint64_t, i
         }
     }
     return ret;
+}
+
+
+map<string, map<string, tuple<ring_t, ring_t, vector<tuple<uint64_t, uint64_t, int, int>>> >> findInvalidMatches(
+        Mat queryImage,
+        Mat databaseImage,
+        Mat databaseToQuery_CVMat,
+        int thresh,
+        int ratio,
+        int kernel_size,
+        int blur_width,
+        int areaThresh,
+        double zoom)
+{
+    //FIXME: allow passing in a preloaded database
+    ImageHashDatabase localDatabase;
+
+    addImageToSearchTree(
+            localDatabase,
+            "None",
+            databaseImage,
+            thresh,
+            ratio,
+            kernel_size,
+            blur_width,
+            areaThresh,
+            zoom);
+
+    localDatabase.tree.build(20, nullptr);
+
+    return findInvalidMatches_prepopulatedDatabase(
+            queryImage,
+            localDatabase,
+            "None",
+            databaseToQuery_CVMat,
+            thresh,
+            ratio,
+            kernel_size,
+            blur_width,
+            areaThresh,
+            zoom);
 }
 

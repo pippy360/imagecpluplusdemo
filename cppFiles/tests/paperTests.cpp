@@ -72,7 +72,7 @@ void loadDatabase(ImageHashDatabase &database, vector<string> files)
 #define SIN(x) sin(x * 3.141592653589/180.0)
 #define COS(x) cos(x * 3.141592653589/180.0)
 
-tuple<int, map<string, int>> searchWithRotation(ImageHashDatabase &database, string imagePath, double rotation)
+pt::ptree searchWithRotation(ImageHashDatabase &database, string imagePath, double rotation)
 {
     const cv::Mat databaseImg = cv::imread(imagePath, cv::IMREAD_GRAYSCALE);
     const cv::Mat databaseImg_clr = cv::imread(imagePath);
@@ -81,15 +81,14 @@ tuple<int, map<string, int>> searchWithRotation(ImageHashDatabase &database, str
                        -SIN(rotation), COS(rotation), 0,
                        0, 0, 1);
 
+    return getMatchesForTransformation_json(database, databaseImg, imagePath, m33);
 
-    auto [queryImg, queryImgToDatabase_mat] = transfromImage_keepVisable(databaseImg, m33);
-    auto [queryImg_clr, ignore] = transfromImage_keepVisable(databaseImg_clr, m33);
+//    pt::write_json(std::cout, jsonOutput);
 
-    tuple<int, map<string, int>> res;
 
-    {
-        map<string, map<string, tuple<ring_t, ring_t, vector<tuple<uint64_t, uint64_t, int, int>>> >> invalids =
-                findInvalidMatches(queryImg, databaseImg, queryImgToDatabase_mat);
+//    auto [queryImg, queryImgToDatabase_mat] = transfromImage_keepVisable(databaseImg, m33);
+//    auto [queryImg_clr, ignore] = transfromImage_keepVisable(databaseImg_clr, m33);
+
 
 //        for (auto [queryImgStr, v] : invalids)
 //        {
@@ -126,19 +125,6 @@ tuple<int, map<string, int>> searchWithRotation(ImageHashDatabase &database, str
 //            imshow("dst", dst);
 //            waitKey(0);
 //        }
-
-        get<0>(res) = invalids.size();
-    }
-
-
-    {
-        auto detailedMatches = findDetailedMatches(database, queryImg);
-
-        for (auto [k, v] : detailedMatches) {
-            get<1>(res)[k] = v.size();
-        }
-    }
-    return res;
 }
 
 TEST(papertest, findDetailedMatches)
@@ -153,18 +139,20 @@ TEST(papertest, findDetailedMatches)
 
     searchWithRotation(database, "../webFiles/images/richandmalty.jpg", 90);
 
+
+    //Add the valid image name
+    //and the chart title
+    pt::ptree root;
     for (int i = 0; i < 360; i++)
     {
+        cout << i << endl;
+        stringstream ss;
+        ss << "Rotation_" << i;
         auto ret = searchWithRotation(database, "../webFiles/images/richandmalty.jpg", i);
-
-        cout << endl << "Results:" << endl << endl;
-        //FIXME: check if the image name is wrong and print as invalid
-        for (auto [k, v] : get<1>(ret)) {
-//            if (k.compare("../webFiles/images/richandmalty.jpg") != 0)
-            cout << k << " : " << v << endl;
-        }
-        cout << "Invalid matches in the same image: " << get<0>(ret) << endl << endl;
+        root.add_child(ss.str(), ret);
     }
+
+    pt::write_json("output_zoom1.json", root);
 }
 
 

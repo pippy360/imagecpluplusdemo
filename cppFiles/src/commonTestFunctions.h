@@ -19,6 +19,8 @@
 #include "PerceptualHash.hpp"
 #include "mainImageProcessingFunctions.hpp"
 
+#include "search.h"
+
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <iostream>
@@ -26,6 +28,17 @@
 #include <algorithm>
 #include <chrono>
 #include <iostream>
+
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/foreach.hpp>
+#include <string>
+#include <set>
+#include <exception>
+#include <iostream>
+
+
+namespace pt = boost::property_tree;
 
 
 tuple<Mat, Mat> transfromImage_keepVisable(Mat img_in, cv::Matx33d transmat);
@@ -38,6 +51,31 @@ vector<tuple<ring_t, vector<tuple<ring_t, double, int>>>> compareImages(Mat img_
                    int areaThresh,
                    double zoom,
                    Mat transmat);
+
+tuple<int, map<string, int>> getMatchesForTransformation(
+                    ImageHashDatabase &database,
+                    Mat databaseImg,
+                    string databaseImgKey,
+                    Matx33f m33,
+                    int thresh=CANNY_THRESH,
+                    int ratio=CANNY_RATIO,
+                    int kernel_size=CANNY_KERNEL_SIZE,
+                    int blur_width=CANNY_BLUR_WIDTH,
+                    int areaThresh=CANNY_AREA_THRESH,
+                    double zoom=HASH_ZOOM);
+
+pt::ptree getMatchesForTransformation_json(
+        ImageHashDatabase &database,
+        Mat databaseImg,
+        string databaseImgKey,
+        Matx33f m33,
+        int thresh=CANNY_THRESH,
+        int ratio=CANNY_RATIO,
+        int kernel_size=CANNY_KERNEL_SIZE,
+        int blur_width=CANNY_BLUR_WIDTH,
+        int areaThresh=CANNY_AREA_THRESH,
+        double zoom=HASH_ZOOM);
+
 
 double getPerctageOverlap(ring_t s1, ring_t s2, double s1_area);
 

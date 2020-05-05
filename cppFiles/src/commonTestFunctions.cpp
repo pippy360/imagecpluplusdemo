@@ -100,6 +100,92 @@ vector<tuple<ring_t, vector<tuple<ring_t, double, int>>>> compareImages(Mat img_
     return res;
 }
 
+//FIXME: test
+tuple<int, map<string, int>> getMatchesForTransformation(
+        ImageHashDatabase &database,
+        Mat databaseImg,
+        string databaseImgKey,
+        Matx33f m33,
+        int thresh,
+        int ratio,
+        int kernel_size,
+        int blur_width,
+        int areaThresh,
+        double zoom)
+{
+    auto [queryImg, queryImgToDatabase_mat] = transfromImage_keepVisable(databaseImg, m33);
+
+    tuple<int, map<string, int>> res;
+
+    {
+        map<string, map<string, tuple<ring_t, ring_t, vector<tuple<uint64_t, uint64_t, int, int>>> >> invalids;
+        invalids = findInvalidMatches_prepopulatedDatabase(queryImg, database, databaseImgKey, queryImgToDatabase_mat,
+                                       thresh,
+                                       ratio,
+                                       kernel_size,
+                                       blur_width,
+                                       areaThresh,
+                                       zoom);
+        get<0>(res) = invalids.size();
+    }
+
+    {
+        auto detailedMatches = findDetailedMatches(
+                database,
+                queryImg,
+                thresh,
+                ratio,
+                kernel_size,
+                blur_width,
+                areaThresh,
+                zoom);
+
+        for (auto [k, v] : detailedMatches) {
+            get<1>(res)[k] = v.size();
+        }
+    }
+    return res;
+}
+
+pt::ptree getMatchesForTransformation_json(
+        ImageHashDatabase &database,
+        Mat databaseImg,
+        string databaseImgKey,
+        Matx33f m33,
+        int thresh,
+        int ratio,
+        int kernel_size,
+        int blur_width,
+        int areaThresh,
+        double zoom)
+{
+    tuple<int, map<string, int>>  matches = getMatchesForTransformation(
+                            database,
+                            databaseImg,
+                            databaseImgKey,
+                            m33,
+                            thresh,
+                            ratio,
+                            kernel_size,
+                            blur_width,
+                            areaThresh,
+                            zoom);
+
+    auto [invalids, v] = matches;
+
+    pt::ptree ret;
+    ret.add("invalids", invalids);
+
+    pt::ptree databaseMatches;
+    for (auto [n, c] : v)
+    {
+        databaseMatches.put(boost::property_tree::ptree::path_type(n, '|'), c);
+    }
+    ret.add_child("databaseMatches", databaseMatches);
+
+    return ret;
+}
+
 //FIXME: test this with different image types
 tuple<Mat, Mat> transfromImage_keepVisable(Mat img_in, cv::Matx33d transmat)
 {

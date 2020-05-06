@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+
+<head>
+    <meta charset="utf-8">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.13.0/d3.min.js"></script>
+</head>
+
+<style>
+
+    .x_axis path {
+        display: none;
+    }
+
+    .bar1 {
+        fill: steelblue;
+        opacity: 0.5;
+    }
+
+    .bar2 {
+        fill: gray;
+        opacity: 0.5;
+    }
+
+</style>
+
+<body>
+
+<script>
+
+    // set the dimensions and margins of the graph
+    var margin = {top: 20, right: 20, bottom: 30, left: 40},
+        width = 960 - margin.left - margin.right,
+        height = 500 - margin.top - margin.bottom;
+
+
+    // append the svg object to the body of the page
+    // append a 'group' element to 'svg'
+    // moves the 'group' element to the top left margin
+    var svg = d3.select("body").append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g");
+        // .attr("transform",
+        //     "translate(" + margin.left + "," + margin.top + ")");
+
+    // get the data
+    d3.json("/imagecpluplusdemo2/cppFiles/output.json", function(error, data) {
+        if (error) throw error;
+        console.log(data);
+        let keys = Object.keys(data);
+        let valids_arr = [];
+        let invalids_arr = [];
+        for (let i = 0; i < keys.length; i++) {
+            let key = keys[i];
+            valids_arr.push(parseInt(data[key].databaseMatches["../webFiles/images/richandmalty.jpg"]));
+            //now invalids
+            let invalids = parseInt(data[key].invalids);
+            let keys2 = Object.keys(data[key].databaseMatches);
+            for (let j = 0; j < keys2.length; j++)
+            {
+                if (keys2[j] != "../webFiles/images/richandmalty.jpg")
+                {
+                    //add to invalids
+                    invalids += parseInt(data[key].databaseMatches[keys2[j]]);
+                }
+            }
+            invalids_arr.push(invalids);
+        }
+
+
+
+        data = [];
+        for (let i = 0; i < valids_arr.length; i++)
+        {
+            data.push([i, valids_arr[i], invalids_arr[i]]);
+        }
+        // Scale the range of the data in the domains
+        // set the ranges
+        var x = d3.scaleLinear()
+            .range([0, width])
+            .domain([-10, 380]);
+
+        var y = d3.scaleLinear()
+            .range([0, height])
+            .domain([d3.max(valids_arr), 0]);
+
+        // append the rectangles for the bar chart
+        svg.append("path")
+            .data([data])
+            // .enter().append("rect")
+            .attr("class", "bar")
+            .attr("width", 1)
+            .attr("fill", "none")
+            .attr("stroke", "steelblue")
+            .attr("stroke-width", 1)
+            .attr("d", d3.line()
+                .x(function(d) {
+                    // console.log(x(d[0]));
+                    return x(d[0])
+                })
+                .y(function(d) {
+                    return y(d[1])
+                })
+            )
+        ;
+
+        svg.append("path")
+            .data([data])
+            .attr("stroke", "red")
+            .attr("fill", "none")
+            .attr("stroke-width", 1)
+            .attr("d", d3.line()
+                .x(function(d) {
+                    console.log(x(d[0]));
+                    return x(d[0])
+                })
+                .y(function(d) {
+                    return y(d[2])
+                })
+            );
+
+        // add the x Axis
+        svg.append("g")
+            .call(d3.axisBottom(x));
+
+        // add the y Axis
+        svg.append("g")
+            .call(d3.axisLeft(y));
+
+    });
+
+    // get the data
+    d3.json("/imagecpluplusdemo2/cppFiles/output_zoom1.json", function(error, data) {
+        if (error) throw error;
+        console.log(data);
+        let keys = Object.keys(data);
+        let valids_arr = [];
+        let invalids_arr = [];
+        for (let i = 0; i < keys.length; i++) {
+            let key = keys[i];
+            valids_arr.push(parseInt(data[key].databaseMatches["../webFiles/images/richandmalty.jpg"]));
+            //now invalids
+            let invalids = parseInt(data[key].invalids);
+            let keys2 = Object.keys(data[key].databaseMatches);
+            for (let j = 0; j < keys2.length; j++)
+            {
+                if (keys2[j] != "../webFiles/images/richandmalty.jpg")
+                {
+                    //add to invalids
+                    invalids += parseInt(data[key].databaseMatches[keys2[j]]);
+                }
+            }
+            invalids_arr.push(invalids);
+        }
+
+
+
+        data = [];
+        for (let i = 0; i < valids_arr.length; i++)
+        {
+            data.push([i, valids_arr[i], invalids_arr[i]]);
+        }
+        // Scale the range of the data in the domains
+        // set the ranges
+        var x = d3.scaleLinear()
+            .range([0, width])
+            .domain([-10, 380]);
+
+        var y = d3.scaleLinear()
+            .range([0, height])
+            .domain([d3.max(valids_arr), 0]);
+
+        // append the rectangles for the bar chart
+        svg.append("path")
+            .data([data])
+            // .enter().append("rect")
+            .attr("class", "bar")
+            .attr("width", 1)
+            .attr("fill", "none")
+            .attr("stroke", "pink")
+            .attr("stroke-width", 1)
+            .attr("d", d3.line()
+                .x(function(d) {
+                    // console.log(x(d[0]));
+                    return x(d[0])
+                })
+                .y(function(d) {
+                    return y(d[1])
+                })
+            )
+        ;
+
+        svg.append("path")
+            .data([data])
+            .attr("stroke", "black")
+            .attr("fill", "none")
+            .attr("stroke-width", 1)
+            .attr("d", d3.line()
+                .x(function(d) {
+                    console.log(x(d[0]));
+                    return x(d[0])
+                })
+                .y(function(d) {
+                    return y(d[2])
+                })
+            );
+
+        // add the x Axis
+        svg.append("g")
+            .call(d3.axisBottom(x));
+
+        // add the y Axis
+        svg.append("g")
+            .call(d3.axisLeft(y));
+
+    });
+
+</script>
+
+
+</body>
+</html>

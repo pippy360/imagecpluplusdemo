@@ -78,46 +78,46 @@
         // set the ranges
         var x = d3.scaleLinear()
             .range([0, width])
-            .domain([-10, 380]);
+            .domain([-10, 1000]);
 
         var y = d3.scaleLinear()
             .range([0, height])
             .domain([d3.max(valids_arr), 0]);
 
-        // append the rectangles for the bar chart
-        svg.append("path")
-            .data([data])
-            // .enter().append("rect")
-            .attr("class", "bar")
-            .attr("width", 1)
-            .attr("fill", "none")
-            .attr("stroke", "steelblue")
-            .attr("stroke-width", 1)
-            .attr("d", d3.line()
-                .x(function(d) {
-                    // console.log(x(d[0]));
-                    return x(d[0])
-                })
-                .y(function(d) {
-                    return y(d[1])
-                })
-            )
-        ;
-
-        svg.append("path")
-            .data([data])
-            .attr("stroke", "red")
-            .attr("fill", "none")
-            .attr("stroke-width", 1)
-            .attr("d", d3.line()
-                .x(function(d) {
-                    console.log(x(d[0]));
-                    return x(d[0])
-                })
-                .y(function(d) {
-                    return y(d[2])
-                })
-            );
+        // // append the rectangles for the bar chart
+        // svg.append("path")
+        //     .data([data])
+        //     // .enter().append("rect")
+        //     .attr("class", "bar")
+        //     .attr("width", 1)
+        //     .attr("fill", "none")
+        //     .attr("stroke", "steelblue")
+        //     .attr("stroke-width", 1)
+        //     .attr("d", d3.line()
+        //         .x(function(d) {
+        //             // console.log(x(d[0]));
+        //             return x(d[0])
+        //         })
+        //         .y(function(d) {
+        //             return y(d[1])
+        //         })
+        //     )
+        // ;
+        //
+        // svg.append("path")
+        //     .data([data])
+        //     .attr("stroke", "red")
+        //     .attr("fill", "none")
+        //     .attr("stroke-width", 1)
+        //     .attr("d", d3.line()
+        //         .x(function(d) {
+        //             console.log(x(d[0]));
+        //             return x(d[0])
+        //         })
+        //         .y(function(d) {
+        //             return y(d[2])
+        //         })
+        //     );
 
         // add the x Axis
         svg.append("g")
@@ -164,7 +164,95 @@
         // set the ranges
         var x = d3.scaleLinear()
             .range([0, width])
-            .domain([-10, 380]);
+            .domain([-10, 1000]);
+
+        var y = d3.scaleLinear()
+            .range([0, height])
+            .domain([d3.max(valids_arr), 0]);
+
+        // // append the rectangles for the bar chart
+        // svg.append("path")
+        //     .data([data])
+        //     // .enter().append("rect")
+        //     .attr("class", "bar")
+        //     .attr("width", 1)
+        //     .attr("fill", "none")
+        //     .attr("stroke", "pink")
+        //     .attr("stroke-width", 1)
+        //     .attr("d", d3.line()
+        //         .x(function(d) {
+        //             // console.log(x(d[0]));
+        //             return x(d[0])
+        //         })
+        //         .y(function(d) {
+        //             return y(d[1])
+        //         })
+        //     )
+        // ;
+
+        // svg.append("path")
+        //     .data([data])
+        //     .attr("stroke", "black")
+        //     .attr("fill", "none")
+        //     .attr("stroke-width", 1)
+        //     .attr("d", d3.line()
+        //         .x(function(d) {
+        //             console.log(x(d[0]));
+        //             return x(d[0])
+        //         })
+        //         .y(function(d) {
+        //             return y(d[2])
+        //         })
+        //     );
+
+        // add the x Axis
+        svg.append("g")
+            .call(d3.axisBottom(x));
+
+        // add the y Axis
+        svg.append("g")
+            .call(d3.axisLeft(y));
+
+    });
+
+    // get the data
+    d3.json("/imagecpluplusdemo2/cppFiles/output_all_images.json", function(error, data) {
+        if (error) throw error;
+        console.log(data);
+        let valids_arr = [];
+        let invalids_arr = [];
+        let _keys = Object.keys(data);
+        debugger;
+        for (let k = 0; k < _keys.length; k++) {
+            let keys = Object.keys(data[_keys[k]]);
+            for (let i = 0; i < keys.length; i++) {
+                let key = keys[i];
+                valids_arr.push(parseInt(data[_keys[k]][key].databaseMatches[_keys[k]]));
+                //now invalids
+                let invalids = parseInt(data[_keys[k]][key].invalids);
+                let keys2 = Object.keys(data[_keys[k]][key].databaseMatches);
+                for (let j = 0; j < keys2.length; j++)
+                {
+                    if (keys2[j] != _keys[k])
+                    {
+                        //add to invalids
+                        invalids += parseInt(data[_keys[k]][key].databaseMatches[keys2[j]]);
+                    }
+                }
+                invalids_arr.push(invalids);
+            }
+        }
+
+        data = [];
+        for (let i = 0; i < valids_arr.length; i++)
+        {
+            data.push([i, valids_arr[i], invalids_arr[i]]);
+        }
+        // Scale the range of the data in the domains
+        // set the ranges
+        var x = d3.scaleLinear()
+            .range([0, width])
+            .domain([-10, 1000]);
 
         var y = d3.scaleLinear()
             .range([0, height])
@@ -177,14 +265,15 @@
             .attr("class", "bar")
             .attr("width", 1)
             .attr("fill", "none")
-            .attr("stroke", "pink")
+            .attr("stroke", "green")
             .attr("stroke-width", 1)
             .attr("d", d3.line()
                 .x(function(d) {
-                    // console.log(x(d[0]));
+                    console.log(x(d[0]));
                     return x(d[0])
                 })
                 .y(function(d) {
+                    console.log(y(d[1]));
                     return y(d[1])
                 })
             )

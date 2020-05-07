@@ -131,28 +131,36 @@ TEST(papertest, findDetailedMatches)
 {
     ImageHashDatabase database;
 
-    loadDatabase(database, {
+    vector<string> images = {
             "../webFiles/images/download_3.png",
             "../webFiles/images/richandmalty.jpg",
             "../webFiles/images/tech.png"
-    });
+    };
+
+    loadDatabase(database, images);
 
     searchWithRotation(database, "../webFiles/images/richandmalty.jpg", 90);
 
 
     //Add the valid image name
     //and the chart title
+    //for each image...
     pt::ptree root;
-    for (int i = 0; i < 360; i++)
+    for (auto imagePath : images)
     {
-        cout << i << endl;
-        stringstream ss;
-        ss << "Rotation_" << i;
-        auto ret = searchWithRotation(database, "../webFiles/images/richandmalty.jpg", i);
-        root.add_child(ss.str(), ret);
+        pt::ptree imgroot;
+        for (int i = 0; i < 360; i++)
+        {
+            cout << i << endl;
+            stringstream ss;
+            ss << "Rotation_" << i;
+            auto ret = searchWithRotation(database, imagePath, i);
+            imgroot.add_child(ss.str(), ret);
+        }
+        root.add_child(pt::ptree::path_type(imagePath, '|'), imgroot);
     }
 
-    pt::write_json("output_zoom1.json", root);
+    pt::write_json("output_all_images.json", root);
 }
 
 

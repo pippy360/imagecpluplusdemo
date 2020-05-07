@@ -118,15 +118,6 @@ map<string, map<string, map<string, vector< tuple<uint64_t, uint64_t, int> >>>> 
                     auto [resShape, resShapeStr, resImgIdx] = database.shapesStrCache[shapeIdx];
                     string imgPath = database.imagePaths[resImgIdx];
 
-                    if ( m.find(imgPath) == m.end() )
-                        m[imgPath] = map<string, map<string, vector< tuple<uint64_t, uint64_t, int> >>>();
-
-                    if ( m[imgPath].find(queryShape_str) == m[imgPath].end() )
-                        m[imgPath][queryShape_str] = map<string, vector< tuple<uint64_t, uint64_t, int> >>();
-
-                    if ( m[imgPath][queryShape_str].find(resShapeStr) == m[imgPath][queryShape_str].end() )
-                        m[imgPath][queryShape_str][resShapeStr] = vector< tuple<uint64_t, uint64_t, int> >();
-
                     m[imgPath][queryShape_str][resShapeStr].push_back(make_tuple(resHash, queryHash, rotation));
                 }
             }
@@ -221,8 +212,10 @@ map<string, map<string, tuple<ring_t, ring_t, vector<tuple<uint64_t, uint64_t, i
         ring_t queryImageShape;
         bg::read_wkt(queryImageShape_str, queryImageShape);
 
-        for (auto [databaseShape_str, ml] : v) {
-            for (auto [hash1, hash2, rotation] : ml) {
+        for (auto [databaseShape_str, ml] : v)
+        {
+            for (auto [hash1, hash2, rotation] : ml)
+            {
                 ring_t databaseShape;
                 bg::read_wkt(databaseShape_str, databaseShape);
                 ring_t outPoly;
@@ -231,13 +224,6 @@ map<string, map<string, tuple<ring_t, ring_t, vector<tuple<uint64_t, uint64_t, i
                 int dist = ImageHash::bitCount(hash1 ^ hash2);
                 if (dist < MATCHING_HASH_DIST && getPerctageOverlap(outPoly, queryImageShape) < .90)
                 {
-                    if ( ret.find(queryImageShape_str) == ret.end() )
-                        ret[queryImageShape_str] = map<string, tuple<ring_t, ring_t, vector<tuple<uint64_t, uint64_t, int, int>>> >();
-
-                    if ( ret[queryImageShape_str].find(databaseShape_str) == ret[queryImageShape_str].end() )
-                        ret[queryImageShape_str][databaseShape_str] =
-                                make_tuple(queryImageShape, databaseShape, vector<tuple<uint64_t, uint64_t, int, int>>());
-
                     get<2>(ret[queryImageShape_str][databaseShape_str]).push_back(make_tuple(hash1, hash2, rotation, dist));
                 }
             }

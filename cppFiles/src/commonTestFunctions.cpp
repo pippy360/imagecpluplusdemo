@@ -14,7 +14,7 @@ double getPerctageOverlap(ring_t s1, ring_t s2, double s1_area) {
     for (auto p : output)
         area += bg::area(p);
 
-    return ((area/s1_area) + (area/s2_area))/2.0;
+    return ((area / s1_area) + (area / s2_area)) / 2.0;
 }
 
 double getPerctageOverlap(ring_t s1, ring_t s2) {
@@ -23,8 +23,7 @@ double getPerctageOverlap(ring_t s1, ring_t s2) {
 }
 
 vector<tuple<ring_t, vector<tuple<ring_t, double>>>> compareShapes(vector<ring_t> img1shape,
-        vector<ring_t> img2shapes, Mat trans)
-{
+                                                                   vector<ring_t> img2shapes, Mat trans) {
     vector<tuple<ring_t, vector<tuple<ring_t, double>>>> res;
 
     Mat outRot;
@@ -52,14 +51,13 @@ vector<tuple<ring_t, vector<tuple<ring_t, double>>>> compareShapes(vector<ring_t
 }
 
 vector<tuple<ring_t, vector<tuple<ring_t, double, int>>>> compareImages(Mat img_in, Mat img_in2,
-                   int thresh,
-                   int ratio,
-                   int kernel_size,
-                   int blur_width,
-                   int areaThresh,
-                   double zoom,
-                   Mat transmat)
-{
+                                                                        int thresh,
+                                                                        int ratio,
+                                                                        int kernel_size,
+                                                                        int blur_width,
+                                                                        int areaThresh,
+                                                                        double zoom,
+                                                                        Mat transmat) {
     Mat grayImg1 = convertToGrey(img_in);
     auto shapes1 = extractShapes(thresh, ratio, kernel_size, blur_width, areaThresh, grayImg1);
     Mat grayImg2 = convertToGrey(img_in2);
@@ -70,25 +68,21 @@ vector<tuple<ring_t, vector<tuple<ring_t, double, int>>>> compareImages(Mat img_
     auto comparedShapes = compareShapes(shapes1, shapes2, transmat);
 
     vector<tuple<ring_t, vector<tuple<ring_t, double, int>>>> res;
-    for (auto c : comparedShapes)
-    {
+    for (auto c : comparedShapes) {
         vector<tuple<ring_t, double, int>> res_part;
 
-        auto [s, list] = c;
-        uint64_t hash1= getHashesForShape_singleRotation(grayImg1, s, 0, zoom);
-        for (auto l : list)
-        {
+        auto[s, list] = c;
+        uint64_t hash1 = getHashesForShape_singleRotation(grayImg1, s, 0, zoom);
+        for (auto l : list) {
             //hm...we can do it for 360 degree rotations
-            auto [s2, perc] = l;
+            auto[s2, perc] = l;
             //getHashesForShape
             //vector<tuple<ring_t, uint64_t, int>>
             vector<uint64_t> hashes = getHashesForShape(grayImg2, s2, 360, 1, 32, 0, zoom);
             int min_hash_distance = -1;
-            for (uint64_t hash2 : hashes)
-            {
+            for (uint64_t hash2 : hashes) {
                 int hash_dist = ImageHash::bitCount(hash1 ^ hash2);
-                if (min_hash_distance == -1 || hash_dist < min_hash_distance)
-                {
+                if (min_hash_distance == -1 || hash_dist < min_hash_distance) {
                     min_hash_distance = hash_dist;
                 }
             }
@@ -101,7 +95,7 @@ vector<tuple<ring_t, vector<tuple<ring_t, double, int>>>> compareImages(Mat img_
 }
 
 //FIXME: test
-tuple<int, map<string, int>> getMatchesForTransformation(
+tuple<pair<int, int>, map<string, int>> getMatchesForTransformation(
         ImageHashDatabase &database,
         Mat databaseImg,
         string databaseImgKey,
@@ -111,22 +105,50 @@ tuple<int, map<string, int>> getMatchesForTransformation(
         int kernel_size,
         int blur_width,
         int areaThresh,
-        double zoom)
-{
-    auto [queryImg, queryImgToDatabase_mat] = transfromImage_keepVisable(databaseImg, m33);
+        double zoom) {
+    auto[queryImg, queryImgToDatabase_mat] = transfromImage_keepVisable(databaseImg, m33);
 
-    tuple<int, map<string, int>> res;
+    tuple<pair<int, int>, map<string, int>> res;
 
     {
-        map<string, map<string, tuple<ring_t, ring_t, vector<tuple<uint64_t, uint64_t, int, int>>> >> invalids;
-        invalids = findInvalidMatches_prepopulatedDatabase(queryImg, database, databaseImgKey, queryImgToDatabase_mat,
-                                       thresh,
-                                       ratio,
-                                       kernel_size,
-                                       blur_width,
-                                       areaThresh,
-                                       zoom);
-        get<0>(res) = invalids.size();
+        auto validsAndInvalids = findDetailedSameImageMatches_prepopulatedDatabase(queryImg, database, databaseImgKey,
+                                                                                   queryImgToDatabase_mat,
+                                                                                   thresh,
+                                                                                   ratio,
+                                                                                   kernel_size,
+                                                                                   blur_width,
+                                                                                   areaThresh,
+                                                                                   zoom);
+        pair<int, int> validAndInvalidsCount;
+        {
+            auto invalidsCount = 0;
+            for (auto [queryShape, v1] : validsAndInvalids[0])
+            {
+                for (auto [databaseShapeStr, v2] : v1) {
+                    auto [s1, s2, actualMatches] = v2;
+                    invalidsCount += actualMatches.size();
+                }
+            }
+            cout << "invalidsCount: " << invalidsCount << endl;
+            get<0>(validAndInvalidsCount) = invalidsCount;
+        }
+
+        {
+            auto validsCount = 0;
+            for (auto [queryShape, v1] : validsAndInvalids[1])
+            {
+                for (auto [databaseShapeStr, v2] : v1) {
+                    //FIXME: do we want to seperate out same rotation matches??? we should plot these too
+
+                    auto [s1, s2, actualMatches] = v2;
+                    validsCount += actualMatches.size();
+                }
+            }
+            cout << "validsCount: " << validsCount << endl;
+            get<1>(validAndInvalidsCount) = validsCount;
+        }
+
+        get<0>(res) = validAndInvalidsCount;
     }
 
     {
@@ -140,8 +162,14 @@ tuple<int, map<string, int>> getMatchesForTransformation(
                 areaThresh,
                 zoom);
 
-        for (auto [k, v] : detailedMatches) {
-            get<1>(res)[k] = v.size();
+        for (auto[imagePath, v] : detailedMatches)
+        {
+            auto count = 0;
+            for (auto [queryShapeStr, v1] : v)
+                for (auto [databaseShapeStr, actualMatches] : v1)
+                        count += actualMatches.size();
+
+            get<1>(res)[imagePath] = count;
         }
     }
     return res;
@@ -149,6 +177,7 @@ tuple<int, map<string, int>> getMatchesForTransformation(
 
 pt::ptree getMatchesForTransformation_json(
         ImageHashDatabase &database,
+        map<string, int> &imageMismatches,
         Mat databaseImg,
         string databaseImgKey,
         Matx33f m33,
@@ -159,36 +188,119 @@ pt::ptree getMatchesForTransformation_json(
         int areaThresh,
         double zoom)
 {
-    tuple<int, map<string, int>>  matches = getMatchesForTransformation(
-                            database,
-                            databaseImg,
-                            databaseImgKey,
-                            m33,
-                            thresh,
-                            ratio,
-                            kernel_size,
-                            blur_width,
-                            areaThresh,
-                            zoom);
+    tuple<pair<int, int>, map<string, int>> matches = getMatchesForTransformation(
+            database,
+            databaseImg,
+            databaseImgKey,
+            m33,
+            thresh,
+            ratio,
+            kernel_size,
+            blur_width,
+            areaThresh,
+            zoom);
 
-    auto [invalids, v] = matches;
+    auto [iv, v] = matches;
+    auto invalids = get<0>(iv);
+    auto valids = get<1>(iv);
+    int otherImageMismatches = 0;
+    int matchesCount;
+    for (auto[n, c] : v) {
+        if (databaseImgKey.compare(n) == 0) {
+            //FIXME: we haven't checked if these are actually valid matches
+            matchesCount = c;
+        } else {
+            imageMismatches[n] += c;
+            otherImageMismatches += c;
+        }
+    }
 
     pt::ptree ret;
-    ret.add("invalids", invalids);
+    ret.add("sameImageMismatches", invalids);
+    ret.add("otherImageMismatches", otherImageMismatches);
+    ret.add("__ignore__", matchesCount);
 
-    pt::ptree databaseMatches;
-    for (auto [n, c] : v)
-    {
-        databaseMatches.put(boost::property_tree::ptree::path_type(n, '|'), c);
-    }
-    ret.add_child("databaseMatches", databaseMatches);
-
+    cout << matchesCount << " = "<< valids << " + " << invalids << endl;
+    assert((invalids+valids) == matchesCount);
     return ret;
 }
 
+//FIXME: we haven't tested this yet
+vector<vector<int>> getMatchesForTransformation_hashDistances(
+        ImageHashDatabase &database,
+        Mat databaseImg,
+        string databaseImgKey,
+        Matx33f m33,
+        int thresh,
+        int ratio,
+        int kernel_size,
+        int blur_width,
+        int areaThresh,
+        double zoom) {
+    auto[queryImg, queryImgToDatabase_mat] = transfromImage_keepVisable(databaseImg, m33);
+
+    vector<int> invalidsHashDistCount(64, 0);
+    vector<int> validsHashDistCount(64, 0);
+
+    {
+        auto invalidsAndValids = findDetailedSameImageMatches_prepopulatedDatabase(queryImg,
+                                                                                   database,
+                                                                                   databaseImgKey,
+                                                                                   queryImgToDatabase_mat,
+                                                                                   thresh,
+                                                                                   ratio,
+                                                                                   kernel_size,
+                                                                                   blur_width,
+                                                                                   areaThresh,
+                                                                                   zoom);
+        map<string, map<string, tuple<ring_t, ring_t, vector<tuple<uint64_t, uint64_t, int, int>>> >> invalids = invalidsAndValids[0];
+
+        //get the hash histances and add them to our count
+        for (auto[k1, v1] : invalids) {
+            for (auto[k2, v2] : v1) {
+                auto[s1, s2, v] = v2;
+                for (auto[h1, h2, rotation, hashDistance] : v) {
+                    invalidsHashDistCount[hashDistance] += 1;
+                }
+            }
+        }
+    }
+
+    vector<int> valids(64, 0);
+
+    {
+        map<string, map<string, map<string, vector< tuple<uint64_t, uint64_t, int, int> >>>> detailedMatches = findDetailedMatches(
+                database,
+                queryImg,
+                thresh,
+                ratio,
+                kernel_size,
+                blur_width,
+                areaThresh,
+                zoom);
+
+        //add everything that isn't our key to the invalids
+        for (auto [k, v] : detailedMatches)
+        {
+            if (databaseImgKey.compare(k) == 0)
+                continue;
+
+            for (auto [s1, m1] : v) {
+                for (auto [s2, vt] : m1) {
+                    for (auto [shape1, shape2, rot, dist] : vt) {
+                        validsHashDistCount[dist] += 1;
+                    }
+                }
+            }
+        }
+    }
+
+    return {invalidsHashDistCount, validsHashDistCount};
+}
+
+
 //FIXME: test this with different image types
-tuple<Mat, Mat> transfromImage_keepVisable(Mat img_in, cv::Matx33d transmat)
-{
+tuple<Mat, Mat> transfromImage_keepVisable(Mat img_in, cv::Matx33d transmat) {
     std::vector<Point2f> vec;
     std::vector<Point2f> outvec;
 
@@ -205,8 +317,8 @@ tuple<Mat, Mat> transfromImage_keepVisable(Mat img_in, cv::Matx33d transmat)
     cv::Rect r = cv::boundingRect(outvec);
 
     if (r.x < 0 || r.y < 0) {
-        double xmove = (r.x < 0)? -r.x : 0;
-        double ymove = (r.y < 0)? -r.y : 0;
+        double xmove = (r.x < 0) ? -r.x : 0;
+        double ymove = (r.y < 0) ? -r.y : 0;
 
         cv::Matx33d m_in(1.0, 0.0, xmove,
                          0.0, 1.0, ymove,
@@ -219,7 +331,7 @@ tuple<Mat, Mat> transfromImage_keepVisable(Mat img_in, cv::Matx33d transmat)
 
     //so we need to calculate the size of the output image? right?
     //FIXME: test this type stuff here...will this work with jpgs????
-    Mat outputImage = Mat::zeros(r.y+r.height, r.x+r.width, img_in.type());
+    Mat outputImage = Mat::zeros(r.y + r.height, r.x + r.width, img_in.type());
     warpAffine(img_in, outputImage, dynTransMat, outputImage.size());
 
     return make_tuple(outputImage, dynTransMat);

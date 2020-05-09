@@ -52,7 +52,7 @@ vector<tuple<ring_t, vector<tuple<ring_t, double, int>>>> compareImages(Mat img_
                    double zoom,
                    Mat transmat);
 
-tuple<int, map<string, int>> getMatchesForTransformation(
+tuple<pair<int, int>, map<string, int>> getMatchesForTransformation(
                     ImageHashDatabase &database,
                     Mat databaseImg,
                     string databaseImgKey,
@@ -66,6 +66,7 @@ tuple<int, map<string, int>> getMatchesForTransformation(
 
 pt::ptree getMatchesForTransformation_json(
         ImageHashDatabase &database,
+        map<string, int> &imgMismatches,
         Mat databaseImg,
         string databaseImgKey,
         Matx33f m33,

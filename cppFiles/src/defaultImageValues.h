@@ -11,12 +11,12 @@
 #define CANNY_BLUR_WIDTH 3
 #define CANNY_AREA_THRESH 200
 
-#define HASH_ZOOM 0.4
+#define HASH_ZOOM .4
 
 #define SMOOTH_CONTOURS_EPSILON 1
 #define SMOOTH_CONTOURS_BOOL true
 
-#define MATCHING_HASH_DIST 8
+#define MATCHING_HASH_DIST 4
 
 //FIXME: group all these default and comment each group
 #define NUMBER_OF_IMAGE_RESIZES 1 //FIXME: comment all these in this file

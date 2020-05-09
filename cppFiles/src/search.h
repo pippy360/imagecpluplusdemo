@@ -26,7 +26,7 @@ public:
     {};
 };
 
-map<string, map<string, vector< tuple<uint64_t, uint64_t, int> >>> findMatchesBetweenTwoImages(
+map<string, map<string, vector< tuple<uint64_t, uint64_t, int, int> >>> findMatchesBetweenTwoImages(
         cv::Mat img_in,
         cv::Mat img_in2,
         int thresh=CANNY_THRESH,
@@ -50,7 +50,7 @@ void addImageToSearchTree(
         double zoom=HASH_ZOOM
             );
 
-map<string, map<string, map<string, vector< tuple<uint64_t, uint64_t, int> >>>> findDetailedMatches(
+map<string, map<string, map<string, vector< tuple<uint64_t, uint64_t, int, int> >>>> findDetailedMatches(
         ImageHashDatabase &database,
         Mat img_in2,
         int thresh=CANNY_THRESH,
@@ -61,7 +61,21 @@ map<string, map<string, map<string, vector< tuple<uint64_t, uint64_t, int> >>>> 
         double zoom=HASH_ZOOM
             );
 
-map<string, map<string, tuple<ring_t, ring_t, vector<tuple<uint64_t, uint64_t, int, int>>> >> findInvalidMatches(
+
+vector<map<string, map<string, tuple<ring_t, ring_t, vector<tuple<uint64_t, uint64_t, int, int>>> >>> findDetailedSameImageMatches_prepopulatedDatabase(
+        Mat queryImage,
+        ImageHashDatabase &localDatabase,
+        string databaseKey,
+        Mat databaseToQuery_CVMat,
+        int thresh=CANNY_THRESH,
+        int ratio=CANNY_RATIO,
+        int kernel_size=CANNY_KERNEL_SIZE,
+        int blur_width=CANNY_BLUR_WIDTH,
+        int areaThresh=CANNY_AREA_THRESH,
+        double zoom=HASH_ZOOM
+            );
+
+vector<map<string, map<string, tuple<ring_t, ring_t, vector<tuple<uint64_t, uint64_t, int, int>>> >>> findDetailedSameImageMatches(
         Mat queryImage,
         Mat databaseImage,
         Mat databaseToQuery_CVMat,
@@ -73,18 +87,5 @@ map<string, map<string, tuple<ring_t, ring_t, vector<tuple<uint64_t, uint64_t, i
         double zoom=HASH_ZOOM
             );
 
-
-map<string, map<string, tuple<ring_t, ring_t, vector<tuple<uint64_t, uint64_t, int, int>>> >> findInvalidMatches_prepopulatedDatabase(
-        Mat queryImage,
-        ImageHashDatabase &localDatabase,
-        string databaseKey,
-        Mat databaseToQuery_CVMat,
-        int thresh=CANNY_THRESH,
-        int ratio=CANNY_RATIO,
-        int kernel_size=CANNY_KERNEL_SIZE,
-        int blur_width=CANNY_BLUR_WIDTH,
-        int areaThresh=CANNY_AREA_THRESH,
-        double zoom=HASH_ZOOM
-                );
 
 #endif //IMAGECPLUPLUSDEMO2_SEARCH_H

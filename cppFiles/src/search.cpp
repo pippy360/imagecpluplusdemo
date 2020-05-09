@@ -65,7 +65,8 @@ string shapeToString(ring_t shape) {
     return ss.str();
 }
 
-map<string, map<string, map<string, vector< tuple<uint64_t, uint64_t, int> >>>> findDetailedMatches(
+//FIXME: we aren't checking if these are valid matches...fuck....
+map<string, map<string, map<string, vector< tuple<uint64_t, uint64_t, int, int> >>>> findDetailedMatches(
         ImageHashDatabase &database,
         Mat queryImg,
         int thresh,
@@ -87,7 +88,7 @@ map<string, map<string, map<string, vector< tuple<uint64_t, uint64_t, int> >>>> 
             1,
             zoom);
 
-    map<string, map<string, map<string, vector< tuple<uint64_t, uint64_t, int> >>>> m;
+    map<string, map<string, map<string, vector< tuple<uint64_t, uint64_t, int, int> >>>> m;
     for (auto [queryShape, shapeHashes] : queryImageHashes)
     {
         string queryShape_str = shapeToString(queryShape);
@@ -118,7 +119,7 @@ map<string, map<string, map<string, vector< tuple<uint64_t, uint64_t, int> >>>> 
                     auto [resShape, resShapeStr, resImgIdx] = database.shapesStrCache[shapeIdx];
                     string imgPath = database.imagePaths[resImgIdx];
 
-                    m[imgPath][queryShape_str][resShapeStr].push_back(make_tuple(resHash, queryHash, rotation));
+                    m[imgPath][queryShape_str][resShapeStr].push_back(make_tuple(resHash, queryHash, rotation, distances[i]));
                 }
             }
         }
@@ -132,7 +133,8 @@ ImageHashDatabase *cachedDatabase;
 
 //FIXME: it's weird that img_in is the database image....this is probably a bug
 //FIXME: this is messy and can be cleaned up
-map<string, map<string, vector< tuple<uint64_t, uint64_t, int> >>> findMatchesBetweenTwoImages(
+//FIXME: split into find invalid  and valid same image matches
+map<string, map<string, vector< tuple<uint64_t, uint64_t, int, int> >>> findMatchesBetweenTwoImages(
         Mat img_in,
         Mat img_in2,
         int thresh,
@@ -176,12 +178,12 @@ map<string, map<string, vector< tuple<uint64_t, uint64_t, int> >>> findMatchesBe
             zoom);
 
     if (resmap.size() == 0)
-        return map<string, map<string, vector< tuple<uint64_t, uint64_t, int> >>>();
+        return map<string, map<string, vector< tuple<uint64_t, uint64_t, int, int> >>>();
 
     return resmap.begin()->second;
 }
 
-map<string, map<string, tuple<ring_t, ring_t, vector<tuple<uint64_t, uint64_t, int, int>>> >> findInvalidMatches_prepopulatedDatabase(
+vector<map<string, map<string, tuple<ring_t, ring_t, vector<tuple<uint64_t, uint64_t, int, int>>> >>> findDetailedSameImageMatches_prepopulatedDatabase(
         Mat queryImage,
         ImageHashDatabase &localDatabase,
         string databaseImgKey,
@@ -204,7 +206,8 @@ map<string, map<string, tuple<ring_t, ring_t, vector<tuple<uint64_t, uint64_t, i
             areaThresh,
             zoom);
 
-    map<string, map<string, tuple<ring_t, ring_t, vector<tuple<uint64_t, uint64_t, int, int>>> >> ret;
+    map<string, map<string, tuple<ring_t, ring_t, vector<tuple<uint64_t, uint64_t, int, int>>> >> invalids;
+    map<string, map<string, tuple<ring_t, ring_t, vector<tuple<uint64_t, uint64_t, int, int>>> >> valids;
     auto databaseToQuery_boostMat = convertCVMatrixToBoost(databaseToQuery_CVMat);
 
     for (auto [queryImageShape_str, v] : matches[databaseImgKey])
@@ -214,26 +217,30 @@ map<string, map<string, tuple<ring_t, ring_t, vector<tuple<uint64_t, uint64_t, i
 
         for (auto [databaseShape_str, ml] : v)
         {
-            for (auto [hash1, hash2, rotation] : ml)
+            for (auto [hash1, hash2, rotation, dist] : ml)
             {
                 ring_t databaseShape;
                 bg::read_wkt(databaseShape_str, databaseShape);
                 ring_t outPoly;
                 boost::geometry::transform(databaseShape, outPoly, databaseToQuery_boostMat);
 
-                int dist = ImageHash::bitCount(hash1 ^ hash2);
-                if (dist < MATCHING_HASH_DIST && getPerctageOverlap(outPoly, queryImageShape) < .90)
-                {
-                    get<2>(ret[queryImageShape_str][databaseShape_str]).push_back(make_tuple(hash1, hash2, rotation, dist));
+                if (dist < MATCHING_HASH_DIST && getPerctageOverlap(outPoly, queryImageShape) < .90) {
+                    //mismatch
+                    get<2>(invalids[queryImageShape_str][databaseShape_str]).push_back(make_tuple(hash1, hash2, rotation, dist));
+
+                } else if (dist < MATCHING_HASH_DIST){
+                    //match
+                    get<2>(valids[queryImageShape_str][databaseShape_str]).push_back(make_tuple(hash1, hash2, rotation, dist));
                 }
             }
         }
     }
-    return ret;
+
+    return {invalids, valids};
 }
 
 
-map<string, map<string, tuple<ring_t, ring_t, vector<tuple<uint64_t, uint64_t, int, int>>> >> findInvalidMatches(
+vector<map<string, map<string, tuple<ring_t, ring_t, vector<tuple<uint64_t, uint64_t, int, int>>> >>> findDetailedSameImageMatches(
         Mat queryImage,
         Mat databaseImage,
         Mat databaseToQuery_CVMat,
@@ -260,7 +267,7 @@ map<string, map<string, tuple<ring_t, ring_t, vector<tuple<uint64_t, uint64_t, i
 
     localDatabase.tree.build(20, nullptr);
 
-    return findInvalidMatches_prepopulatedDatabase(
+    return findDetailedSameImageMatches_prepopulatedDatabase(
             queryImage,
             localDatabase,
             "None",

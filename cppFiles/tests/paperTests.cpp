@@ -72,7 +72,8 @@ void loadDatabase(ImageHashDatabase &database, vector<string> files)
 #define SIN(x) sin(x * 3.141592653589/180.0)
 #define COS(x) cos(x * 3.141592653589/180.0)
 
-pt::ptree searchWithRotation(ImageHashDatabase &database, string imagePath, double rotation)
+pt::ptree searchWithRotation(ImageHashDatabase &database, string imagePath, double rotation,
+        map<string, int> &imageMismatches)
 {
     const cv::Mat databaseImg = cv::imread(imagePath, cv::IMREAD_GRAYSCALE);
     const cv::Mat databaseImg_clr = cv::imread(imagePath);
@@ -81,7 +82,7 @@ pt::ptree searchWithRotation(ImageHashDatabase &database, string imagePath, doub
                        -SIN(rotation), COS(rotation), 0,
                        0, 0, 1);
 
-    return getMatchesForTransformation_json(database, databaseImg, imagePath, m33);
+    return getMatchesForTransformation_json(database, imageMismatches, databaseImg, imagePath, m33);
 
 //    pt::write_json(std::cout, jsonOutput);
 
@@ -134,31 +135,105 @@ TEST(papertest, findDetailedMatches)
     vector<string> images = {
             "../webFiles/images/download_3.png",
             "../webFiles/images/richandmalty.jpg",
-            "../webFiles/images/tech.png"
+            "../webFiles/images/tech.png",
+            "../webFiles/images/forest.jpg",
+            "../webFiles/images/font.jpg"
     };
 
     loadDatabase(database, images);
 
-    searchWithRotation(database, "../webFiles/images/richandmalty.jpg", 90);
-
-
-    //Add the valid image name
-    //and the chart title
-    //for each image...
     pt::ptree root;
-    for (auto imagePath : images)
+    pt::ptree children[images.size()];
+
+//#pragma omp parallel for
+    for (int idx = 0; idx < images.size(); idx++)
     {
-        pt::ptree imgroot;
+        auto imagePath = images[idx];
+
+        map<string, int> imageMismatches;
+        pt::ptree rotations;
         for (int i = 0; i < 360; i++)
         {
             cout << i << endl;
-            stringstream ss;
-            ss << "Rotation_" << i;
-            auto ret = searchWithRotation(database, imagePath, i);
-            imgroot.add_child(ss.str(), ret);
+            auto ret = searchWithRotation(database, imagePath, i, imageMismatches);
+            rotations.push_back(make_pair("", ret));
         }
-        root.add_child(pt::ptree::path_type(imagePath, '|'), imgroot);
+
+        pt::ptree imgroot;
+        imgroot.add_child("rotations", rotations);
+        //now add the map for this image
+
+        pt::ptree misMatches;
+        for (auto [k, v] : imageMismatches)
+        {
+            misMatches.add(pt::ptree::path_type(k, '|'), v);
+        }
+
+        imgroot.add_child("rotations", rotations);
+        imgroot.add_child("misMatches", misMatches);
+        children[idx] = imgroot;
     }
+
+    for (int i = 0; i < images.size(); i++) {
+        root.add_child(pt::ptree::path_type(images[i], '|'), children[i]);
+    }
+
+
+    pt::write_json("output_all_images.json", root);
+}
+
+
+
+TEST(papertest, hashdistances)
+{
+    ImageHashDatabase database;
+
+    vector<string> images = {
+            "../webFiles/images/download_3.png",
+            "../webFiles/images/richandmalty.jpg",
+            "../webFiles/images/tech.png",
+            "../webFiles/images/forest.jpg",
+            "../webFiles/images/font.jpg"
+    };
+
+    loadDatabase(database, images);
+
+    pt::ptree root;
+    pt::ptree children[images.size()];
+
+#pragma omp parallel for
+    for (int idx = 0; idx < images.size(); idx++)
+    {
+        auto imagePath = images[idx];
+
+        map<string, int> imageMismatches;
+        pt::ptree rotations;
+        for (int i = 0; i < 360; i++)
+        {
+            cout << i << endl;
+            auto ret = searchWithRotation(database, imagePath, i, imageMismatches);
+            rotations.push_back(make_pair("", ret));
+        }
+
+        pt::ptree imgroot;
+        imgroot.add_child("rotations", rotations);
+        //now add the map for this image
+
+        pt::ptree misMatches;
+        for (auto [k, v] : imageMismatches)
+        {
+            misMatches.add(pt::ptree::path_type(k, '|'), v);
+        }
+
+        imgroot.add_child("rotations", rotations);
+        imgroot.add_child("misMatches", misMatches);
+        children[idx] = imgroot;
+    }
+
+    for (int i = 0; i < images.size(); i++) {
+        root.add_child(pt::ptree::path_type(images[i], '|'), children[i]);
+    }
+
 
     pt::write_json("output_all_images.json", root);
 }

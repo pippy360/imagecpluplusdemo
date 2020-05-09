@@ -268,8 +268,7 @@ MatWraper transfromImage_keepVisable_wrapper(
     }
     polygonString << "],";
 
-    map<string, map<string, tuple<ring_t, ring_t, vector<tuple<uint64_t, uint64_t, int, int>>> >> invalids =
-            findInvalidMatches(
+    auto validsAndInvalids = findDetailedSameImageMatches(
                     m,
                     img_in,
                     trans,
@@ -279,6 +278,8 @@ MatWraper transfromImage_keepVisable_wrapper(
                     CANNY_BLUR_WIDTH,
                     CANNY_AREA_THRESH,
                     HASH_ZOOM);
+
+    map<string, map<string, tuple<ring_t, ring_t, vector<tuple<uint64_t, uint64_t, int, int>>> >> invalids = validsAndInvalids[0];
 
     polygonString << "\"invalid\": [";
     int firstRun = true;

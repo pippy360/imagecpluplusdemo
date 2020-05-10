@@ -29,12 +29,7 @@ public:
 map<string, map<string, vector< tuple<uint64_t, uint64_t, int, int> >>> findMatchesBetweenTwoImages(
         cv::Mat img_in,
         cv::Mat img_in2,
-        int thresh=CANNY_THRESH,
-        int ratio=CANNY_RATIO,
-        int kernel_size=CANNY_KERNEL_SIZE,
-        int blur_width=CANNY_BLUR_WIDTH,
-        int areaThresh=CANNY_AREA_THRESH,
-        double zoom=HASH_ZOOM,
+        DrawingOptions d=DrawingOptions(),
         bool flushCache=true
                 );
 
@@ -42,23 +37,13 @@ void addImageToSearchTree(
         ImageHashDatabase &database,
         string imageName,
         Mat img_in,
-        int thresh=CANNY_THRESH,
-        int ratio=CANNY_RATIO,
-        int kernel_size=CANNY_KERNEL_SIZE,
-        int blur_width=CANNY_BLUR_WIDTH,
-        int areaThresh=CANNY_AREA_THRESH,
-        double zoom=HASH_ZOOM
+        DrawingOptions d=DrawingOptions()
             );
 
 map<string, map<string, map<string, vector< tuple<uint64_t, uint64_t, int, int> >>>> findDetailedMatches(
         ImageHashDatabase &database,
         Mat img_in2,
-        int thresh=CANNY_THRESH,
-        int ratio=CANNY_RATIO,
-        int kernel_size=CANNY_KERNEL_SIZE,
-        int blur_width=CANNY_BLUR_WIDTH,
-        int areaThresh=CANNY_AREA_THRESH,
-        double zoom=HASH_ZOOM
+        DrawingOptions d=DrawingOptions()
             );
 
 
@@ -67,24 +52,14 @@ vector<map<string, map<string, tuple<ring_t, ring_t, vector<tuple<uint64_t, uint
         ImageHashDatabase &localDatabase,
         string databaseKey,
         Mat databaseToQuery_CVMat,
-        int thresh=CANNY_THRESH,
-        int ratio=CANNY_RATIO,
-        int kernel_size=CANNY_KERNEL_SIZE,
-        int blur_width=CANNY_BLUR_WIDTH,
-        int areaThresh=CANNY_AREA_THRESH,
-        double zoom=HASH_ZOOM
+        DrawingOptions d=DrawingOptions()
             );
 
 vector<map<string, map<string, tuple<ring_t, ring_t, vector<tuple<uint64_t, uint64_t, int, int>>> >>> findDetailedSameImageMatches(
         Mat queryImage,
         Mat databaseImage,
         Mat databaseToQuery_CVMat,
-        int thresh=CANNY_THRESH,
-        int ratio=CANNY_RATIO,
-        int kernel_size=CANNY_KERNEL_SIZE,
-        int blur_width=CANNY_BLUR_WIDTH,
-        int areaThresh=CANNY_AREA_THRESH,
-        double zoom=HASH_ZOOM
+        DrawingOptions d=DrawingOptions()
             );
 
 

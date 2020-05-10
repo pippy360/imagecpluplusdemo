@@ -254,17 +254,11 @@ vector<ring_t> applyMatrixToPoints(vector<ring_t> shapes, trans::matrix_transfor
 vector<tuple<ring_t, vector<uint64_t>>> getAllTheHashesForImage(
         Mat img_in,
         int rotations,
-        int thresh,
-        int ratio,
-        int kernel_size,
-        int blur_width,
-        int areaThresh,
-        int second_rotation,
-        double zoom)
+        DrawingOptions d)
 {
     vector<tuple<ring_t, vector<uint64_t>>> v;
     Mat grayImg = convertToGrey(img_in);
-    for (int i = 0; i < second_rotation; i += 1)
+    for (int i = 0; i < d.second_rotation; i += 1)
     {
         vector<tuple<ring_t, vector<uint64_t>>> v_prime;
 
@@ -278,13 +272,12 @@ vector<tuple<ring_t, vector<uint64_t>>> getAllTheHashesForImage(
         cv::Mat dst;
         cv::warpAffine(grayImg, dst, rot, bbox.size());
 
-        vector<ring_t> shapes = extractShapes(thresh,
-                                              ratio,
-                                              kernel_size,
-                                              blur_width,
-                                              areaThresh,
+        vector<ring_t> shapes = extractShapes(d.thresh,
+                                              d.ratio,
+                                              d.kernel_size,
+                                              d.blur_width,
+                                              d.area_thresh,
                                               dst);
-        Mat canny_output = applyCanny(dst, thresh, ratio, kernel_size, blur_width);
         Mat outRot;
         cv::invertAffineTransform(rot, outRot);
         auto invmat = convertCVMatrixToBoost(outRot);
@@ -292,14 +285,14 @@ vector<tuple<ring_t, vector<uint64_t>>> getAllTheHashesForImage(
         g_useRotatedImageForHashes = true;
         if (g_useRotatedImageForHashes) {
             //pass in inv matrix
-            v_prime = getAllTheHashesForImageAndShapes(dst, shapes, rotations, 1, zoom, invmat, true);
+            v_prime = getAllTheHashesForImageAndShapes(dst, shapes, rotations, 1, d.hash_zoom, invmat, true);
         } else {
 
             //apply inv transformation matrix to all shapes
             auto newShapes = applyMatrixToPoints(shapes, invmat);
             //pass in identity matrix
             //WRONG, shape is used wrong here...
-            v_prime = getAllTheHashesForImageAndShapes(grayImg, newShapes, rotations, 1, zoom);
+            v_prime = getAllTheHashesForImageAndShapes(grayImg, newShapes, rotations, 1, d.hash_zoom);
         }
 //        for (auto v : v_prime) {
 //            auto [outRing, p, b] = v;

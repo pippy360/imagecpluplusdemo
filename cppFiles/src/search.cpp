@@ -16,12 +16,7 @@ void addImageToSearchTree(
         ImageHashDatabase &database,
         string imageName,
         Mat img_in,
-        int thresh,
-        int ratio,
-        int kernel_size,
-        int blur_width,
-        int areaThresh,
-        double zoom)
+        DrawingOptions d)
 {
     int imageIdx = database.imagePaths.size();
 
@@ -30,13 +25,7 @@ void addImageToSearchTree(
     vector<tuple<ring_t, vector<uint64_t>>> imghashes = getAllTheHashesForImage(
             img_in,
             360,
-            thresh,
-            ratio,
-            kernel_size,
-            blur_width,
-            areaThresh,
-            1,
-            zoom);
+            d);
 
     int count = 0;
     for (auto [shape1, shape1hashes] : imghashes) {
@@ -69,24 +58,9 @@ string shapeToString(ring_t shape) {
 map<string, map<string, map<string, vector< tuple<uint64_t, uint64_t, int, int> >>>> findDetailedMatches(
         ImageHashDatabase &database,
         Mat queryImg,
-        int thresh,
-        int ratio,
-        int kernel_size,
-        int blur_width,
-        int areaThresh,
-        double zoom
-        )
+        DrawingOptions d)
 {
-    auto queryImageHashes = getAllTheHashesForImage(
-            queryImg,
-            1,
-            thresh,
-            ratio,
-            kernel_size,
-            blur_width,
-            areaThresh,
-            1,
-            zoom);
+    auto queryImageHashes = getAllTheHashesForImage(queryImg, 1, d);
 
     map<string, map<string, map<string, vector< tuple<uint64_t, uint64_t, int, int> >>>> m;
     for (auto [queryShape, shapeHashes] : queryImageHashes)
@@ -137,45 +111,23 @@ ImageHashDatabase *cachedDatabase;
 map<string, map<string, vector< tuple<uint64_t, uint64_t, int, int> >>> findMatchesBetweenTwoImages(
         Mat img_in,
         Mat img_in2,
-        int thresh,
-        int ratio,
-        int kernel_size,
-        int blur_width,
-        int areaThresh,
-        double zoom,
+        DrawingOptions d,
         bool flushCache
 ) {
     if (flushCache) {
-        cout << zoom << endl;
+        cout << d.hash_zoom << endl;
         cout << "recomputing cache..." << endl;
         if (cachedDatabase != nullptr)
             delete cachedDatabase;
 
         cachedDatabase = new ImageHashDatabase();
-        addImageToSearchTree(
-                *cachedDatabase,
-                "None",
-                img_in,
-                thresh,
-                ratio,
-                kernel_size,
-                blur_width,
-                areaThresh,
-                zoom);
+        addImageToSearchTree(*cachedDatabase, "None", img_in, d);
 
         cachedDatabase->tree.build(20, nullptr);
         cout << "...done" << endl;
     }
 
-    auto resmap = findDetailedMatches(
-            *cachedDatabase,
-            img_in2,
-            thresh,
-            ratio,
-            kernel_size,
-            blur_width,
-            areaThresh,
-            zoom);
+    auto resmap = findDetailedMatches(*cachedDatabase, img_in2, d);
 
     if (resmap.size() == 0)
         return map<string, map<string, vector< tuple<uint64_t, uint64_t, int, int> >>>();
@@ -188,23 +140,13 @@ vector<map<string, map<string, tuple<ring_t, ring_t, vector<tuple<uint64_t, uint
         ImageHashDatabase &localDatabase,
         string databaseImgKey,
         Mat databaseToQuery_CVMat,
-        int thresh,
-        int ratio,
-        int kernel_size,
-        int blur_width,
-        int areaThresh,
-        double zoom)
+        DrawingOptions d)
 {
 
     auto matches = findDetailedMatches(
             localDatabase,
             queryImage,
-            thresh,
-            ratio,
-            kernel_size,
-            blur_width,
-            areaThresh,
-            zoom);
+            d);
 
     map<string, map<string, tuple<ring_t, ring_t, vector<tuple<uint64_t, uint64_t, int, int>>> >> invalids;
     map<string, map<string, tuple<ring_t, ring_t, vector<tuple<uint64_t, uint64_t, int, int>>> >> valids;
@@ -244,39 +186,15 @@ vector<map<string, map<string, tuple<ring_t, ring_t, vector<tuple<uint64_t, uint
         Mat queryImage,
         Mat databaseImage,
         Mat databaseToQuery_CVMat,
-        int thresh,
-        int ratio,
-        int kernel_size,
-        int blur_width,
-        int areaThresh,
-        double zoom)
+        DrawingOptions d)
 {
     //FIXME: allow passing in a preloaded database
     ImageHashDatabase localDatabase;
 
-    addImageToSearchTree(
-            localDatabase,
-            "None",
-            databaseImage,
-            thresh,
-            ratio,
-            kernel_size,
-            blur_width,
-            areaThresh,
-            zoom);
+    addImageToSearchTree(localDatabase, "None", databaseImage, d);
 
     localDatabase.tree.build(20, nullptr);
 
-    return findDetailedSameImageMatches_prepopulatedDatabase(
-            queryImage,
-            localDatabase,
-            "None",
-            databaseToQuery_CVMat,
-            thresh,
-            ratio,
-            kernel_size,
-            blur_width,
-            areaThresh,
-            zoom);
+    return findDetailedSameImageMatches_prepopulatedDatabase(queryImage, localDatabase, "None", databaseToQuery_CVMat, d);
 }
 

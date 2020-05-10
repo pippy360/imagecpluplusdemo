@@ -44,12 +44,7 @@ namespace pt = boost::property_tree;
 tuple<Mat, Mat> transfromImage_keepVisable(Mat img_in, cv::Matx33d transmat);
 
 vector<tuple<ring_t, vector<tuple<ring_t, double, int>>>> compareImages(Mat img_in, Mat img_in2,
-                   int thresh,
-                   int ratio,
-                   int kernel_size,
-                   int blur_width,
-                   int areaThresh,
-                   double zoom,
+                   DrawingOptions d,
                    Mat transmat);
 
 tuple<pair<int, int>, map<string, int>> getMatchesForTransformation(
@@ -57,12 +52,7 @@ tuple<pair<int, int>, map<string, int>> getMatchesForTransformation(
                     Mat databaseImg,
                     string databaseImgKey,
                     Matx33f m33,
-                    int thresh=CANNY_THRESH,
-                    int ratio=CANNY_RATIO,
-                    int kernel_size=CANNY_KERNEL_SIZE,
-                    int blur_width=CANNY_BLUR_WIDTH,
-                    int areaThresh=CANNY_AREA_THRESH,
-                    double zoom=HASH_ZOOM);
+                    DrawingOptions d=DrawingOptions());
 
 pt::ptree getMatchesForTransformation_json(
         ImageHashDatabase &database,
@@ -70,12 +60,7 @@ pt::ptree getMatchesForTransformation_json(
         Mat databaseImg,
         string databaseImgKey,
         Matx33f m33,
-        int thresh=CANNY_THRESH,
-        int ratio=CANNY_RATIO,
-        int kernel_size=CANNY_KERNEL_SIZE,
-        int blur_width=CANNY_BLUR_WIDTH,
-        int areaThresh=CANNY_AREA_THRESH,
-        double zoom=HASH_ZOOM);
+        DrawingOptions d=DrawingOptions());
 
 
 double getPerctageOverlap(ring_t s1, ring_t s2, double s1_area);

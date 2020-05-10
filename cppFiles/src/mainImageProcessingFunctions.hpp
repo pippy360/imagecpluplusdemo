@@ -58,13 +58,7 @@ vector<ring_t> extractShapesFromContours(
 vector<tuple<ring_t, vector<uint64_t>>> getAllTheHashesForImage(
         Mat img_in,
         int rotations=360,
-        int thresh=CANNY_THRESH,
-        int ratio=CANNY_RATIO,
-        int kernel_size=CANNY_KERNEL_SIZE,
-        int blur_width=CANNY_BLUR_WIDTH,
-        int areaThresh=CANNY_AREA_THRESH,
-        int second_rotations=1,
-        double zoom=HASH_ZOOM
+        DrawingOptions d=DrawingOptions()
             );
 
 void drawContoursWithRing(const Mat &img, vector<ring_t> _pts);

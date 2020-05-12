@@ -1,0 +1,88 @@
+<html>
+<head>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript">
+
+        async function load_perfect() {
+            let response = await fetch("/imagecpluplusdemo2/cppFiles/output_all_images_perfect.json")
+            let jsonObj = await response.json();
+
+            let valids_arr = [];
+            let invalids_arr = [];
+            let _keys = Object.keys(jsonObj);
+            for (let k = 0; k < _keys.length; k++) {
+                let rotations = jsonObj[_keys[k]].rotations;
+                for (let i = 0; i < rotations.length; i++) {
+                    let rotation = rotations[i];
+                    valids_arr.push(parseInt(rotation.sameImageValids));
+
+                    //now invalids
+                    let invalids = parseInt(rotation.otherImageMismatches);
+                    invalids += parseInt(rotation.sameImageMismatches);
+                    invalids_arr.push(invalids);
+                }
+            }
+            return [invalids_arr, valids_arr];
+        }
+
+        async function load_normal() {
+            let response = await fetch("/imagecpluplusdemo2/cppFiles/output_all_images.json")
+            let jsonObj = await response.json();
+
+            let valids_arr = [];
+            let invalids_arr = [];
+            let _keys = Object.keys(jsonObj);
+            for (let k = 0; k < _keys.length; k++) {
+                let rotations = jsonObj[_keys[k]].rotations;
+                for (let i = 0; i < rotations.length; i++) {
+                    let rotation = rotations[i];
+                    valids_arr.push(parseInt(rotation.sameImageValids));
+
+                    //now invalids
+                    let invalids = parseInt(rotation.otherImageMismatches);
+                    invalids += parseInt(rotation.sameImageMismatches);
+                    invalids_arr.push(invalids);
+                }
+            }
+            return [invalids_arr, valids_arr];
+        }
+
+        google.charts.load('current', {'packages':['corechart']});
+        google.charts.setOnLoadCallback(drawChart);
+
+        async function drawChart() {
+
+            const res = await load_perfect();
+            let invalids_arr_perfect = res[0];
+            let valids_arr_perfect = res[1];
+
+            const res2 = await load_normal();
+            let invalids_arr = res2[0];
+            let valids_arr = res2[1];
+
+            let datain = [];
+            datain.push(["rotation", "valids_p", "invalids_p", "valids", "invalids",]);
+            for (let i = 0; i < valids_arr.length; i++)
+            {
+                datain.push([i, valids_arr_perfect[i], invalids_arr_perfect[i], valids_arr[i], invalids_arr[i]]);
+            }
+
+
+            var data = google.visualization.arrayToDataTable(datain);
+
+            var options = {
+                title: '',
+                curveType: 'function',
+                legend: { position: 'bottom' }
+            };
+
+            var chart = new google.visualization.LineChart(document.getElementById('curve_chart'));
+
+            chart.draw(data, options);
+        }
+    </script>
+</head>
+<body>
+<div id="curve_chart" style="width: 3000px; height: 1000px"></div>
+</body>
+</html>

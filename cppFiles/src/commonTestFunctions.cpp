@@ -94,8 +94,8 @@ tuple<pair<int, int>, map<string, int>> getMatchesForTransformation(
         Mat databaseImg,
         string databaseImgKey,
         Matx33f m33,
-        DrawingOptions d
-        ) {
+        DrawingOptions d)
+{
     auto[queryImg, queryImgToDatabase_mat] = transfromImage_keepVisable(databaseImg, m33);
 
     tuple<pair<int, int>, map<string, int>> res;
@@ -113,7 +113,6 @@ tuple<pair<int, int>, map<string, int>> getMatchesForTransformation(
                     invalidsCount += actualMatches.size();
                 }
             }
-            cout << "invalidsCount: " << invalidsCount << endl;
             get<0>(validAndInvalidsCount) = invalidsCount;
         }
 
@@ -128,7 +127,6 @@ tuple<pair<int, int>, map<string, int>> getMatchesForTransformation(
                     validsCount += actualMatches.size();
                 }
             }
-            cout << "validsCount: " << validsCount << endl;
             get<1>(validAndInvalidsCount) = validsCount;
         }
 
@@ -240,6 +238,39 @@ vector<vector<int>> getMatchesForTransformation_hashDistances(
     }
 
     return {invalidsHashDistCount, validsHashDistCount};
+}
+
+pt::ptree getMatchesForTransformation_hashDistances_json(
+        ImageHashDatabase &database,
+        Mat databaseImg,
+        string databaseImgKey,
+        Matx33f m33,
+        DrawingOptions d)
+{
+    pt::ptree res;
+    vector<vector<int>> hashDist = getMatchesForTransformation_hashDistances(database, databaseImg, databaseImgKey, m33, d);
+
+    auto hashDistInvalid = hashDist[0];
+    pt::ptree invalids;
+    for (int hl : hashDistInvalid)
+    {
+        pt::ptree arrayElement;
+        arrayElement.put_value(hl);
+        invalids.push_back(make_pair("", arrayElement));
+    }
+    res.add_child("invalids", invalids);
+
+    auto hashDistValid = hashDist[1];
+    pt::ptree valids;
+    for (int hl : hashDistValid)
+    {
+        pt::ptree arrayElement;
+        arrayElement.put_value(hl);
+        valids.push_back(make_pair("", arrayElement));
+    }
+    res.add_child("valids", valids);
+
+    return res;
 }
 
 

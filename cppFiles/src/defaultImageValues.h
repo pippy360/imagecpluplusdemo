@@ -32,6 +32,8 @@ public:
     double hash_zoom;
     int second_rotation;
     int matchingHashDistance;
+    bool replaceExtractShapesFunction;
+    std::function<vector<ring_t> (int, int, int, int, int, cv::Mat &)> extractShapes;
 
     //constructor to default values
     DrawingOptions() :
@@ -42,7 +44,8 @@ public:
             area_thresh(CANNY_AREA_THRESH),
             hash_zoom(HASH_ZOOM),
             second_rotation(1),
-            matchingHashDistance(MATCHING_HASH_DIST)
+            matchingHashDistance(MATCHING_HASH_DIST),
+            replaceExtractShapesFunction(false)
     {}
 };
 

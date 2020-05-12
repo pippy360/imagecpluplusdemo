@@ -52,7 +52,7 @@ tuple<pair<int, int>, map<string, int>> getMatchesForTransformation(
                     Mat databaseImg,
                     string databaseImgKey,
                     Matx33f m33,
-                    DrawingOptions d=DrawingOptions());
+                    DrawingOptions d);
 
 pt::ptree getMatchesForTransformation_json(
         ImageHashDatabase &database,
@@ -60,8 +60,21 @@ pt::ptree getMatchesForTransformation_json(
         Mat databaseImg,
         string databaseImgKey,
         Matx33f m33,
-        DrawingOptions d=DrawingOptions());
+        DrawingOptions d);
 
+vector<vector<int>> getMatchesForTransformation_hashDistances(
+        ImageHashDatabase &database,
+        Mat databaseImg,
+        string databaseImgKey,
+        Matx33f m33,
+        DrawingOptions d);
+
+pt::ptree getMatchesForTransformation_hashDistances_json(
+        ImageHashDatabase &database,
+        Mat databaseImg,
+        string databaseImgKey,
+        Matx33f m33,
+        DrawingOptions d);
 
 double getPerctageOverlap(ring_t s1, ring_t s2, double s1_area);
 

@@ -1,6 +1,8 @@
 //
 // Created by Tom Murphy on 2020-04-13.
 //
+#include <functional>
+
 #include <gtest/gtest.h>
 
 #include <src/PerceptualHash.hpp>
@@ -67,8 +69,8 @@ void loadDatabase(ImageHashDatabase &database, vector<string> files)
 #define SIN(x) sin(x * 3.141592653589/180.0)
 #define COS(x) cos(x * 3.141592653589/180.0)
 
-pt::ptree searchWithRotation_perfectShapes(ImageHashDatabase &database, string imagePath, double rotation,
-                                           map<string, int> &imageMismatches)
+pt::ptree searchWithRotation_hashDistance(ImageHashDatabase &database, string imagePath, double rotation,
+                                           map<string, int> &imageMismatches, DrawingOptions d)
 {
     const cv::Mat databaseImg = cv::imread(imagePath, cv::IMREAD_GRAYSCALE);
     const cv::Mat databaseImg_clr = cv::imread(imagePath);
@@ -76,12 +78,11 @@ pt::ptree searchWithRotation_perfectShapes(ImageHashDatabase &database, string i
     auto m33 = Matx33f(COS(rotation), SIN(rotation), 0,
                        -SIN(rotation), COS(rotation), 0,
                        0, 0, 1);
-
-    return getMatchesForTransformation_json(database, imageMismatches, databaseImg, imagePath, m33);
+    return getMatchesForTransformation_hashDistances_json(database, databaseImg, imagePath, m33, d);
 }
 
 pt::ptree searchWithRotation(ImageHashDatabase &database, string imagePath, double rotation,
-        map<string, int> &imageMismatches)
+        map<string, int> &imageMismatches, DrawingOptions d)
 {
     const cv::Mat databaseImg = cv::imread(imagePath, cv::IMREAD_GRAYSCALE);
     const cv::Mat databaseImg_clr = cv::imread(imagePath);
@@ -90,7 +91,7 @@ pt::ptree searchWithRotation(ImageHashDatabase &database, string imagePath, doub
                        -SIN(rotation), COS(rotation), 0,
                        0, 0, 1);
 
-    return getMatchesForTransformation_json(database, imageMismatches, databaseImg, imagePath, m33);
+    return getMatchesForTransformation_json(database, imageMismatches, databaseImg, imagePath, m33, d);
 
 //    pt::write_json(std::cout, jsonOutput);
 
@@ -152,6 +153,7 @@ TEST(papertest, findDetailedMatches)
 
     pt::ptree root;
     pt::ptree children[images.size()];
+    DrawingOptions d;
 
 //#pragma omp parallel for
     for (int idx = 0; idx < images.size(); idx++)
@@ -163,7 +165,7 @@ TEST(papertest, findDetailedMatches)
         for (int i = 0; i < 360; i++)
         {
             cout << i << endl;
-            auto ret = searchWithRotation(database, imagePath, i, imageMismatches);
+            auto ret = searchWithRotation(database, imagePath, i, imageMismatches, d);
             rotations.push_back(make_pair("", ret));
         }
 
@@ -205,6 +207,7 @@ TEST(papertest, hashdistances)
     };
 
     loadDatabase(database, images);
+    DrawingOptions d;
 
     pt::ptree root;
     pt::ptree children[images.size()];
@@ -219,22 +222,14 @@ TEST(papertest, hashdistances)
         for (int i = 0; i < 360; i++)
         {
             cout << i << endl;
-            auto ret = searchWithRotation(database, imagePath, i, imageMismatches);
+            auto ret = searchWithRotation_hashDistance(database, imagePath, i, imageMismatches, d);
             rotations.push_back(make_pair("", ret));
         }
 
         pt::ptree imgroot;
-        imgroot.add_child("rotations", rotations);
+        imgroot.add_child("hashDistances", rotations);
         //now add the map for this image
 
-        pt::ptree misMatches;
-        for (auto [k, v] : imageMismatches)
-        {
-            misMatches.add(pt::ptree::path_type(k, '|'), v);
-        }
-
-        imgroot.add_child("rotations", rotations);
-        imgroot.add_child("misMatches", misMatches);
         children[idx] = imgroot;
     }
 
@@ -242,10 +237,24 @@ TEST(papertest, hashdistances)
         root.add_child(pt::ptree::path_type(images[i], '|'), children[i]);
     }
 
-
-    pt::write_json("output_all_images.json", root);
+    pt::write_json("output_all_images_hashDistances.json", root);
 }
 
+
+class PerfectShapes
+{
+public:
+    vector<ring_t> m_shapes;
+
+    PerfectShapes(vector<ring_t> shapes) :
+        m_shapes(shapes)
+    {}
+
+    vector<ring_t> operator()(int, int, int, int, int, cv::Mat &)
+    {
+        return m_shapes;
+    }
+};
 
 TEST(papertest, perfectShapeExtraction)
 {
@@ -264,6 +273,7 @@ TEST(papertest, perfectShapeExtraction)
     pt::ptree root;
     pt::ptree children[images.size()];
 
+
 #pragma omp parallel for
     for (int idx = 0; idx < images.size(); idx++)
     {
@@ -273,8 +283,47 @@ TEST(papertest, perfectShapeExtraction)
         pt::ptree rotations;
         for (int i = 0; i < 360; i++)
         {
+            DrawingOptions d;
+
+            //ONLY replace for query image!!
+            vector<ring_t> outputShapes;
+
+            {
+                auto imagePath = images[idx];
+                cv::Mat databaseImg = cv::imread(imagePath, cv::IMREAD_GRAYSCALE);
+
+                auto m33 = Matx33f(COS(i), SIN(i), 0,
+                                   -SIN(i), COS(i), 0,
+                                   0, 0, 1);
+                auto[queryImg, queryImgToDatabase_mat] = transfromImage_keepVisable(databaseImg, m33);
+                //calc the shapes
+                auto resShapes = extractShapes(
+                        d.thresh,
+                        d.ratio,
+                        d.kernel_size,
+                        d.blur_width,
+                        d.area_thresh,
+                        databaseImg);
+
+                Mat outRot;
+                cv::invertAffineTransform(queryImgToDatabase_mat, outRot);
+                auto invmat = convertCVMatrixToBoost(queryImgToDatabase_mat);
+
+                for (auto shape : resShapes)
+                {
+                    ring_t outPoly;
+                    boost::geometry::transform(shape, outPoly, invmat);
+                    outputShapes.push_back(outPoly);
+                }
+            }
+
+            PerfectShapes p(outputShapes);
+
+            d.replaceExtractShapesFunction = true;
+            d.extractShapes = std::function<vector<ring_t> (int, int, int, int, int, cv::Mat &)> (p);
+
             cout << i << endl;
-            auto ret = searchWithRotation(database, imagePath, i, imageMismatches);
+            auto ret = searchWithRotation(database, imagePath, i, imageMismatches, d);
             rotations.push_back(make_pair("", ret));
         }
 
@@ -298,6 +347,6 @@ TEST(papertest, perfectShapeExtraction)
     }
 
 
-    pt::write_json("output_all_images.json", root);
+    pt::write_json("output_all_images_perfect.json", root);
 }
 

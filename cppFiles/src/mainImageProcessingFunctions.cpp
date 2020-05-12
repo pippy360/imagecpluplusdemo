@@ -272,12 +272,22 @@ vector<tuple<ring_t, vector<uint64_t>>> getAllTheHashesForImage(
         cv::Mat dst;
         cv::warpAffine(grayImg, dst, rot, bbox.size());
 
-        vector<ring_t> shapes = extractShapes(d.thresh,
-                                              d.ratio,
-                                              d.kernel_size,
-                                              d.blur_width,
-                                              d.area_thresh,
-                                              dst);
+        vector<ring_t> shapes;
+        if (d.replaceExtractShapesFunction) {
+            shapes = d.extractShapes(d.thresh,
+                                     d.ratio,
+                                     d.kernel_size,
+                                     d.blur_width,
+                                     d.area_thresh,
+                                     dst);
+        } else {
+             shapes = extractShapes(d.thresh,
+                                      d.ratio,
+                                      d.kernel_size,
+                                      d.blur_width,
+                                      d.area_thresh,
+                                      dst);
+        }
         Mat outRot;
         cv::invertAffineTransform(rot, outRot);
         auto invmat = convertCVMatrixToBoost(outRot);

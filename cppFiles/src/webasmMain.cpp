@@ -102,6 +102,7 @@ void getImageFragmentFromShape(uintptr_t img_in, int width, int height, ValHolde
     memcpy(valsOut->outputImage2.ptr_, outputImage.data, output_width * output_width * 4);
 }
 
+//FIXME: we aren't using the rotation here...why not?
 std::string findMatchesForImageFromCanvas(
         uintptr_t img_in, int img_in_width, int img_in_height,
         uintptr_t img_in2, int img_in2_width, int img_in2_height,
@@ -115,6 +116,13 @@ std::string findMatchesForImageFromCanvas(
         bool flush_cache
         )
 {
+    DrawingOptions d;
+    d.thresh = thresh;
+    d.ratio = ratio;
+    d.kernel_size = kernel_size;
+    d.blur_width = blur_width;
+    d.area_thresh = areaThresh;
+
     Mat image(cv::Size(img_in_width, img_in_height), CV_8UC4, (void *) img_in, cv::Mat::AUTO_STEP);
     Mat image2(cv::Size(img_in2_width, img_in2_height), CV_8UC4, (void *) img_in2, cv::Mat::AUTO_STEP);
 
@@ -122,12 +130,7 @@ std::string findMatchesForImageFromCanvas(
     auto vec = findMatchesBetweenTwoImages(
             image,
             image2,
-            thresh,
-            ratio,
-            kernel_size,
-            blur_width,
-            areaThresh,
-            zoom,
+            d,
             flush_cache
     );
     std::cout << "findMatchesForImageFromCanvas called, with this many matches: " << vec.size() << std::endl;
@@ -160,7 +163,7 @@ std::string findMatchesForImageFromCanvas(
                     polygonString << ",";
                 }
 
-                auto [hash1, queryHash, rot] = hashMatches[j];
+                auto [hash1, queryHash, rot, dist] = hashMatches[j];
                 polygonString << "[\"" << ImageHash::bitCount(hash1 ^ queryHash) << "\", " << rot << "]";
             }
             polygonString << "]}";
@@ -231,6 +234,8 @@ MatWraper transfromImage_keepVisable_wrapper(
 {
     Mat img_in(cv::Size(width, height), CV_8UC4, (void *) img_in_ptr, cv::Mat::AUTO_STEP);
 
+    DrawingOptions draw;
+    draw.hash_zoom = zoom;
     cv::Matx33d m_in(a, b, c,
                      d, e, f,
                  0.0, 0.0, 1.0);
@@ -238,12 +243,7 @@ MatWraper transfromImage_keepVisable_wrapper(
     auto [m, trans] = transfromImage_keepVisable(img_in, m_in);
     vector<tuple<ring_t, vector<tuple<ring_t, double, int>>>>  res = compareImages(img_in,
                              m,
-                             CANNY_THRESH,
-                             CANNY_RATIO,
-                             CANNY_KERNEL_SIZE,
-                             CANNY_BLUR_WIDTH,
-                             CANNY_AREA_THRESH,
-                             zoom,
+                             draw,
                              trans);
 
     std::stringstream polygonString;
@@ -272,12 +272,7 @@ MatWraper transfromImage_keepVisable_wrapper(
                     m,
                     img_in,
                     trans,
-                    CANNY_THRESH,
-                    CANNY_RATIO,
-                    CANNY_KERNEL_SIZE,
-                    CANNY_BLUR_WIDTH,
-                    CANNY_AREA_THRESH,
-                    HASH_ZOOM);
+                    draw);
 
     map<string, map<string, tuple<ring_t, ring_t, vector<tuple<uint64_t, uint64_t, int, int>>> >> invalids = validsAndInvalids[0];
 

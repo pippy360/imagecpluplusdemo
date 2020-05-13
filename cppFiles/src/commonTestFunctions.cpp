@@ -178,8 +178,9 @@ pt::ptree getMatchesForTransformation_json(
     ret.add("sameImageMismatches", invalids);
     ret.add("otherImageMismatches", otherImageMismatches);
     ret.add("__ignore__", matchesCount);
+    ret.add("sameImageValids", valids);
 
-    cout << matchesCount << " = "<< valids << " + " << invalids << endl;
+    cout << matchesCount << " = valids: "<< valids << " + " << invalids << endl;
     assert((invalids+valids) == matchesCount);
     return ret;
 }

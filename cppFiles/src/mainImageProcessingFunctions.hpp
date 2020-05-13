@@ -57,7 +57,6 @@ vector<ring_t> extractShapesFromContours(
 
 vector<tuple<ring_t, vector<uint64_t>>> getAllTheHashesForImage(
         Mat img_in,
-        int rotations=360,
         DrawingOptions d=DrawingOptions()
             );
 

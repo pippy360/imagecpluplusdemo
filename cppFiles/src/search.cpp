@@ -22,10 +22,7 @@ void addImageToSearchTree(
 
     database.imagePaths.push_back(imageName);
 
-    vector<tuple<ring_t, vector<uint64_t>>> imghashes = getAllTheHashesForImage(
-            img_in,
-            360,
-            d);
+    vector<tuple<ring_t, vector<uint64_t>>> imghashes = getAllTheHashesForImage(img_in, d);
 
     int count = 0;
     for (auto [shape1, shape1hashes] : imghashes) {
@@ -60,7 +57,8 @@ map<string, map<string, map<string, vector< tuple<uint64_t, uint64_t, int, int> 
         Mat queryImg,
         DrawingOptions d)
 {
-    auto queryImageHashes = getAllTheHashesForImage(queryImg, 1, d);
+    d.fragment_rotations = 1;
+    auto queryImageHashes = getAllTheHashesForImage(queryImg, d);
 
     map<string, map<string, map<string, vector< tuple<uint64_t, uint64_t, int, int> >>>> m;
     for (auto [queryShape, shapeHashes] : queryImageHashes)

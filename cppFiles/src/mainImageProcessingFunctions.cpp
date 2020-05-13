@@ -253,7 +253,6 @@ vector<ring_t> applyMatrixToPoints(vector<ring_t> shapes, trans::matrix_transfor
 //FIXME: this code is such a mess
 vector<tuple<ring_t, vector<uint64_t>>> getAllTheHashesForImage(
         Mat img_in,
-        int rotations,
         DrawingOptions d)
 {
     vector<tuple<ring_t, vector<uint64_t>>> v;
@@ -295,14 +294,14 @@ vector<tuple<ring_t, vector<uint64_t>>> getAllTheHashesForImage(
         g_useRotatedImageForHashes = true;
         if (g_useRotatedImageForHashes) {
             //pass in inv matrix
-            v_prime = getAllTheHashesForImageAndShapes(dst, shapes, rotations, 1, d.hash_zoom, invmat, true);
+            v_prime = getAllTheHashesForImageAndShapes(dst, shapes, d.fragment_rotations, d.fragment_rotation_jump, d.hash_zoom, invmat, true);
         } else {
 
             //apply inv transformation matrix to all shapes
             auto newShapes = applyMatrixToPoints(shapes, invmat);
-            //pass in identity matrix
+            //pass in ident ity matrix
             //WRONG, shape is used wrong here...
-            v_prime = getAllTheHashesForImageAndShapes(grayImg, newShapes, rotations, 1, d.hash_zoom);
+            v_prime = getAllTheHashesForImageAndShapes(grayImg, newShapes, d.fragment_rotations, d.fragment_rotation_jump, d.hash_zoom);
         }
 //        for (auto v : v_prime) {
 //            auto [outRing, p, b] = v;

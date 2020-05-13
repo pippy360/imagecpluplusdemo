@@ -274,7 +274,7 @@ TEST(papertest, perfectShapeExtraction)
     pt::ptree children[images.size()];
 
 
-#pragma omp parallel for
+//#pragma omp parallel for
     for (int idx = 0; idx < images.size(); idx++)
     {
         auto imagePath = images[idx];
@@ -349,4 +349,71 @@ TEST(papertest, perfectShapeExtraction)
 
     pt::write_json("output_all_images_perfect.json", root);
 }
+
+
+TEST(papertest, secondRotation)
+{
+    ImageHashDatabase database;
+
+    vector<string> images = {
+            "../webFiles/images/download_3.png",
+            "../webFiles/images/richandmalty.jpg",
+            "../webFiles/images/tech.png",
+            "../webFiles/images/forest.jpg",
+            "../webFiles/images/font.jpg"
+    };
+
+    loadDatabase(database, images);
+
+    pt::ptree root;
+    pt::ptree children[images.size()];
+    DrawingOptions d;
+    d.fragment_rotations = 1;
+    d.second_rotation = 360;
+
+//#pragma omp parallel for
+    for (int idx = 0; idx < images.size(); idx++)
+    {
+        auto imagePath = images[idx];
+
+        map<string, int> imageMismatches;
+        pt::ptree rot[360];
+
+#pragma omp parallel for
+        for (int i = 0; i < 360; i++)
+        {
+            cout << i << endl;
+            auto ret = searchWithRotation(database, imagePath, i, imageMismatches, d);
+            rot[i] = ret;
+        }
+
+        pt::ptree rotations;
+        for (int i = 0; i < 360; i++)
+        {
+            rotations.push_back(make_pair("", rot[i]));
+        }
+
+        pt::ptree imgroot;
+        imgroot.add_child("rotations", rotations);
+        //now add the map for this image
+
+        pt::ptree misMatches;
+        for (auto [k, v] : imageMismatches)
+        {
+            misMatches.add(pt::ptree::path_type(k, '|'), v);
+        }
+
+        imgroot.add_child("rotations", rotations);
+        imgroot.add_child("misMatches", misMatches);
+        children[idx] = imgroot;
+    }
+
+    for (int i = 0; i < images.size(); i++) {
+        root.add_child(pt::ptree::path_type(images[i], '|'), children[i]);
+    }
+
+
+    pt::write_json("output_all_images_second_rotation.json", root);
+}
+
 

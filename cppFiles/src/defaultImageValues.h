@@ -33,6 +33,9 @@ public:
     int second_rotation;
     int matchingHashDistance;
     bool replaceExtractShapesFunction;
+    int fragment_rotations;
+    double fragment_rotation_jump;
+    double fragment_rotation_start;
     std::function<vector<ring_t> (int, int, int, int, int, cv::Mat &)> extractShapes;
 
     //constructor to default values
@@ -45,7 +48,10 @@ public:
             hash_zoom(HASH_ZOOM),
             second_rotation(1),
             matchingHashDistance(MATCHING_HASH_DIST),
-            replaceExtractShapesFunction(false)
+            replaceExtractShapesFunction(false),
+            fragment_rotations(360),
+            fragment_rotation_jump(1),
+            fragment_rotation_start(0)
     {}
 };
 

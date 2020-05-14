@@ -163,7 +163,7 @@ pt::ptree getMatchesForTransformation_json(
     auto invalids = get<0>(iv);
     auto valids = get<1>(iv);
     int otherImageMismatches = 0;
-    int matchesCount;
+    int matchesCount = 0;
     for (auto[n, c] : v) {
         if (databaseImgKey.compare(n) == 0) {
             //FIXME: we haven't checked if these are actually valid matches

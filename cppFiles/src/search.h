@@ -29,7 +29,7 @@ public:
 map<string, map<string, vector< tuple<uint64_t, uint64_t, int, int> >>> findMatchesBetweenTwoImages(
         cv::Mat img_in,
         cv::Mat img_in2,
-        DrawingOptions d=DrawingOptions(),
+        DrawingOptions d,
         bool flushCache=true
                 );
 
@@ -37,13 +37,13 @@ void addImageToSearchTree(
         ImageHashDatabase &database,
         string imageName,
         Mat img_in,
-        DrawingOptions d=DrawingOptions()
+        DrawingOptions d
             );
 
 map<string, map<string, map<string, vector< tuple<uint64_t, uint64_t, int, int> >>>> findDetailedMatches(
         ImageHashDatabase &database,
         Mat img_in2,
-        DrawingOptions d=DrawingOptions()
+        DrawingOptions d
             );
 
 
@@ -52,14 +52,14 @@ vector<map<string, map<string, tuple<ring_t, ring_t, vector<tuple<uint64_t, uint
         ImageHashDatabase &localDatabase,
         string databaseKey,
         Mat databaseToQuery_CVMat,
-        DrawingOptions d=DrawingOptions()
+        DrawingOptions d
             );
 
 vector<map<string, map<string, tuple<ring_t, ring_t, vector<tuple<uint64_t, uint64_t, int, int>>> >>> findDetailedSameImageMatches(
         Mat queryImage,
         Mat databaseImage,
         Mat databaseToQuery_CVMat,
-        DrawingOptions d=DrawingOptions()
+        DrawingOptions d
             );
 
 

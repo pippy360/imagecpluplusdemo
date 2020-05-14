@@ -127,10 +127,12 @@ map<string, map<string, vector< tuple<uint64_t, uint64_t, int, int> >>> findMatc
 
     auto resmap = findDetailedMatches(*cachedDatabase, img_in2, d);
 
-    if (resmap.size() == 0)
-        return map<string, map<string, vector< tuple<uint64_t, uint64_t, int, int> >>>();
+    //return first value
+    for (auto [k, v] : resmap)
+        return v;
 
-    return resmap.begin()->second;
+    //If not matches return
+    return map<string, map<string, vector< tuple<uint64_t, uint64_t, int, int> >>>();
 }
 
 vector<map<string, map<string, tuple<ring_t, ring_t, vector<tuple<uint64_t, uint64_t, int, int>>> >>> findDetailedSameImageMatches_prepopulatedDatabase(

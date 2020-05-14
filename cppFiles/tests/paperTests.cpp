@@ -55,12 +55,12 @@ TEST(papertest, pc_overlap) {
     EXPECT_EQ(res2, 0.1);
 }
 
-void loadDatabase(ImageHashDatabase &database, vector<string> files)
+void loadDatabase(ImageHashDatabase &database, vector<string> files, DrawingOptions d)
 {
     for (auto file : files)
     {
         const cv::Mat rickandmortyImage = cv::imread(file, cv::IMREAD_GRAYSCALE);
-        addImageToSearchTree(database, file, rickandmortyImage);
+        addImageToSearchTree(database, file, rickandmortyImage, d);
     }
 
     database.tree.build(20, nullptr);
@@ -148,12 +148,12 @@ TEST(papertest, findDetailedMatches)
             "../webFiles/images/forest.jpg",
             "../webFiles/images/font.jpg"
     };
+    DrawingOptions d;
 
-    loadDatabase(database, images);
+    loadDatabase(database, images, d);
 
     pt::ptree root;
     pt::ptree children[images.size()];
-    DrawingOptions d;
 
 //#pragma omp parallel for
     for (int idx = 0; idx < images.size(); idx++)
@@ -206,8 +206,9 @@ TEST(papertest, hashdistances)
             "../webFiles/images/font.jpg"
     };
 
-    loadDatabase(database, images);
     DrawingOptions d;
+
+    loadDatabase(database, images, d);
 
     pt::ptree root;
     pt::ptree children[images.size()];
@@ -268,7 +269,9 @@ TEST(papertest, perfectShapeExtraction)
             "../webFiles/images/font.jpg"
     };
 
-    loadDatabase(database, images);
+    DrawingOptions d_default;
+
+    loadDatabase(database, images, d_default);
 
     pt::ptree root;
     pt::ptree children[images.size()];
@@ -363,13 +366,15 @@ TEST(papertest, secondRotation)
             "../webFiles/images/font.jpg"
     };
 
-    loadDatabase(database, images);
-
-    pt::ptree root;
-    pt::ptree children[images.size()];
     DrawingOptions d;
     d.fragment_rotations = 1;
     d.second_rotation = 360;
+
+    loadDatabase(database, images, d);
+
+    pt::ptree root;
+    pt::ptree children[images.size()];
+
 
 //#pragma omp parallel for
     for (int idx = 0; idx < images.size(); idx++)
@@ -379,8 +384,8 @@ TEST(papertest, secondRotation)
         map<string, int> imageMismatches;
         pt::ptree rot[360];
 
-#pragma omp parallel for
-        for (int i = 0; i < 360; i++)
+//#pragma omp parallel for
+        for (int i = 346; i < 347; i++)
         {
             cout << i << endl;
             auto ret = searchWithRotation(database, imagePath, i, imageMismatches, d);

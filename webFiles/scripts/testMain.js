@@ -5,8 +5,8 @@ let g_thresh;
 let g_areaThresh;
 let g_flushCache = true;
 let g_zoom = .4;
-
-
+let g_usePerfectShapes = false;
+let g_transformationMatrix = getIdentityMatrix();
 let g_leftSelected;
 let g_rightSelected;
 
@@ -16,6 +16,20 @@ let g_lastusedClickAndSeeShapeLeft;
 let g_mainGlobalState;
 let g_shapeResults;
 
+
+function setUsePerfectShapes() {
+    g_usePerfectShapes = document.getElementById("usePerfectShapes").checked;
+}
+
+function setRotationMatrix() {
+    let rotation = parseInt(document.getElementById("setRotationMatrixInput").value);
+    g_transformationMatrix = getRotationMatrix(rotation);
+}
+
+function setScaleMatrix() {
+    let rotation = parseInt(document.getElementById("setScaleMatrixInput").value);
+    g_transformationMatrix = getScaleMatrix(rotation);
+}
 
 function getHashDistance() {
     let databaseString = g_lastusedClickAndSeeShapeRight;
@@ -584,22 +598,23 @@ function drawOutputImageOrEdgeImage() {
         valHolder.delete();
     }
 
-
+//
     let res = module.transfromImage_keepVisable_wrapper(
         lookup_canvas_wasm_heap.ptr,
         g_zoom,
         lookup_canvas_wasm_heap.width,
         lookup_canvas_wasm_heap.height,
-        0.7,0.7,0,
-        -0.7,0.7,0
+        g_transformationMatrix[0][0], g_transformationMatrix[0][1], 0,
+        g_transformationMatrix[1][0], g_transformationMatrix[1][1], 0,
+        g_usePerfectShapes
     );
     // console.log(res.outStr);
     const shapeResults = JSON.parse(res.outStr);
     const edgeImageOut5 = new ImageData(new Uint8ClampedArray(res.v),
         res.width, res.height);
 
-    console.log("shapeResults.invalid");
-    console.log(shapeResults.invalid);
+    console.log("shapeResults.invalids");
+    console.log(shapeResults.invalids);
 
     setDatabaseCanvasSize(res.width, res.height);
     const databaseCanvas = getCleanCanvas("databaseCanvas");
@@ -612,15 +627,29 @@ function drawOutputImageOrEdgeImage() {
 
     const list = document.getElementById('shapelist2');
     list.innerHTML = "";
-    for (let i = 0; i < shapeResults.invalid.length; i++) {
-        var obj = shapeResults.invalid[i];
+
+    for (let i = 0; i < shapeResults.valids.length; i++) {
+        var obj = shapeResults.valids[i];
         const color = "" + randomColor();
 
         {
             let el = document.createElement("div");
             // el.innerHTML = `<div class='shapeListEl' style="background-color: hsl(${color})" onmouseover="drawshapefromResult('${opt[1]}', '${opt[0]}', ${opt[2]}, ${opt[3]})" id='shapeListEl${i}'>${i}</div>`;
 
-            el.innerHTML = `<div class='shapeListEl' style="background-color: hsl(${color})" onmouseover="drawshapefromClickandseeLeftRepeat('${obj.s1}','${obj.s2}')" id='shapeListEl___${i}'>${i} -- (${obj.dist})</div>`;
+            el.innerHTML = `<div class='shapeListEl' style="background-color: hsl(${color})" onmouseover="drawshapefromClickandseeLeftRepeat('${obj.shape1}','${obj.shape2}')" id='shapeListEl___${i}'>${i} -- (${obj.actualMatches})</div>`;
+            list.appendChild(el);
+        }
+    }
+
+    for (let i = 0; i < shapeResults.invalids.length; i++) {
+        var obj = shapeResults.invalids[i];
+        const color = "" + randomColor();
+
+        {
+            let el = document.createElement("div");
+            // el.innerHTML = `<div class='shapeListEl' style="background-color: hsl(${color})" onmouseover="drawshapefromResult('${opt[1]}', '${opt[0]}', ${opt[2]}, ${opt[3]})" id='shapeListEl${i}'>${i}</div>`;
+
+            el.innerHTML = `<div class='shapeListEl' style="background-color: rgb(255,0,0)" onmouseover="drawshapefromClickandseeLeftRepeat('${obj.shape1}','${obj.shape2}')" id='shapeListEl___${i}'>${i} -- (${obj.actualMatches})</div>`;
             list.appendChild(el);
         }
     }

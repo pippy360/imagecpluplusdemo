@@ -336,32 +336,24 @@
                     <div class="buttonsWrapper">
                         <div class="buttonsInner">
                       <span role="group" style="width: 100%"  class="btn-group-vertical" >
-                          <button id="translateButton" class="btn btn-secondary active"
-                                  onclick="setCurrnetOperation(enum_TransformationOperation.TRANSLATE)">
-                              Move
-                          </button>
-                          <button class="btn btn-secondary"
-                                  onclick="setCurrnetOperation(enum_TransformationOperation.NON_UNIFORM_SCALE)">
-                              Directional Stretch
-                          </button>
-                          <button class="btn btn-secondary"
-                                  onclick="setCurrnetOperation(enum_TransformationOperation.UNIFORM_SCALE)">
-                              Uniform Scale
-                          </button>
-                          <button class="btn btn-secondary" onclick="setCurrnetOperation(enum_TransformationOperation.ROTATE)">
-                              Rotate
-                          </button>
-                          <button class="btn btn-secondary" onclick="setCurrnetOperation(enum_TransformationOperation.SKEW_X)">
-                              Skew/Shear X
-                          </button>
-                          <button class="btn btn-secondary" onclick="setCurrnetOperation(enum_TransformationOperation.SKEW_Y)">
-                              Skew/Shear Y
-                          </button>
-                          <button class="btn btn-secondary" onclick="setCurrnetOperation(enum_TransformationOperation.CROP)">
-                              Crop
-                          </button>
+                        <div>
+                            <span>
+                                Use perfect shapes:
+                            </span>
+                            <input type="checkbox" class="form-control" style="width: 60px; display: inline-block" onchange="setUsePerfectShapes()" id="usePerfectShapes">
+                        </div>
+                          <span>
+                                Rotation matrix:
+                          </span>
+                          <input type="text" class="form-control" style="width: 60px; display: inline-block" onchange="setRotationMatrix()" id="setRotationMatrixInput">
+                          <span>
+                                Scale matrix:
+                          </span>
+                          <input type="text" class="form-control" style="width: 60px; display: inline-block" onchange="setScaleMatrix()" id="setScaleMatrixInput">
+
+                          <br>
                             <button type="button" style="margin-bottom: 8px;" class="alert-danger btn btn-secondary"
-                                    onclick="setDefaultTransformationValues()">Reset</button>
+                                    onclick="setDefaultTransformationValues()">Draw</button>
                       </span>
                         </div>
                     </div>
@@ -694,8 +686,10 @@
       };
 
 
+
+
   </script>
-  <script async type="text/javascript" src="wasmLibs/cppdemo.js"></script>
+  <script async type="text/javascript" src="../cppFiles/cppdemo.js"></script>
   <script src="scripts/testMain.js" ></script>
   <script>
 

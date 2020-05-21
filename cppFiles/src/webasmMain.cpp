@@ -230,7 +230,8 @@ MatWraper transfromImage_keepVisable_wrapper(
         double c,
         double d,
         double e,
-        double f)
+        double f,
+        bool usePerfectShapes)
 {
     Mat img_in(cv::Size(width, height), CV_8UC4, (void *) img_in_ptr, cv::Mat::AUTO_STEP);
 
@@ -241,6 +242,7 @@ MatWraper transfromImage_keepVisable_wrapper(
                  0.0, 0.0, 1.0);
 
     auto [m, trans] = transfromImage_keepVisable(img_in, m_in);
+    //FIXME: compare images is a crap name, what does this return? the shapes and their overlaps
     vector<tuple<ring_t, vector<tuple<ring_t, double, int>>>>  res = compareImages(img_in,
                              m,
                              draw,
@@ -262,38 +264,65 @@ MatWraper transfromImage_keepVisable_wrapper(
             if (j > 0)
                 polygonString << ",";
 
-            polygonString << "{\"shape\" : \"" << bg::wkt(shape2) << "\", \"dist\" : " << dist << ", \"hashDist\" : " << hashdist <<" }";
+            polygonString << "{\"shape\" : \"" << bg::wkt(shape2) << "\", \"dist\" : " << dist
+                          << ", \"hashDist\" : " << hashdist <<" }";
         }
         polygonString << "]}";
     }
-    polygonString << "],";
 
-    auto validsAndInvalids = findDetailedSameImageMatches(
-                    m,
-                    img_in,
-                    trans,
-                    draw);
+    polygonString << "], \"invalids\": [";
 
-    map<string, map<string, tuple<ring_t, ring_t, vector<tuple<uint64_t, uint64_t, int, int>>> >> invalids = validsAndInvalids[0];
+    ImageHashDatabase database;
+    addImageToSearchTree(database, "None", img_in, draw);
+    database.tree.build(20, nullptr);
 
-    polygonString << "\"invalid\": [";
-    int firstRun = true;
-    for (auto [queryImgStr, v] : invalids)
+//    auto json = getMatchesForTransformation(database, img_in, "None", m33, draw);
+
+    map<string, int> imageMismatches;
+    vector<map<string, map<string, tuple<ring_t, ring_t, vector<tuple<uint64_t, uint64_t, int, int>>> >>> validsAndInvalids;
+    validsAndInvalids = findDetailedSameImageMatches_prepopulatedDatabase(
+            img_in,
+            database,
+            "None",
+            trans,
+            draw);
+
     {
-        for (auto [databaseImgStr, t] : v)
+        bool firstRun = true;
+        for (auto [queryShape, v1] : validsAndInvalids[0])
         {
-            auto[_i, __i, _v] = t;
-            auto [hash1, hash2, rot, dist] = _v[0];
+            for (auto [database, v2] : v1)
+            {
+                auto [s1, s2, actualMatches ]  = v2;
 
-            if (!firstRun) {
-                polygonString << ",";
+                if (!firstRun) {
+                    polygonString << ",";
+                }
+                firstRun = false;
+
+                polygonString << "{\"shape1\" : \"" << queryShape << "\", \"shape2\" : \"" << database << "\", \"actualMatches\" : " << actualMatches.size() <<" }";
             }
-            firstRun = false;
+        }
+    }
 
-            polygonString << "{\"s1\": \"" << databaseImgStr << "\", \"s2\": \"" << queryImgStr << "\", \"hash1\": \""
-                          << ImageHash::convertHashToString(hash1) << "\", \"hash2\": \""
-                          << ImageHash::convertHashToString(hash2)
-                          << "\", \"dist\": " << dist << ", \"rotationMatches\": " << _v.size() << "}";
+    polygonString << "], \"valids\": [";
+
+    {
+        bool firstRun = true;
+        for (auto [queryShape, v1] : validsAndInvalids[1])
+        {
+            for (auto [database, v2] : v1)
+            {
+                auto [s1, s2, actualMatches ]  = v2;
+
+                if (!firstRun) {
+                    polygonString << ",";
+                }
+                firstRun = false;
+
+                polygonString << "{\"shape1\" : \"" << queryShape << "\", \"shape2\" : \"" << database << "\", \"actualMatches\" : " << actualMatches.size() <<" }";
+            }
+
         }
     }
     polygonString << "]}";

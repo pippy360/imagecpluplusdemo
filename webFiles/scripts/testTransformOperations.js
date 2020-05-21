@@ -815,10 +815,6 @@ function draw() {
         return;
     }
 
-    window.history.pushState("object or string", "Title", "tests.html?"
-        + "transfromState="
-        + JSON.stringify(g_transformState, _jsonReplacer)+"");
-
     const c_lookupCanvas = document.getElementById("lookupCanvas_output");
     const c_lookupCanvas_ctx = c_lookupCanvas.getContext("2d");
     clearCanvasByContext(c_lookupCanvas_ctx);

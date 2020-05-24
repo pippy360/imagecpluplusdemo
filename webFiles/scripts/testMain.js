@@ -238,6 +238,16 @@ function setKernelVal() {
 }
 
 function updateLookupCanvasHeap() {
+    const lookupCanvas = document.getElementById('lookupCanvas');
+
+    module._free(lookup_canvas_wasm_heap.width * lookup_canvas_wasm_heap.height * 4);
+
+    lookup_canvas_wasm_heap = {
+        ptr: module._malloc(lookupCanvas.width * lookupCanvas.height * 4),
+        width: lookupCanvas.width,
+        height: lookupCanvas.height
+    };
+
     const lookupCanvas_ctx = document.getElementById('lookupCanvas_output').getContext("2d");
     const image = lookupCanvas_ctx.getImageData(0, 0,
         lookup_canvas_wasm_heap.width,
@@ -247,6 +257,17 @@ function updateLookupCanvasHeap() {
 }
 
 function updateDatabaseCanvasHeap() {
+
+    module._free(canvas_inserted_in_database_wasm_heap.width * canvas_inserted_in_database_wasm_heap.height * 4);
+
+    const databaseCanvas = document.getElementById('databaseCanvas');
+
+    canvas_inserted_in_database_wasm_heap = {
+        ptr: module._malloc(databaseCanvas.width * databaseCanvas.height * 4),
+        width: databaseCanvas.width,
+        height: databaseCanvas.height
+    };
+
     const databaseCanvas_ctx = document.getElementById('databaseCanvas_output').getContext("2d");
     const image = databaseCanvas_ctx.getImageData(0, 0,
         canvas_inserted_in_database_wasm_heap.width,
@@ -636,7 +657,7 @@ function drawOutputImageOrEdgeImage() {
             let el = document.createElement("div");
             // el.innerHTML = `<div class='shapeListEl' style="background-color: hsl(${color})" onmouseover="drawshapefromResult('${opt[1]}', '${opt[0]}', ${opt[2]}, ${opt[3]})" id='shapeListEl${i}'>${i}</div>`;
 
-            el.innerHTML = `<div class='shapeListEl' style="background-color: hsl(${color})" onmouseover="drawshapefromClickandseeLeftRepeat('${obj.shape1}','${obj.shape2}')" id='shapeListEl___${i}'>${i} -- (${obj.actualMatches})</div>`;
+            el.innerHTML = `<div class='shapeListEl' style="background-color: hsl(${color})" onmouseover="drawshapefromClickandseeLeftRepeat('${obj.shape2}','${obj.shape1}')" id='shapeListEl___${i}'>${i} -- (${obj.actualMatches})</div>`;
             list.appendChild(el);
         }
     }
@@ -649,7 +670,7 @@ function drawOutputImageOrEdgeImage() {
             let el = document.createElement("div");
             // el.innerHTML = `<div class='shapeListEl' style="background-color: hsl(${color})" onmouseover="drawshapefromResult('${opt[1]}', '${opt[0]}', ${opt[2]}, ${opt[3]})" id='shapeListEl${i}'>${i}</div>`;
 
-            el.innerHTML = `<div class='shapeListEl' style="background-color: rgb(255,0,0)" onmouseover="drawshapefromClickandseeLeftRepeat('${obj.shape1}','${obj.shape2}')" id='shapeListEl___${i}'>${i} -- (${obj.actualMatches})</div>`;
+            el.innerHTML = `<div class='shapeListEl' style="background-color: rgb(255,0,0)" onmouseover="drawshapefromClickandseeLeftRepeat('${obj.shape2}','${obj.shape1}')" id='shapeListEl___${i}'>${i} -- (${obj.actualMatches})</div>`;
             list.appendChild(el);
         }
     }

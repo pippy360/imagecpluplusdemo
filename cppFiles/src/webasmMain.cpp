@@ -208,7 +208,7 @@ public:
     emscripten::val v;
     int m_height, m_width;
 
-    MatWraper(unsigned char *data, size_t size, int height, int width):
+    MatWraper(unsigned char *data, size_t size, int width, int height):
             m_width(width),
             m_height(height),
             m_data(data),
@@ -281,7 +281,7 @@ MatWraper transfromImage_keepVisable_wrapper(
     map<string, int> imageMismatches;
     vector<map<string, map<string, tuple<ring_t, ring_t, vector<tuple<uint64_t, uint64_t, int, int>>> >>> validsAndInvalids;
     validsAndInvalids = findDetailedSameImageMatches_prepopulatedDatabase(
-            img_in,
+            m,
             database,
             "None",
             trans,

@@ -36,6 +36,9 @@ function setDatabaseCanvasSize(width, height)
 
     document.getElementById("databaseCanvas_uipass").width = width;
     document.getElementById("databaseCanvas_uipass").height = height;
+
+    document.getElementById("databaseCanvas_output").width = width;
+    document.getElementById("databaseCanvas_output").height = height;
 }
 
 function setLookupCanvasSize(width, height)
@@ -58,6 +61,9 @@ function setLookupCanvasSize(width, height)
 
     document.getElementById("lookupCanvas_uipass").width = width;
     document.getElementById("lookupCanvas_uipass").height = height;
+
+    document.getElementById("lookupCanvas_output").width = width;
+    document.getElementById("lookupCanvas_output").height = height;
 }
 
 function convertTransformationObjectToTransformationMatrix(transformations, shapeCenter) {
@@ -91,6 +97,9 @@ function convertTransformationObjectToTransformationMatrix(transformations, shap
 }
 
 function _newLayer(layerImage) {
+
+    setLookupCanvasSize(layerImage.width, layerImage.height);
+
     return {
         nonTransformedImageOutline: buildRect(layerImage.width, layerImage.height),
         image: layerImage,
@@ -824,6 +833,7 @@ function draw() {
 
     for (let i = 0; i < g_transformState.interactiveCanvasState.layers.length; i++){
         const layer = g_transformState.interactiveCanvasState.layers[i];
+        layer.cachedCanvas = null;
         drawLayer(c_lookupCanvas_ctx, g_transformState.interactiveCanvasState, layer);
     }
 
@@ -847,10 +857,11 @@ function draw() {
     _c_lookupCanvas.ctx.drawImage(c_lookupCanvas, 0, 0);
     _c_databaseCanvas.ctx.drawImage(c_databaseCanvas, 0, 0);
 
+    updateLookupCanvasHeap();
+
     drawOutputImageOrEdgeImage();
 
     //FIXME: check active canvas and flush cache on heap update!!!
-    updateLookupCanvasHeap();
     updateDatabaseCanvasHeap();
 
     // let jsonData = module.getContoursWithCurvature(lookup_canvas_wasm_heap.ptr,

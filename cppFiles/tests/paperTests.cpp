@@ -24,12 +24,10 @@ TEST(papertest, basic) {
                      -0.7, 0.7, -2,
                      0.0, 0.0, 1.0);
 
-    auto [img2, dyntrans] = transfromImage_keepVisable(rickandmortyImage, m_in);
     //show the imageThank
-    auto res = compareImages(rickandmortyImage,
-            img2,
+    auto res = compareImageShapes(rickandmortyImage,
             DrawingOptions(),
-           dyntrans);
+            m_in, true);
 
     //ok so we know which shapes match
     cout << "res size: " << res.size() << endl;
@@ -92,49 +90,6 @@ pt::ptree searchWithRotation(ImageHashDatabase &database, string imagePath, doub
                        0, 0, 1);
 
     return getMatchesForTransformation_json(database, imageMismatches, databaseImg, imagePath, m33, d);
-
-//    pt::write_json(std::cout, jsonOutput);
-
-
-//    auto [queryImg, queryImgToDatabase_mat] = transfromImage_keepVisable(databaseImg, m33);
-//    auto [queryImg_clr, ignore] = transfromImage_keepVisable(databaseImg_clr, m33);
-
-
-//        for (auto [queryImgStr, v] : invalids)
-//        {
-//            for (auto [databaseImgStr, t] : v)
-//            {
-//                auto [r1, r2, v] = t;
-//                drawContoursWithRing(queryImg_clr, vector<ring_t>(1, r1));
-//                drawContoursWithRing(databaseImg_clr, vector<ring_t>(1, r2));
-//            }
-//        }
-//
-//        int rows = (queryImg_clr.rows > databaseImg_clr.rows)? queryImg_clr.rows : databaseImg_clr.rows;
-//        Mat dst = Mat::zeros(rows, queryImg_clr.cols + databaseImg_clr.cols, queryImg_clr.type());
-//        databaseImg_clr.copyTo(dst(Rect(0, 0, databaseImg_clr.cols, databaseImg_clr.rows)));
-//        queryImg_clr.copyTo(dst(Rect(databaseImg_clr.cols, 0, queryImg_clr.cols, queryImg_clr.rows)));
-//
-//        {
-//            //concat the images and save...
-//            for (auto [queryImgStr, v] : invalids)
-//            {
-//                for (auto [databaseImgStr, t] : v)
-//                {
-//                    auto [r1, r2, v] = t;
-//                    point_t p1;
-//                    bg::centroid(r1, p1);
-//                    point_t p2;
-//                    bg::centroid(r2, p2);
-//                    Scalar color( rand()&255, rand()&255, rand()&255 );
-//                    line(dst, Point(p1.get<0>(), p1.get<1>()), Point(databaseImg_clr.cols+p2.get<0>(), p2.get<1>()), color, 4);
-//                }
-//            }
-//            imshow("databaseImg_clr", databaseImg_clr);
-//            imshow("queryImg_clr", queryImg_clr);
-//            imshow("dst", dst);
-//            waitKey(0);
-//        }
 }
 
 TEST(papertest, findDetailedMatches)
@@ -242,7 +197,7 @@ TEST(papertest, hashdistances)
 }
 
 
-class PerfectShapes
+static class PerfectShapes
 {
 public:
     vector<ring_t> m_shapes;
@@ -308,14 +263,12 @@ TEST(papertest, perfectShapeExtraction)
                         d.area_thresh,
                         databaseImg);
 
-                Mat outRot;
-                cv::invertAffineTransform(queryImgToDatabase_mat, outRot);
-                auto invmat = convertCVMatrixToBoost(queryImgToDatabase_mat);
+                auto boostMat = convertCVMatrixToBoost(queryImgToDatabase_mat);
 
                 for (auto shape : resShapes)
                 {
                     ring_t outPoly;
-                    boost::geometry::transform(shape, outPoly, invmat);
+                    boost::geometry::transform(shape, outPoly, boostMat);
                     outputShapes.push_back(outPoly);
                 }
             }

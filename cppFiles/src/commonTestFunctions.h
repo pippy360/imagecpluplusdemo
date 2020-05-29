@@ -43,9 +43,10 @@ namespace pt = boost::property_tree;
 
 tuple<Mat, Mat> transfromImage_keepVisable(Mat img_in, cv::Matx33d transmat);
 
-vector<tuple<ring_t, vector<tuple<ring_t, double, int>>>> compareImages(Mat img_in, Mat img_in2,
+vector<tuple<ring_t, vector<tuple<ring_t, double, int>>>> compareImageShapes(Mat img_in,
                    DrawingOptions d,
-                   Mat transmat);
+                   Matx33d transmat,
+                   bool usePerfectShapes);
 
 tuple<pair<int, int>, map<string, int>> getMatchesForTransformation(
                     ImageHashDatabase &database,

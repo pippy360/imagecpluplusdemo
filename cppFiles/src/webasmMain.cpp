@@ -220,6 +220,21 @@ public:
     }
 };
 
+class PerfectShapes
+{
+public:
+    vector<ring_t> m_shapes;
+
+    PerfectShapes(vector<ring_t> shapes) :
+            m_shapes(shapes)
+    {}
+
+    vector<ring_t> operator()(int, int, int, int, int, cv::Mat &)
+    {
+        return m_shapes;
+    }
+};
+
 MatWraper transfromImage_keepVisable_wrapper(
         uintptr_t img_in_ptr,
         double zoom,
@@ -241,12 +256,10 @@ MatWraper transfromImage_keepVisable_wrapper(
                      d, e, f,
                  0.0, 0.0, 1.0);
 
-    auto [m, trans] = transfromImage_keepVisable(img_in, m_in);
-    //FIXME: compare images is a crap name, what does this return? the shapes and their overlaps
-    vector<tuple<ring_t, vector<tuple<ring_t, double, int>>>>  res = compareImages(img_in,
-                             m,
+    vector<tuple<ring_t, vector<tuple<ring_t, double, int>>>>  res = compareImageShapes(img_in,
                              draw,
-                             trans);
+                             m_in,
+                             usePerfectShapes);
 
     std::stringstream polygonString;
 
@@ -277,6 +290,33 @@ MatWraper transfromImage_keepVisable_wrapper(
     database.tree.build(20, nullptr);
 
 //    auto json = getMatchesForTransformation(database, img_in, "None", m33, draw);
+
+    auto [m, trans] = transfromImage_keepVisable(img_in, m_in);
+
+    vector<ring_t> outputShapes;
+    if (usePerfectShapes)
+    {
+        Mat grayImg1 = convertToGrey(img_in);
+        auto resShapes = extractShapes(
+                draw.thresh,
+                draw.ratio,
+                draw.kernel_size,
+                draw.blur_width,
+                draw.area_thresh,
+                grayImg1);
+
+        auto boostTrans = convertCVMatrixToBoost(trans);
+
+        for (auto shape : resShapes)
+        {
+            ring_t outPoly;
+            boost::geometry::transform(shape, outPoly, boostTrans);
+            outputShapes.push_back(outPoly);
+        }
+        PerfectShapes p(resShapes);
+        draw.replaceExtractShapesFunction = true;
+        draw.extractShapes = std::function<vector<ring_t> (int, int, int, int, int, cv::Mat &)> (p);
+    }
 
     map<string, int> imageMismatches;
     vector<map<string, map<string, tuple<ring_t, ring_t, vector<tuple<uint64_t, uint64_t, int, int>>> >>> validsAndInvalids;

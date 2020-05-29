@@ -50,12 +50,17 @@ vector<tuple<ring_t, vector<tuple<ring_t, double>>>> compareShapes(vector<ring_t
     return res;
 }
 
-vector<tuple<ring_t, vector<tuple<ring_t, double, int>>>> compareImages(Mat img_in, Mat img_in2, DrawingOptions d, Mat transmat)
+vector<tuple<ring_t, vector<tuple<ring_t, double, int>>>> compareImageShapes(Mat img_in, DrawingOptions d, Matx33d m_in,
+                                                                        bool usePerfectShapes)
 {
     Mat grayImg1 = convertToGrey(img_in);
     auto shapes1 = extractShapes(d.thresh, d.ratio, d.kernel_size, d.blur_width, d.area_thresh, grayImg1);
-    Mat grayImg2 = convertToGrey(img_in2);
+
+    auto [m, transmat] = transfromImage_keepVisable(img_in, m_in);
+
+    Mat grayImg2 = convertToGrey(m);
     auto shapes2 = extractShapes(d.thresh, d.ratio, d.kernel_size, d.blur_width, d.area_thresh, grayImg2);
+
     //how many actually match and at what hash distance
 
     //compare the shapes with the transformation matrix

@@ -28,7 +28,7 @@ function setRotationMatrix() {
 
 function setScaleMatrix() {
     let rotation = parseInt(document.getElementById("setScaleMatrixInput").value);
-    g_transformationMatrix = getScaleMatrix(rotation);
+    g_transformationMatrix = getScaleMatrix(rotation, rotation);
 }
 
 function getHashDistance() {
@@ -258,7 +258,7 @@ function updateLookupCanvasHeap() {
 
 function updateDatabaseCanvasHeap() {
 
-    module._free(canvas_inserted_in_database_wasm_heap.width * canvas_inserted_in_database_wasm_heap.height * 4);
+    module._free(canvas_inserted_in_database_wasm_heap.ptr);
 
     const databaseCanvas = document.getElementById('databaseCanvas');
 

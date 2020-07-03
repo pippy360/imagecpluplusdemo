@@ -1,0 +1,1 @@
+-I/Users/tmurphy/git/image/opencv/opencv_default -I/Users/tmurphy/git/image/opencv/modules/features2d/include -I/Users/tmurphy/git/image/opencv/opencv_default/modules/features2d -I/Users/tmurphy/git/image/opencv/modules/core/include -I/Users/tmurphy/git/image/opencv/modules/flann/include -I/Users/tmurphy/git/image/opencv/modules/imgproc/include 

@@ -1,0 +1,1 @@
+-I/Users/tmurphy/git/image/opencv/opencv_default -I/Users/tmurphy/git/image/opencv/modules/core/include -I/Users/tmurphy/git/image/opencv/opencv_default/modules/core -I/Users/tmurphy/git/image/opencv/3rdparty/zlib -I/Users/tmurphy/git/image/opencv/opencv_default/3rdparty/zlib 

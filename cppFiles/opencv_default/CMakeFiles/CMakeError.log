@@ -1,0 +1,199 @@
+Compilation failed:
+    source file: '/Users/tmurphy/git/image/opencv/opencv_default/CMakeFiles/CMakeTmp/src.cxx'
+    check option: ' -fsigned-char -W -Wall -Werror=return-type -Werror=non-virtual-dtor -Werror=address -Werror=sequence-point -Wformat -Werror=format-security -Wmissing-declarations -Wmissing-prototypes -Wstrict-prototypes -Wundef -Winit-self -Wpointer-arith -Wshadow -Wsign-promo -Wuninitialized -Winit-self -Winconsistent-missing-override -Wno-delete-non-virtual-dtor -Wno-unnamed-type-template-args -Wno-comment -fdiagnostics-show-option  -pthread'
+===== BUILD LOG =====
+Change Dir: /Users/tmurphy/git/image/opencv/opencv_default/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make cmTC_cd4c8/fast && /Applications/Xcode.app/Contents/Developer/usr/bin/make -f CMakeFiles/cmTC_cd4c8.dir/build.make CMakeFiles/cmTC_cd4c8.dir/build
+Building CXX object CMakeFiles/cmTC_cd4c8.dir/src.cxx.o
+/Users/tmurphy/git/image/emsdk/upstream/emscripten/em++    -s WASM=1 -s USE_PTHREADS=0   -DNDEBUG -O2    -fsigned-char -W -Wall -Werror=return-type -Werror=non-virtual-dtor -Werror=address -Werror=sequence-point -Wformat -Werror=format-security -Wmissing-declarations -Wmissing-prototypes -Wstrict-prototypes -Wundef -Winit-self -Wpointer-arith -Wshadow -Wsign-promo -Wuninitialized -Winit-self -Winconsistent-missing-override -Wno-delete-non-virtual-dtor -Wno-unnamed-type-template-args -Wno-comment -fdiagnostics-show-option  -pthread -std=c++11 -o CMakeFiles/cmTC_cd4c8.dir/src.cxx.o -c /Users/tmurphy/git/image/opencv/opencv_default/CMakeFiles/CMakeTmp/src.cxx
+/Users/tmurphy/git/image/opencv/opencv_default/CMakeFiles/CMakeTmp/src.cxx:1:8: warning: unknown pragma ignored [-Wunknown-pragmas]
+#pragma
+       ^
+1 warning generated.
+Linking CXX executable cmTC_cd4c8.js
+/usr/local/Cellar/cmake/3.16.5/bin/cmake -E cmake_link_script CMakeFiles/cmTC_cd4c8.dir/link.txt --verbose=1
+/Users/tmurphy/git/image/emsdk/upstream/emscripten/em++  -s WASM=1 -s USE_PTHREADS=0   -DNDEBUG -O2    -O2 @CMakeFiles/cmTC_cd4c8.dir/objects1.rsp  -o cmTC_cd4c8.js 
+wasm-ld: error: 'atomics' feature is used by CMakeFiles/cmTC_cd4c8.dir/src.cxx.o, so --shared-memory must be used
+shared:ERROR: '/Users/tmurphy/git/image/emsdk/upstream/bin/wasm-ld -o /var/folders/1p/7d57c5z54d9352qjr1npz9pm0000gp/T/emscripten_temp_4EOYKr/cmTC_cd4c8.wasm --lto-O0 CMakeFiles/cmTC_cd4c8.dir/src.cxx.o -L/Users/tmurphy/git/image/emsdk/upstream/emscripten/system/local/lib -L/Users/tmurphy/git/image/emsdk/upstream/emscripten/system/lib -L/Users/tmurphy/.emscripten_cache/wasm /Users/tmurphy/.emscripten_cache/wasm/libc.a /Users/tmurphy/.emscripten_cache/wasm/libcompiler_rt.a /Users/tmurphy/.emscripten_cache/wasm/libc-wasm.a /Users/tmurphy/.emscripten_cache/wasm/libdlmalloc.a /Users/tmurphy/.emscripten_cache/wasm/libpthread_stub.a /Users/tmurphy/.emscripten_cache/wasm/libc_rt_wasm.a /Users/tmurphy/.emscripten_cache/wasm/libsockets.a --allow-undefined --import-memory --import-table -mllvm -combiner-global-alias-analysis=false -mllvm -enable-emscripten-sjlj -mllvm -disable-lsr --strip-debug --export __wasm_call_ctors --export __data_end --export main --export malloc --export free --export setThrew --export __errno_location -z stack-size=5242880 --initial-memory=16777216 --no-entry --max-memory=16777216 --global-base=1024' failed (1)
+make[1]: *** [cmTC_cd4c8.js] Error 1
+make: *** [cmTC_cd4c8/fast] Error 2
+
+
+===== END =====
+
+Compilation failed:
+    source file: '/Users/tmurphy/git/image/opencv/opencv_default/CMakeFiles/CMakeTmp/src.c'
+    check option: ' -fsigned-char -W -Wall -Werror=return-type -Werror=non-virtual-dtor -Werror=address -Werror=sequence-point -Wformat -Werror=format-security -Wmissing-declarations -Wmissing-prototypes -Wstrict-prototypes -Wundef -Winit-self -Wpointer-arith -Wshadow -Wsign-promo -Wuninitialized -Winit-self -Winconsistent-missing-override -Wno-delete-non-virtual-dtor -Wno-unnamed-type-template-args -Wno-comment -fdiagnostics-show-option  -pthread'
+===== BUILD LOG =====
+Change Dir: /Users/tmurphy/git/image/opencv/opencv_default/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make cmTC_0d862/fast && /Applications/Xcode.app/Contents/Developer/usr/bin/make -f CMakeFiles/cmTC_0d862.dir/build.make CMakeFiles/cmTC_0d862.dir/build
+Building C object CMakeFiles/cmTC_0d862.dir/src.c.o
+/Users/tmurphy/git/image/emsdk/upstream/emscripten/emcc   -s WASM=1 -s USE_PTHREADS=0   -DNDEBUG -O2    -fsigned-char -W -Wall -Werror=return-type -Werror=non-virtual-dtor -Werror=address -Werror=sequence-point -Wformat -Werror=format-security -Wmissing-declarations -Wmissing-prototypes -Wstrict-prototypes -Wundef -Winit-self -Wpointer-arith -Wshadow -Wsign-promo -Wuninitialized -Winit-self -Winconsistent-missing-override -Wno-delete-non-virtual-dtor -Wno-unnamed-type-template-args -Wno-comment -fdiagnostics-show-option  -pthread -o CMakeFiles/cmTC_0d862.dir/src.c.o   -c /Users/tmurphy/git/image/opencv/opencv_default/CMakeFiles/CMakeTmp/src.c
+/Users/tmurphy/git/image/opencv/opencv_default/CMakeFiles/CMakeTmp/src.c:1:8: warning: unknown pragma ignored [-Wunknown-pragmas]
+#pragma
+       ^
+1 warning generated.
+Linking C executable cmTC_0d862.js
+/usr/local/Cellar/cmake/3.16.5/bin/cmake -E cmake_link_script CMakeFiles/cmTC_0d862.dir/link.txt --verbose=1
+/Users/tmurphy/git/image/emsdk/upstream/emscripten/emcc -s WASM=1 -s USE_PTHREADS=0   -DNDEBUG -O2    -O2 @CMakeFiles/cmTC_0d862.dir/objects1.rsp  -o cmTC_0d862.js 
+wasm-ld: error: 'atomics' feature is used by CMakeFiles/cmTC_0d862.dir/src.c.o, so --shared-memory must be used
+shared:ERROR: '/Users/tmurphy/git/image/emsdk/upstream/bin/wasm-ld -o /var/folders/1p/7d57c5z54d9352qjr1npz9pm0000gp/T/emscripten_temp_5_ADmc/cmTC_0d862.wasm --lto-O0 CMakeFiles/cmTC_0d862.dir/src.c.o -L/Users/tmurphy/git/image/emsdk/upstream/emscripten/system/local/lib -L/Users/tmurphy/git/image/emsdk/upstream/emscripten/system/lib -L/Users/tmurphy/.emscripten_cache/wasm /Users/tmurphy/.emscripten_cache/wasm/libc.a /Users/tmurphy/.emscripten_cache/wasm/libcompiler_rt.a /Users/tmurphy/.emscripten_cache/wasm/libc-wasm.a /Users/tmurphy/.emscripten_cache/wasm/libdlmalloc.a /Users/tmurphy/.emscripten_cache/wasm/libpthread_stub.a /Users/tmurphy/.emscripten_cache/wasm/libc_rt_wasm.a /Users/tmurphy/.emscripten_cache/wasm/libsockets.a --allow-undefined --import-memory --import-table -mllvm -combiner-global-alias-analysis=false -mllvm -enable-emscripten-sjlj -mllvm -disable-lsr --strip-debug --export __wasm_call_ctors --export __data_end --export main --export malloc --export free --export setThrew --export __errno_location -z stack-size=5242880 --initial-memory=16777216 --no-entry --max-memory=16777216 --global-base=1024' failed (1)
+make[1]: *** [cmTC_0d862.js] Error 1
+make: *** [cmTC_0d862/fast] Error 2
+
+
+===== END =====
+
+Compilation failed:
+    source file: '/Users/tmurphy/git/image/opencv/opencv_default/CMakeFiles/CMakeTmp/src.cxx'
+    check option: ' -fsigned-char -W -Wall -Werror=return-type -Werror=non-virtual-dtor -Werror=address -Werror=sequence-point -Wformat -Werror=format-security -Wmissing-declarations -Wmissing-prototypes -Wstrict-prototypes -Wundef -Winit-self -Wpointer-arith -Wshadow -Wsign-promo -Wuninitialized -Winit-self -Winconsistent-missing-override -Wno-delete-non-virtual-dtor -Wno-unnamed-type-template-args -Wno-comment -fdiagnostics-show-option -Qunused-arguments -ffunction-sections -fdata-sections   -mfpmath=387'
+===== BUILD LOG =====
+Change Dir: /Users/tmurphy/git/image/opencv/opencv_default/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make cmTC_411a3/fast && /Applications/Xcode.app/Contents/Developer/usr/bin/make -f CMakeFiles/cmTC_411a3.dir/build.make CMakeFiles/cmTC_411a3.dir/build
+Building CXX object CMakeFiles/cmTC_411a3.dir/src.cxx.o
+/Users/tmurphy/git/image/emsdk/upstream/emscripten/em++    -s WASM=1 -s USE_PTHREADS=0   -DNDEBUG -O2    -fsigned-char -W -Wall -Werror=return-type -Werror=non-virtual-dtor -Werror=address -Werror=sequence-point -Wformat -Werror=format-security -Wmissing-declarations -Wmissing-prototypes -Wstrict-prototypes -Wundef -Winit-self -Wpointer-arith -Wshadow -Wsign-promo -Wuninitialized -Winit-self -Winconsistent-missing-override -Wno-delete-non-virtual-dtor -Wno-unnamed-type-template-args -Wno-comment -fdiagnostics-show-option -Qunused-arguments -ffunction-sections -fdata-sections   -mfpmath=387 -std=c++11 -o CMakeFiles/cmTC_411a3.dir/src.cxx.o -c /Users/tmurphy/git/image/opencv/opencv_default/CMakeFiles/CMakeTmp/src.cxx
+error: unknown FP unit '387'
+shared:ERROR: '/Users/tmurphy/git/image/emsdk/upstream/bin/clang++ -target wasm32-unknown-emscripten -D__EMSCRIPTEN_major__=1 -D__EMSCRIPTEN_minor__=39 -D__EMSCRIPTEN_tiny__=10 -D_LIBCPP_ABI_VERSION=2 -Dunix -D__unix -D__unix__ -Werror=implicit-function-declaration -Xclang -nostdsysteminc -Xclang -isystem/Users/tmurphy/git/image/emsdk/upstream/emscripten/system/include/libcxx -Xclang -isystem/Users/tmurphy/git/image/emsdk/upstream/emscripten/system/lib/libcxxabi/include -Xclang -isystem/Users/tmurphy/git/image/emsdk/upstream/emscripten/system/include/compat -Xclang -isystem/Users/tmurphy/git/image/emsdk/upstream/emscripten/system/include -Xclang -isystem/Users/tmurphy/git/image/emsdk/upstream/emscripten/system/include/libc -Xclang -isystem/Users/tmurphy/git/image/emsdk/upstream/emscripten/system/lib/libc/musl/arch/emscripten -Xclang -isystem/Users/tmurphy/git/image/emsdk/upstream/emscripten/system/local/include -Xclang -isystem/Users/tmurphy/.emscripten_cache/wasm/include -DNDEBUG -O2 -fsigned-char -W -Wall -Werror=return-type -Werror=non-virtual-dtor -Werror=address -Werror=sequence-point -Wformat -Werror=format-security -Wmissing-declarations -Wmissing-prototypes -Wstrict-prototypes -Wundef -Winit-self -Wpointer-arith -Wshadow -Wsign-promo -Wuninitialized -Winit-self -Winconsistent-missing-override -Wno-delete-non-virtual-dtor -Wno-unnamed-type-template-args -Wno-comment -fdiagnostics-show-option -Qunused-arguments -ffunction-sections -fdata-sections -mfpmath=387 -std=c++11 -c -DEMSCRIPTEN -fignore-exceptions /Users/tmurphy/git/image/opencv/opencv_default/CMakeFiles/CMakeTmp/src.cxx -Xclang -isystem/Users/tmurphy/git/image/emsdk/upstream/emscripten/system/include/SDL -c -o CMakeFiles/cmTC_411a3.dir/src.cxx.o -mllvm -combiner-global-alias-analysis=false -mllvm -enable-emscripten-sjlj -mllvm -disable-lsr' failed (1)
+make[1]: *** [CMakeFiles/cmTC_411a3.dir/src.cxx.o] Error 1
+make: *** [cmTC_411a3/fast] Error 2
+
+
+===== END =====
+
+Compilation failed:
+    source file: '/Users/tmurphy/git/image/opencv/opencv_default/CMakeFiles/CMakeTmp/src.c'
+    check option: ' -fsigned-char -W -Wall -Werror=return-type -Werror=non-virtual-dtor -Werror=address -Werror=sequence-point -Wformat -Werror=format-security -Wmissing-declarations -Wmissing-prototypes -Wstrict-prototypes -Wundef -Winit-self -Wpointer-arith -Wshadow -Wsign-promo -Wuninitialized -Winit-self -Winconsistent-missing-override -Wno-delete-non-virtual-dtor -Wno-unnamed-type-template-args -Wno-comment -fdiagnostics-show-option -Qunused-arguments -ffunction-sections -fdata-sections   -mfpmath=387'
+===== BUILD LOG =====
+Change Dir: /Users/tmurphy/git/image/opencv/opencv_default/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make cmTC_25df8/fast && /Applications/Xcode.app/Contents/Developer/usr/bin/make -f CMakeFiles/cmTC_25df8.dir/build.make CMakeFiles/cmTC_25df8.dir/build
+Building C object CMakeFiles/cmTC_25df8.dir/src.c.o
+/Users/tmurphy/git/image/emsdk/upstream/emscripten/emcc   -s WASM=1 -s USE_PTHREADS=0   -DNDEBUG -O2    -fsigned-char -W -Wall -Werror=return-type -Werror=non-virtual-dtor -Werror=address -Werror=sequence-point -Wformat -Werror=format-security -Wmissing-declarations -Wmissing-prototypes -Wstrict-prototypes -Wundef -Winit-self -Wpointer-arith -Wshadow -Wsign-promo -Wuninitialized -Winit-self -Winconsistent-missing-override -Wno-delete-non-virtual-dtor -Wno-unnamed-type-template-args -Wno-comment -fdiagnostics-show-option -Qunused-arguments -ffunction-sections -fdata-sections   -mfpmath=387 -o CMakeFiles/cmTC_25df8.dir/src.c.o   -c /Users/tmurphy/git/image/opencv/opencv_default/CMakeFiles/CMakeTmp/src.c
+error: unknown FP unit '387'
+shared:ERROR: '/Users/tmurphy/git/image/emsdk/upstream/bin/clang -target wasm32-unknown-emscripten -D__EMSCRIPTEN_major__=1 -D__EMSCRIPTEN_minor__=39 -D__EMSCRIPTEN_tiny__=10 -D_LIBCPP_ABI_VERSION=2 -Dunix -D__unix -D__unix__ -Werror=implicit-function-declaration -Xclang -nostdsysteminc -Xclang -isystem/Users/tmurphy/git/image/emsdk/upstream/emscripten/system/include/libcxx -Xclang -isystem/Users/tmurphy/git/image/emsdk/upstream/emscripten/system/lib/libcxxabi/include -Xclang -isystem/Users/tmurphy/git/image/emsdk/upstream/emscripten/system/include/compat -Xclang -isystem/Users/tmurphy/git/image/emsdk/upstream/emscripten/system/include -Xclang -isystem/Users/tmurphy/git/image/emsdk/upstream/emscripten/system/include/libc -Xclang -isystem/Users/tmurphy/git/image/emsdk/upstream/emscripten/system/lib/libc/musl/arch/emscripten -Xclang -isystem/Users/tmurphy/git/image/emsdk/upstream/emscripten/system/local/include -Xclang -isystem/Users/tmurphy/.emscripten_cache/wasm/include -DNDEBUG -O2 -fsigned-char -W -Wall -Werror=return-type -Werror=non-virtual-dtor -Werror=address -Werror=sequence-point -Wformat -Werror=format-security -Wmissing-declarations -Wmissing-prototypes -Wstrict-prototypes -Wundef -Winit-self -Wpointer-arith -Wshadow -Wsign-promo -Wuninitialized -Winit-self -Winconsistent-missing-override -Wno-delete-non-virtual-dtor -Wno-unnamed-type-template-args -Wno-comment -fdiagnostics-show-option -Qunused-arguments -ffunction-sections -fdata-sections -mfpmath=387 -c -DEMSCRIPTEN -fignore-exceptions /Users/tmurphy/git/image/opencv/opencv_default/CMakeFiles/CMakeTmp/src.c -Xclang -isystem/Users/tmurphy/git/image/emsdk/upstream/emscripten/system/include/SDL -c -o CMakeFiles/cmTC_25df8.dir/src.c.o -mllvm -combiner-global-alias-analysis=false -mllvm -enable-emscripten-sjlj -mllvm -disable-lsr' failed (1)
+make[1]: *** [CMakeFiles/cmTC_25df8.dir/src.c.o] Error 1
+make: *** [cmTC_25df8/fast] Error 2
+
+
+===== END =====
+
+Determining size of off64_t failed with the following output:
+Change Dir: /Users/tmurphy/git/image/opencv/opencv_default/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make cmTC_769de/fast && /Applications/Xcode.app/Contents/Developer/usr/bin/make -f CMakeFiles/cmTC_769de.dir/build.make CMakeFiles/cmTC_769de.dir/build
+Building C object CMakeFiles/cmTC_769de.dir/OFF64_T.c.o
+/Users/tmurphy/git/image/emsdk/upstream/emscripten/emcc   -s WASM=1 -s USE_PTHREADS=0    -fsigned-char -W -Wall -Werror=return-type -Werror=non-virtual-dtor -Werror=address -Werror=sequence-point -Wformat -Werror=format-security -Wmissing-declarations -Wmissing-prototypes -Wstrict-prototypes -Wundef -Winit-self -Wpointer-arith -Wshadow -Wsign-promo -Wuninitialized -Winit-self -Winconsistent-missing-override -Wno-delete-non-virtual-dtor -Wno-unnamed-type-template-args -Wno-comment -fdiagnostics-show-option -Qunused-arguments -ffunction-sections -fdata-sections  -fvisibility=hidden -fvisibility-inlines-hidden  -DNDEBUG -O2   -o CMakeFiles/cmTC_769de.dir/OFF64_T.c.o   -c /Users/tmurphy/git/image/opencv/opencv_default/CMakeFiles/CheckTypeSize/OFF64_T.c
+/Users/tmurphy/git/image/opencv/opencv_default/CMakeFiles/CheckTypeSize/OFF64_T.c:19:12: error: use of undeclared identifier 'off64_t'
+  ('0' + ((SIZE / 10000)%10)),
+           ^
+/Users/tmurphy/git/image/opencv/opencv_default/CMakeFiles/CheckTypeSize/OFF64_T.c:17:22: note: expanded from macro 'SIZE'
+#define SIZE (sizeof(off64_t))
+                     ^
+/Users/tmurphy/git/image/opencv/opencv_default/CMakeFiles/CheckTypeSize/OFF64_T.c:20:12: error: use of undeclared identifier 'off64_t'
+  ('0' + ((SIZE / 1000)%10)),
+           ^
+/Users/tmurphy/git/image/opencv/opencv_default/CMakeFiles/CheckTypeSize/OFF64_T.c:17:22: note: expanded from macro 'SIZE'
+#define SIZE (sizeof(off64_t))
+                     ^
+/Users/tmurphy/git/image/opencv/opencv_default/CMakeFiles/CheckTypeSize/OFF64_T.c:21:12: error: use of undeclared identifier 'off64_t'
+  ('0' + ((SIZE / 100)%10)),
+           ^
+/Users/tmurphy/git/image/opencv/opencv_default/CMakeFiles/CheckTypeSize/OFF64_T.c:17:22: note: expanded from macro 'SIZE'
+#define SIZE (sizeof(off64_t))
+                     ^
+/Users/tmurphy/git/image/opencv/opencv_default/CMakeFiles/CheckTypeSize/OFF64_T.c:22:12: error: use of undeclared identifier 'off64_t'
+  ('0' + ((SIZE / 10)%10)),
+           ^
+/Users/tmurphy/git/image/opencv/opencv_default/CMakeFiles/CheckTypeSize/OFF64_T.c:17:22: note: expanded from macro 'SIZE'
+#define SIZE (sizeof(off64_t))
+                     ^
+/Users/tmurphy/git/image/opencv/opencv_default/CMakeFiles/CheckTypeSize/OFF64_T.c:23:12: error: use of undeclared identifier 'off64_t'
+  ('0' +  (SIZE    % 10)),
+           ^
+/Users/tmurphy/git/image/opencv/opencv_default/CMakeFiles/CheckTypeSize/OFF64_T.c:17:22: note: expanded from macro 'SIZE'
+#define SIZE (sizeof(off64_t))
+                     ^
+/Users/tmurphy/git/image/opencv/opencv_default/CMakeFiles/CheckTypeSize/OFF64_T.c:39:10: error: use of undeclared identifier 'off64_t'
+  return SIZE;
+         ^
+/Users/tmurphy/git/image/opencv/opencv_default/CMakeFiles/CheckTypeSize/OFF64_T.c:17:22: note: expanded from macro 'SIZE'
+#define SIZE (sizeof(off64_t))
+                     ^
+6 errors generated.
+shared:ERROR: '/Users/tmurphy/git/image/emsdk/upstream/bin/clang -target wasm32-unknown-emscripten -D__EMSCRIPTEN_major__=1 -D__EMSCRIPTEN_minor__=39 -D__EMSCRIPTEN_tiny__=10 -D_LIBCPP_ABI_VERSION=2 -Dunix -D__unix -D__unix__ -Werror=implicit-function-declaration -Xclang -nostdsysteminc -Xclang -isystem/Users/tmurphy/git/image/emsdk/upstream/emscripten/system/include/libcxx -Xclang -isystem/Users/tmurphy/git/image/emsdk/upstream/emscripten/system/lib/libcxxabi/include -Xclang -isystem/Users/tmurphy/git/image/emsdk/upstream/emscripten/system/include/compat -Xclang -isystem/Users/tmurphy/git/image/emsdk/upstream/emscripten/system/include -Xclang -isystem/Users/tmurphy/git/image/emsdk/upstream/emscripten/system/include/libc -Xclang -isystem/Users/tmurphy/git/image/emsdk/upstream/emscripten/system/lib/libc/musl/arch/emscripten -Xclang -isystem/Users/tmurphy/git/image/emsdk/upstream/emscripten/system/local/include -Xclang -isystem/Users/tmurphy/.emscripten_cache/wasm/include -fsigned-char -W -Wall -Werror=return-type -Werror=non-virtual-dtor -Werror=address -Werror=sequence-point -Wformat -Werror=format-security -Wmissing-declarations -Wmissing-prototypes -Wstrict-prototypes -Wundef -Winit-self -Wpointer-arith -Wshadow -Wsign-promo -Wuninitialized -Winit-self -Winconsistent-missing-override -Wno-delete-non-virtual-dtor -Wno-unnamed-type-template-args -Wno-comment -fdiagnostics-show-option -Qunused-arguments -ffunction-sections -fdata-sections -fvisibility=hidden -fvisibility-inlines-hidden -DNDEBUG -O2 -c -DEMSCRIPTEN -fignore-exceptions /Users/tmurphy/git/image/opencv/opencv_default/CMakeFiles/CheckTypeSize/OFF64_T.c -Xclang -isystem/Users/tmurphy/git/image/emsdk/upstream/emscripten/system/include/SDL -c -o CMakeFiles/cmTC_769de.dir/OFF64_T.c.o -mllvm -combiner-global-alias-analysis=false -mllvm -enable-emscripten-sjlj -mllvm -disable-lsr' failed (1)
+make[1]: *** [CMakeFiles/cmTC_769de.dir/OFF64_T.c.o] Error 1
+make: *** [cmTC_769de/fast] Error 2
+
+
+/Users/tmurphy/git/image/opencv/opencv_default/CMakeFiles/CheckTypeSize/OFF64_T.c:
+#include <sys/types.h>
+#include <stdint.h>
+#include <stddef.h>
+
+
+#undef KEY
+#if defined(__i386)
+# define KEY '_','_','i','3','8','6'
+#elif defined(__x86_64)
+# define KEY '_','_','x','8','6','_','6','4'
+#elif defined(__ppc__)
+# define KEY '_','_','p','p','c','_','_'
+#elif defined(__ppc64__)
+# define KEY '_','_','p','p','c','6','4','_','_'
+#endif
+
+#define SIZE (sizeof(off64_t))
+char info_size[] =  {'I', 'N', 'F', 'O', ':', 's','i','z','e','[',
+  ('0' + ((SIZE / 10000)%10)),
+  ('0' + ((SIZE / 1000)%10)),
+  ('0' + ((SIZE / 100)%10)),
+  ('0' + ((SIZE / 10)%10)),
+  ('0' +  (SIZE    % 10)),
+  ']',
+#ifdef KEY
+  ' ','k','e','y','[', KEY, ']',
+#endif
+  '\0'};
+
+#ifdef __CLASSIC_C__
+int main(argc, argv) int argc; char *argv[];
+#else
+int main(int argc, char *argv[])
+#endif
+{
+  int require = 0;
+  require += info_size[argc];
+  (void)argv;
+  return SIZE;
+}
+
+
+Build output check failed:
+    Regex: 'unknown .*option'
+    Output line: 'warning: unknown warning option '-Wno-suggest-override', did you mean '-Wno-shift-overflow'? [-Wunknown-warning-option]'
+Compilation failed:
+    source file: '/Users/tmurphy/git/image/opencv/opencv_default/CMakeFiles/CMakeTmp/src.cxx'
+    check option: ' -Wno-suggest-override'
+===== BUILD LOG =====
+Change Dir: /Users/tmurphy/git/image/opencv/opencv_default/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make cmTC_7c609/fast && /Applications/Xcode.app/Contents/Developer/usr/bin/make -f CMakeFiles/cmTC_7c609.dir/build.make CMakeFiles/cmTC_7c609.dir/build
+Building CXX object CMakeFiles/cmTC_7c609.dir/src.cxx.o
+/Users/tmurphy/git/image/emsdk/upstream/emscripten/em++    -s WASM=1 -s USE_PTHREADS=0    -fsigned-char -W -Wall -Werror=return-type -Werror=non-virtual-dtor -Werror=address -Werror=sequence-point -Wformat -Werror=format-security -Wstrict-prototypes -Winit-self -Wpointer-arith -Wuninitialized -Winit-self -Winconsistent-missing-override -Wno-delete-non-virtual-dtor -Wno-unnamed-type-template-args -Wno-comment -fdiagnostics-show-option -Qunused-arguments -ffunction-sections -fdata-sections  -fvisibility=hidden -fvisibility-inlines-hidden -Wno-deprecated -Wno-missing-prototypes -Wno-missing-declarations -Wno-shadow -Wno-unused-parameter -Wno-unused-local-typedefs -Wno-sign-compare -Wno-sign-promo -Wno-undef -Wno-tautological-undefined-compare -Wno-ignored-qualifiers -Wno-extra -Wno-unused-function -Wno-unused-const-variable -Wno-shorten-64-to-32 -Wno-invalid-offsetof -Wno-enum-compare-switch  -DNDEBUG -O2    -Wno-suggest-override -std=c++11 -o CMakeFiles/cmTC_7c609.dir/src.cxx.o -c /Users/tmurphy/git/image/opencv/opencv_default/CMakeFiles/CMakeTmp/src.cxx
+warning: unknown warning option '-Wno-suggest-override'; did you mean '-Wno-shift-overflow'? [-Wunknown-warning-option]
+/Users/tmurphy/git/image/opencv/opencv_default/CMakeFiles/CMakeTmp/src.cxx:1:8: warning: unknown pragma ignored [-Wunknown-pragmas]
+#pragma
+       ^
+2 warnings generated.
+Linking CXX executable cmTC_7c609.js
+/usr/local/Cellar/cmake/3.16.5/bin/cmake -E cmake_link_script CMakeFiles/cmTC_7c609.dir/link.txt --verbose=1
+/Users/tmurphy/git/image/emsdk/upstream/emscripten/em++  -s WASM=1 -s USE_PTHREADS=0    -fsigned-char -W -Wall -Werror=return-type -Werror=non-virtual-dtor -Werror=address -Werror=sequence-point -Wformat -Werror=format-security -Wstrict-prototypes -Winit-self -Wpointer-arith -Wuninitialized -Winit-self -Winconsistent-missing-override -Wno-delete-non-virtual-dtor -Wno-unnamed-type-template-args -Wno-comment -fdiagnostics-show-option -Qunused-arguments -ffunction-sections -fdata-sections  -fvisibility=hidden -fvisibility-inlines-hidden -Wno-deprecated -Wno-missing-prototypes -Wno-missing-declarations -Wno-shadow -Wno-unused-parameter -Wno-unused-local-typedefs -Wno-sign-compare -Wno-sign-promo -Wno-undef -Wno-tautological-undefined-compare -Wno-ignored-qualifiers -Wno-extra -Wno-unused-function -Wno-unused-const-variable -Wno-shorten-64-to-32 -Wno-invalid-offsetof -Wno-enum-compare-switch  -DNDEBUG -O2    -Wl,--gc-sections -Wl,--as-needed  -O2 @CMakeFiles/cmTC_7c609.dir/objects1.rsp  -o cmTC_7c609.js 
+shared:WARNING: ignoring unsupported linker flag: `--gc-sections`
+shared:WARNING: ignoring unsupported linker flag: `--as-needed`
+
+
+===== END =====
+

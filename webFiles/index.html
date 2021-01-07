@@ -489,6 +489,82 @@
                                                         <span>
                                                             <img src="images/mus.png" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
                                                         </span>
+                                                        <span>
+                                                            <img src="images/boo.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                                        </span>
+                                                        <span>
+                                                            <img src="images/cat01.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                                        </span>
+                                                        <span>
+                                                            <img src="images/head.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                                        </span>
+                                                        <span>
+                                                            <img src="images/image.png" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                                        </span>
+                                                        <span>
+                                                            <img src="images/image8-2.png" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                                        </span>
+                                                        <span>
+                                                            <img src="images/mouse.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                                        </span>
+                                                        <span>
+                                                            <img src="images/pasted again.png" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                                        </span>
+                                                        <span>
+                                                            <img src="images/pasted again01.png" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                                        </span>
+                                                        <span>
+                                                            <img src="images/pasted image 0.png" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                                        </span>
+                                                        <span>
+                                                            <img src="images/soup.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                                        </span>
+                                                        <span>
+                                                            <img src="images/soup02.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                                        </span>
+                                                        <span>
+                                                            <img src="images/soup03.png" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                                        </span>
+                                                        <span>
+                                                            <img src="images/spirited01.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                                        </span>
+                                                        <span>
+                                                            <img src="images/spirited02.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                                        </span>
+                                                        <span>
+                                                            <img src="images/spirited03.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                                        </span>
+                                                        <span>
+                                                            <img src="images/spirited04.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                                        </span>
+                                                        <span>
+                                                            <img src="images/spirited05.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                                        </span>
+                                                        <span>
+                                                            <img src="images/spirited06.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                                        </span>
+                                                        <span>
+                                                            <img src="images/spirited07.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                                        </span>
+                                                        <span>
+                                                            <img src="images/spirited08.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                                        </span>
+                                                        <span>
+                                                            <img src="images/spirited_01.png" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                                        </span>
+                                                        <span>
+                                                            <img src="images/spirited_away.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                                        </span>
+                                                        <span>
+                                                            <img src="images/Total_Rickall.png" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                                        </span>
+                                                        <span>
+                                                            <img src="images/mus.png" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                                        </span>
+                                                        <span>
+                                                            <img src="images/mus.png" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                                        </span>
+
                                                     </div>
                                                 </div>
                                             </span>
@@ -630,6 +706,22 @@
   <script src="scripts/transformOperations.js"></script>
 
   <script type='text/javascript'>
+
+      function debug_toImageShape() {
+          const matinv = math.inv(g_transformState.activeCanvas.layers[g_transformState.activeCanvas.layers.length-1].appliedTransformationsMat);
+          const shape = applyTransformationMatrixToAllPoints(shapeStrToShape(g_lastusedClickAndSeeShapeLeft), matinv);
+          let str = "[";
+          for (let i = 0; i < shape.length; i++) {
+              if (i > 0)
+                  str += ", "
+              str += "[" + shape[i][0] + ", " + shape[i][1] + "]"
+          }
+          str += "]";
+          console.log("The output:");
+          return str;
+      }
+
+
       let api;
       let module;
       var statusElement = document.getElementById('status');
@@ -694,7 +786,6 @@
               if (text) Module.printErr('[post-exception status] ' + text);
           };
       };
-
 
   </script>
   <script async type="text/javascript" src="wasmLibs/cppdemo.js"></script>

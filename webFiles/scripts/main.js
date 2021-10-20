@@ -629,11 +629,6 @@ function main() {
     g_areaThresh = module.get_CANNY_AREA_THRESH();
     g_zoom = module.get_HASH_ZOOM();
 
-    document.getElementById("cannyBlurSize").value = g_blurWidth;
-    document.getElementById("cannyKernelSize").value = g_kernelSize;
-    document.getElementById("cannyRatio").value = g_ratio;
-    document.getElementById("areaThresh").value = g_areaThresh;
-
     init_loadTransformStateAndImages();
 
     g_mainGlobalState = {};

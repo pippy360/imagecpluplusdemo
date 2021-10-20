@@ -7,17 +7,11 @@
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
       <style>
-          .topPageDemoContainer {
-              margin: auto;
-              width: 1600px;
-          }
           .leftSidebar {
               width: 200px;
               float: left;
           }
           .middleImageContainer {
-              width: 1200px;
-              float: left;
           }
           .rightSidebar {
               width: 200px;
@@ -26,92 +20,33 @@
 
           .canvasInline {
               display: inline-block;
-              float: left;
               position: absolute;
-
-          }
-          .canvasWrapper {
-              display: inline-block;
-              position: relative;
-              /*height: 402px;*/
-          }
-          .addLayerButtonWrapper {
-
           }
           .selectUpperOptionsButtons {
-              width: 200px;
               font-size: 13px;
-              padding: 4px 10px;
-              margin: 5px 10px;
-              height: 28px;
+              border: 0px;
+              color: rgba(0,0,0, .7);
+              cursor: pointer;
           }
           .upperOptionsButtons {
-              margin: 5px 10px;
               /*color: #007bff;*/
+              position: relative;
+              top: 3px;
               cursor: pointer;
               font-size: 13px;
-              padding: 4px;
-          }
-          .addLayerButton {
               float: right;
-          }
-          .canvasFragment {
-              width: 258px;
-              height: 258px;
-              float: left;
-          }
-          .tab-content .canvasWrapperRight{
-              width: 560px;
-              height: 560px;
-              margin: auto;
-          }
-          .tab-content .canvasWrapperRight canvas{
-              width: 560px;
-              height: 560px;
-          }
-          .tab-content .canvasWrapperLeft{
-              width: 560px;
-              height: 560px;
-              margin: auto;
-          }
-          .tab-content .canvasWrapperLeft canvas{
-              width: 560px;
-              height: 560px;
-          }
-          .linebreak {
-              margin: auto;
-              width: 1650px;
-              align-content: center;
-          }
-          .frag {
-              width: 126px;
-              height: 126px;
-          }
-          .subScript {
-              margin: 10px;
-          }
-          canvas {
-              box-sizing: border-box;
-              border: 1px solid rgba(0,0,0,.12);
+              background-color: rgba(255,255,255,0.0);
+              color: rgba(0,0,0,.7);
+              border: 0px;
+              margin: 0px;
+              padding: 0px;
           }
           .buttonsWrapper {
-              max-width: 300px;
+              display: flex;
+              gap: 10px;
           }
           .buttonsWrapper label {
               display: block;
-          }
-          .largeCanvas canvas {
-              width: 800px;
-              height: 800px;
-          }
-          .largeCanvas .canvasWrapper {
-              /*width: 800px;*/
-              /*height: 800px;*/
-          }
-          .canvasUILayer {
-          }
-          #databaseAndLookupCanvasWrapper {
-              width: 1200px;
           }
           #databaseAndLookupCanvasWrapper:hover {
               box-sizing: border-box;
@@ -122,9 +57,6 @@
           #databaseAndLookupCanvasWrapper #lookupCanvas_ui {
               opacity: 0;
           }
-          #databaseAndLookupCanvasWrapper:hover #lookupCanvas {
-              opacity: .9;
-          }
           #databaseAndLookupCanvasWrapper #lookupCanvas {
               opacity: 1;
           }
@@ -134,46 +66,17 @@
           #databaseAndLookupCanvasWrapper #databaseCanvas_ui {
               opacity: 0;
           }
-          #databaseAndLookupCanvasWrapper:hover #databaseCanvas {
-              opacity: .9;
-          }
           #databaseAndLookupCanvasWrapper #databaseCanvas {
               opacity: 1;
-          }
-          #clickandseeHashDistanceOutput {
-              padding: 20px;
-              font-size: 20px;
-          }
-          .innerLeftSide {
-
-              width: 50%;
-              box-sizing: border-box;
-              float: left;
-          }
-          .innerLeftSide .canvasWrapper {
-              margin: auto;
-          }
-          .innerLeftSide>div{
-              display: block;
-              padding: 10px;
           }
           .innerLeftSide .canvasWrapperLeft {
               cursor: crosshair;
           }
-          .innerRightSide {
-              width: 50%;
-              box-sizing: border-box;
-              float: left;
-          }
-          .innerRightSide>div{
-              display: block;
-              padding: 10px;
+          .canvasWrapper {
+              border: 1px solid black;
           }
           .innerRightSide .canvasWrapperRight {
               cursor: crosshair;
-          }
-          .innerRightSide .canvasWrapper {
-              margin: auto;
           }
       </style>
 
@@ -278,12 +181,6 @@
           overflow: scroll;
           width: 100%;
       }
-      #shapelist{
-          display: inline-block;
-          overflow: scroll;
-          height: 200px;
-          border: 1px solid black;
-      }
       .shapeListEl{
           border-bottom: 1px solid black;
           text-align: center;
@@ -314,401 +211,318 @@
       .avoid-clicks {
           pointer-events: none;
       }
-
+      .transformOpGroup {
+          height: 33px;
+          font-size: 13px;
+      }
+      .transformOpGroup .btn{
+          font-size: 13px;
+      }
+      .transformOp {
+          padding-top: 4px;
+          padding-bottom: 4px;
+          padding-bottom: 4px;
+          background-color: #f9f9f9;
+          border: 1px solid #666;
+          color: rgba(0,0,0,.7);
+      }
+      .bottomRowCanvasHeightWidthWrapper {
+          width: 202px;
+          height: 202px;
+      }
+      .bottomRowCanvasHeightWidth {
+          width: 200px;
+          height: 200px;
+      }
     </style>
   </head>
-  <body>
-    <!--some temporary canvases we use for drawing-->
-    <canvas id="lookupCanvas_output"    style="display: none" class="canvasInline" width="560" height="560"></canvas>
-    <canvas id="databaseCanvas_output"  style="display: none" class="canvasInline" width="560" height="560"></canvas>
-
-    <div class="alert alert-info">
-        <div class="spinner" id='spinner'></div>
-        <div class="emscripten" id="status">Downloading...</div>
-        <div class="emscripten">
-            <progress value="0" max="100" id="progress" hidden=1></progress>
-        </div>
-    </div>
-    <div>
-        <div class="topPageDemoContainer clearfix">
-            <div class="leftSidebar">
-                <div style="height: 800px; overflow: scroll">
-                    <div>transformations</div>
-                    <hr>
-                    <div class="buttonsWrapper">
-                        <div class="buttonsInner">
-                      <span role="group" style="width: 100%"  class="btn-group-vertical" >
-                          <button id="translateButton" class="btn btn-secondary active"
-                                  onclick="setCurrnetOperation(enum_TransformationOperation.TRANSLATE)">
-                              Move
-                          </button>
-                          <button class="btn btn-secondary"
-                                  onclick="setCurrnetOperation(enum_TransformationOperation.NON_UNIFORM_SCALE)">
-                              Directional Stretch
-                          </button>
-                          <button class="btn btn-secondary"
-                                  onclick="setCurrnetOperation(enum_TransformationOperation.UNIFORM_SCALE)">
-                              Uniform Scale
-                          </button>
-                          <button class="btn btn-secondary" onclick="setCurrnetOperation(enum_TransformationOperation.ROTATE)">
-                              Rotate
-                          </button>
-                          <button class="btn btn-secondary" onclick="setCurrnetOperation(enum_TransformationOperation.SKEW_X)">
-                              Skew/Shear X
-                          </button>
-                          <button class="btn btn-secondary" onclick="setCurrnetOperation(enum_TransformationOperation.SKEW_Y)">
-                              Skew/Shear Y
-                          </button>
-                          <button class="btn btn-secondary" onclick="setCurrnetOperation(enum_TransformationOperation.CROP)">
-                              Crop
-                          </button>
-                            <button type="button" style="margin-bottom: 8px;" class="alert-danger btn btn-secondary"
-                                    onclick="setDefaultTransformationValues()">Reset</button>
-                      </span>
-                        </div>
-                    </div>
-                    <hr>
-                    <div>inspect</div>
-                    <button class="btn btn-secondary" style="width: 100%" onclick="setMode(enum_modes.inspect)">insepct</button>
-                    <hr>
-                    <div>Canny edge detection parameters</div>
-                    <hr>
-                    <div style="max-width: 200px;">
-                        <div>
-                            <span>
-                                blur size:
-                            </span>
-                            <input type="text" class="form-control" style="width: 60px; display: inline-block" onchange="setBlurVal()" id="cannyBlurSize">
-                        </div>
-                        <div>
-                            <span>
-                                kernel size:
-                            </span>
-                            <input type="text" class="form-control" style="width: 60px; display: inline-block" onchange="setKernelVal()" id="cannyKernelSize">
-                        </div>
-                        <div>
-                            <span>
-                                ratio size:
-                            </span>
-                            <input type="text" class="form-control" style="width: 60px; display: inline-block" onchange="setRatioVal()" id="cannyRatio">
-                        </div>
-                        <div>
-                            <span>
-                                Area threshold:
-                            </span>
-                            <input type="text" class="form-control" style="width: 60px; display: inline-block" onchange="setAreaThresh()" id="areaThresh">
-                        </div>
-                        <div>
-                            <span>
-                                Erode before size:
-                            </span>
-                            <input type="text" class="form-control" style="width: 60px; display: inline-block" onchange="set_g_EROSION_BEFORE_SIZE()" id="erodeBeforeSize">
-                        </div>
-                        <div>
-                            <span>
-                                Dilate size:
-                            </span>
-                            <input type="text" class="form-control" style="width: 60px; display: inline-block" onchange="set_g_DILATE_SIZE()" id="dilateSize">
-                        </div>
-                        <div>
-                            <span>
-                                Erode after size:
-                            </span>
-                            <input type="text" class="form-control" style="width: 60px; display: inline-block" onchange="set_g_EROSION_AFTER_SIZE()" id="erodeAfterSize">
-                        </div>
-                        <div>
-                            <span>
-                                Erode before:
-                            </span>
-                            <input type="checkbox" class="form-control" style="width: 60px; display: inline-block" onchange="set_g_USE_ERODE_BEFORE()" id="erodeBeforeBool">
-                        </div>
-                        <div>
-                            <span>
-                                Dilate:
-                            </span>
-                            <input type="checkbox" class="form-control" style="width: 60px; display: inline-block" onchange="set_g_USE_DILATE()" id="dilateBool">
-                        </div>
-                        <div>
-                            <span>
-                                Erode after:
-                            </span>
-                            <input type="checkbox" class="form-control" style="width: 60px; display: inline-block" onchange="set_g_USE_ERODE_AFTER()" id="erodeAfterBool">
-                        </div>
-
-                    </div>
-                </div>
-            </div>
+  <body class="container">
+    <div style="display: flex">
+        <div class="topPageDemoContainer clearfix" style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px">
             <div class="middleImageContainer">
-                <div style="float: left">
-                    <div class="tab-content">
-                        <div id="home" class="tab-pane active">
-                            <div id="databaseAndLookupCanvasWrapper" class="clearfix">
-                                <div class="innerLeftSide">
-                                    <div class="canvasWrapper">
-                                        <div class="clearfix">
-                                            <select class="browser-default selectUpperOptionsButtons custom-select" onchange="g_mainGlobalState.drawingImageLookup = this.selectedIndex; draw()" style="width: 200px">
-                                                <option value="0" selected>RGBA</option>
-                                                <option value="1">Valid Shape</option>
-                                                <option value="2">All Shape</option>
-                                                <option value="3">Contours</option>
-                                                <option value="4">Edge</option>
-                                            </select>
-                                            <span class="dropdown">
-                                                <button class="upperOptionsButtons addLayerButton btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                                    + Add layer
-                                                </button>
-                                                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton2">
-                                                    <div style="padding: 10px; width: 270px">
-                                                        <span>
-                                                            <img src="images/205488737.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
-                                                        </span>
-                                                        <span>
-                                                            <img src="images/41mYED6GE6L._AC_.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
-                                                        </span>
-                                                        <span>
-                                                            <img src="images/4216447_1.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
-                                                        </span>
-                                                        <span>
-                                                            <img src="images/accidental-wes-anderson-montreal.webp" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
-                                                        </span>
-                                                        <span>
-                                                            <img src="images/brockton-point-lighthouse-in-stanley-park.webp" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
-                                                        </span>
-                                                        <span>
-                                                            <img src="images/il_1588xN.3197638522_lo52.webp" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
-                                                        </span>
-                                                        <span>
-                                                            <img src="images/il_fullxfull.1219881601_lkvp.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
-                                                        </span>
-                                                        <span>
-                                                            <img src="images/basicshapes.png" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
-                                                        </span>
-                                                        <span>
-                                                            <img src="images/IMG_20191024_130833.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
-                                                        </span>
-                                                        <span>
-                                                            <img src="images/richandmalty.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
-                                                        </span>
-                                                        <span>
-                                                            <img src="images/richandmalty400px.png" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
-                                                        </span>
-                                                        <span>
-                                                            <img src="images/Total_Rickall.webp" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
-                                                        </span>
-                                                        <span>
-                                                            <img src="images/googlelogo.webp" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
-                                                        </span>
-                                                        <span>
-                                                            <img src="images/font.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
-                                                        </span>
-                                                        <span>
-                                                            <img src="images/forest.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
-                                                        </span>
-                                                        <span>
-                                                            <img src="images/tech.png" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
-                                                        </span>
-                                                        <span>
-                                                            <img src="images/mus.png" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
-                                                        </span>
-                                                        <span>
-                                                            <img src="images/boo.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
-                                                        </span>
-                                                        <span>
-                                                            <img src="images/cat01.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
-                                                        </span>
-                                                        <span>
-                                                            <img src="images/head.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
-                                                        </span>
-                                                        <span>
-                                                            <img src="images/image.png" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
-                                                        </span>
-                                                        <span>
-                                                            <img src="images/image8-2.png" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
-                                                        </span>
-                                                        <span>
-                                                            <img src="images/mouse.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
-                                                        </span>
-                                                        <span>
-                                                            <img src="images/pasted again.png" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
-                                                        </span>
-                                                        <span>
-                                                            <img src="images/pasted again01.png" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
-                                                        </span>
-                                                        <span>
-                                                            <img src="images/pasted image 0.png" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
-                                                        </span>
-                                                        <span>
-                                                            <img src="images/soup.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
-                                                        </span>
-                                                        <span>
-                                                            <img src="images/soup02.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
-                                                        </span>
-                                                        <span>
-                                                            <img src="images/soup03.png" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
-                                                        </span>
-                                                        <span>
-                                                            <img src="images/spirited01.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
-                                                        </span>
-                                                        <span>
-                                                            <img src="images/spirited02.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
-                                                        </span>
-                                                        <span>
-                                                            <img src="images/spirited03.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
-                                                        </span>
-                                                        <span>
-                                                            <img src="images/spirited04.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
-                                                        </span>
-                                                        <span>
-                                                            <img src="images/spirited05.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
-                                                        </span>
-                                                        <span>
-                                                            <img src="images/spirited06.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
-                                                        </span>
-                                                        <span>
-                                                            <img src="images/spirited07.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
-                                                        </span>
-                                                        <span>
-                                                            <img src="images/spirited08.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
-                                                        </span>
-                                                        <span>
-                                                            <img src="images/spirited_01.png" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
-                                                        </span>
-                                                        <span>
-                                                            <img src="images/spirited_away.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
-                                                        </span>
-                                                        <span>
-                                                            <img src="images/Total_Rickall.png" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
-                                                        </span>
-                                                        <span>
-                                                            <img src="images/mus.png" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
-                                                        </span>
-                                                        <span>
-                                                            <img src="images/mus.png" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
-                                                        </span>
-
-                                                    </div>
-                                                </div>
-                                            </span>
-                                        </div>
-                                        <div class="canvasWrapperLeft">
-                                            <canvas id="lookupCanvas" class="canvasInline" width="560" height="560"></canvas>
-                                            <canvas id="lookupCanvas_uilower" class="canvasInline canvasUILayer" width="560" height="560"></canvas>
-                                            <canvas id="lookupCanvas_ui" class="canvasInline canvasUILayer" width="560" height="560"></canvas>
-                                            <canvas id="lookupCanvas_uipass" class="canvasInline canvasUILayer avoid-clicks" width="560" height="560"></canvas>
-                                        </div>
-                                        <div class="subScript alert alert-secondary">
-                                            <b>Click and drag</b> to change on the image to change it. This is the query image. This is the image the user is using to search.
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="innerRightSide">
-                                    <div class="canvasWrapper">
-                                        <div class="clearfix">
-                                            <select class="browser-default selectUpperOptionsButtons custom-select" onchange="g_mainGlobalState.drawingImageDatabase = this.selectedIndex; draw()" style="width: 200px">
-                                                <option value="0" selected>RGBA</option>
-                                                <option value="1">Valid Shape</option>
-                                                <option value="2">All Shape</option>
-                                                <option value="3">Contours</option>
-                                                <option value="4">Edge</option>
-                                            </select>
-                                            <span class="dropdown">
-                                                <button class="upperOptionsButtons addLayerButton btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton3" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                                    + Add layer
-                                                </button>
-                                                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton3">
-                                                    <div style="padding: 10px; width: 270px">
-                                                        <span>
-                                                            <img src="images/basicshapes.png" onclick="addLayerToDatabaseCanvas(this.src)" class="imgThumbForSelection">
-                                                        </span>
-                                                            <span>
-                                                            <img src="images/IMG_20191024_130833.jpg" onclick="addLayerToDatabaseCanvas(this.src)" class="imgThumbForSelection">
-                                                        </span>
-                                                            <span>
-                                                            <img src="images/richandmalty.jpg" onclick="addLayerToDatabaseCanvas(this.src)" class="imgThumbForSelection">
-                                                        </span>
-                                                            <span>
-                                                            <img src="images/richandmalty400px.png" onclick="addLayerToDatabaseCanvas(this.src)" class="imgThumbForSelection">
-                                                        </span>
-                                                            <span>
-                                                            <img src="images/Total_Rickall.webp" onclick="addLayerToDatabaseCanvas(this.src)" class="imgThumbForSelection">
-                                                        </span>
-                                                            <span>
-                                                            <img src="images/googlelogo.webp" onclick="addLayerToDatabaseCanvas(this.src)" class="imgThumbForSelection">
-                                                        </span>
-                                                            <span>
-                                                            <img src="images/font.jpg" onclick="addLayerToDatabaseCanvas(this.src)" class="imgThumbForSelection">
-                                                        </span>
-                                                        <span>
-                                                            <img src="images/forest.jpg" onclick="addLayerToDatabaseCanvas(this.src)" class="imgThumbForSelection">
-                                                        </span>
-                                                        <span>
-                                                            <img src="images/tech.png" onclick="addLayerToDatabaseCanvas(this.src)" class="imgThumbForSelection">
-                                                        </span>
-                                                        <span>
-                                                            <img src="images/mus.png" onclick="addLayerToDatabaseCanvas(this.src)" class="imgThumbForSelection">
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </span>
-                                        </div>
-                                        <div class="canvasWrapperRight">
-                                            <canvas id="databaseCanvas" class="canvasInline" width="560" height="560"></canvas>
-                                            <canvas id="databaseCanvas_uilower" class="canvasInline canvasUILayer" width="560" height="560"></canvas>
-                                            <canvas id="databaseCanvas_ui" class="canvasInline canvasUILayer" width="560" height="560"></canvas>
-                                            <canvas id="databaseCanvas_uipass" class="canvasInline canvasUILayer avoid-clicks" width="560" height="560"></canvas>
-                                        </div>
-                                        <div class="subScript alert alert-secondary">
-                                            This is an image stored in the database. Changing this image is slower because images being stored in the database require extra preprocessing compared with query images.
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                <div style="display: grid; justify-items: center">
+                    <div class="buttonsWrapper" style="display: flex">
+                        <div style="" class="transformOpGroup btn-group btn-group-toggle" data-toggle="buttons">
+                            <label class="btn  btn-secondary transformOp active" onclick="setCurrnetOperation(enum_TransformationOperation.TRANSLATE)">
+                                <input type="radio" name="options" autocomplete="off" checked="">Pan
+                            </label>
+                            <label class="btn btn-secondary transformOp" onclick="setCurrnetOperation(enum_TransformationOperation.UNIFORM_SCALE)">
+                                <input type="radio" name="options" autocomplete="off">Zoom
+                            </label>
+                            <label class="btn btn-secondary transformOp" onclick="setCurrnetOperation(enum_TransformationOperation.NON_UNIFORM_SCALE)">
+                                <input type="radio" name="options" autocomplete="off">Stretch
+                            </label>
+                            <label class="btn btn-secondary transformOp" onclick="setCurrnetOperation(enum_TransformationOperation.ROTATE)">
+                                <input type="radio" name="options" autocomplete="off">Rotate
+                            </label>
+                            <label class="btn btn-secondary transformOp" onclick="setCurrnetOperation(enum_TransformationOperation.CROP)">
+                                <input type="radio" name="options" autocomplete="off" >Crop
+                            </label>
+                            <label class="btn btn-secondary transformOp" onclick="setMode(enum_modes.inspect)">
+                                <input type="radio" name="options" autocomplete="off" >Inspect
+                            </label>
                         </div>
-                    </div>
-                    <div class="clearfix">
-                        <div  class="clearfix" style="margin: auto;">
-                            <div id="clickandseeListLeft" style="width: 150px; height: 700px; overflow: scroll; float: left">
-                                <pre></pre>
-                            </div>
-                            <div class="canvasWrapper" style="float: left; width: 256px; height: 256px" >
-                                <canvas id="lookupCanvasFrag" class="canvasInline" width="256" height="256"></canvas>
-                                <canvas id="lookupCanvasFrag_ui" class="canvasInline canvasUILayer" width="256" height="256"></canvas>
-                            </div>
-                            <div id="hammingDistanceForResult" style="float: left; width: 250px; padding: 20px; text-align: center; font-size: 20px"></div>
-                            <div style="float: left">
-                                <div class="canvasWrapper" style="width: 256px; height: 256px">
-                                    <canvas id="databaseCanvasFrag" class="canvasInline" width="256" height="256"></canvas>
-                                    <canvas id="databaseCanvasFrag_ui" class="canvasInline canvasUILayer" width="256" height="256"></canvas>
-                                </div>
-                                <div id="rotationSliderWrapper" style="display: none; padding: 10px 40px">
-                                    <div style="text-align: center">Rotation</div>
-                                    <input style="width: 100%; padding: 4px" type="range" min="0" max="720" id="clickandseeRotation" oninput="drawshapefromClickandseeRight(g_lastusedClickAndSeeShapeRight, 0)" value="360">
-                                </div>
-                            </div>
-                            <div id="clickandseeListRight" style="width: 150px; height: 700px; overflow: scroll; float: left">
-                                <pre></pre>
-                            </div>
-                        </div>
+                        <!--            FIXME: we can remove this button once we add example matches...-->
+                        <button type="button" style="margin-bottom: 8px;" class="transformOpGroup alert-danger btn btn-secondary" onclick="setDefaultTransformationValues()">Reset</button>
 
                     </div>
                 </div>
+                <div style="display: grid; grid-row-gap: 20px;">
+                    <div id="databaseAndLookupCanvasWrapper" style="display: grid; grid-template-columns: 1fr 1fr; column-gap: 20px;" class="clearfix">
+                        <div class="innerLeftSide">
+                            <div>
+                                <select class="selectUpperOptionsButtons" onchange="g_mainGlobalState.drawingImageLookup = parseInt(this.selectedOptions[0].value); draw();" style="">
+                                    <option value="0" selected>Original Image</option>
+                                    <option value="2">All Shape</option>
+                                    <option value="3">Contours</option>
+                                </select>
+                                <span class="dropdown">
+                                    <div class="upperOptionsButtons" type="button" id="dropdownMenuButton2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        + Add layer
+                                    </div>
+                                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton2">
+                                        <div style="padding: 10px; width: 270px">
+                                            <span>
+                                                <img src="images/205488737.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                            </span>
+                                            <span>
+                                                <img src="images/41mYED6GE6L._AC_.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                            </span>
+                                            <span>
+                                                <img src="images/4216447_1.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                            </span>
+                                            <span>
+                                                <img src="images/accidental-wes-anderson-montreal.webp" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                            </span>
+                                            <span>
+                                                <img src="images/brockton-point-lighthouse-in-stanley-park.webp" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                            </span>
+                                            <span>
+                                                <img src="images/il_1588xN.3197638522_lo52.webp" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                            </span>
+                                            <span>
+                                                <img src="images/il_fullxfull.1219881601_lkvp.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                            </span>
+                                            <span>
+                                                <img src="images/basicshapes.png" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                            </span>
+                                            <span>
+                                                <img src="images/IMG_20191024_130833.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                            </span>
+                                            <span>
+                                                <img src="images/richandmalty.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                            </span>
+                                            <span>
+                                                <img src="images/richandmalty400px.png" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                            </span>
+                                            <span>
+                                                <img src="images/Total_Rickall.webp" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                            </span>
+                                            <span>
+                                                <img src="images/googlelogo.webp" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                            </span>
+                                            <span>
+                                                <img src="images/font.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                            </span>
+                                            <span>
+                                                <img src="images/forest.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                            </span>
+                                            <span>
+                                                <img src="images/tech.png" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                            </span>
+                                            <span>
+                                                <img src="images/mus.png" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                            </span>
+                                            <span>
+                                                <img src="images/boo.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                            </span>
+                                            <span>
+                                                <img src="images/cat01.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                            </span>
+                                            <span>
+                                                <img src="images/head.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                            </span>
+                                            <span>
+                                                <img src="images/image.png" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                            </span>
+                                            <span>
+                                                <img src="images/image8-2.png" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                            </span>
+                                            <span>
+                                                <img src="images/mouse.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                            </span>
+                                            <span>
+                                                <img src="images/pasted again.png" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                            </span>
+                                            <span>
+                                                <img src="images/pasted again01.png" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                            </span>
+                                            <span>
+                                                <img src="images/pasted image 0.png" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                            </span>
+                                            <span>
+                                                <img src="images/soup.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                            </span>
+                                            <span>
+                                                <img src="images/soup02.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                            </span>
+                                            <span>
+                                                <img src="images/soup03.png" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                            </span>
+                                            <span>
+                                                <img src="images/spirited01.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                            </span>
+                                            <span>
+                                                <img src="images/spirited02.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                            </span>
+                                            <span>
+                                                <img src="images/spirited03.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                            </span>
+                                            <span>
+                                                <img src="images/spirited04.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                            </span>
+                                            <span>
+                                                <img src="images/spirited05.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                            </span>
+                                            <span>
+                                                <img src="images/spirited06.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                            </span>
+                                            <span>
+                                                <img src="images/spirited07.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                            </span>
+                                            <span>
+                                                <img src="images/spirited08.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                            </span>
+                                            <span>
+                                                <img src="images/spirited_01.png" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                            </span>
+                                            <span>
+                                                <img src="images/spirited_away.jpg" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                            </span>
+                                            <span>
+                                                <img src="images/Total_Rickall.png" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                            </span>
+                                            <span>
+                                                <img src="images/mus.png" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                            </span>
+                                            <span>
+                                                <img src="images/mus.png" onclick="addLayerToLookupCanvas(this.src)" class="imgThumbForSelection">
+                                            </span>
 
+                                        </div>
+                                    </div>
+                                </span>
+                            </div>
+
+                            <div class="canvasWrapper">
+                                <div class="canvasWrapperLeft clearfix" style="width: 400px; height: 400px;">
+                                    <canvas id="lookupCanvas" class="canvasInline" width="400" height="400"></canvas>
+                                    <canvas id="lookupCanvas_uilower" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
+                                    <canvas id="lookupCanvas_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
+                                    <canvas id="lookupCanvas_uipass" class="canvasInline canvasUILayer avoid-clicks" width="400" height="400"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="innerRightSide">
+                            <div>
+                                <select class="selectUpperOptionsButtons" onchange="g_mainGlobalState.drawingImageDatabase = parseInt(this.selectedOptions[0].value); draw()" style="">
+                                    <option value="0" selected>Original Image</option>
+                                    <option value="2">All Shape</option>
+                                    <option value="3">Contours</option>
+                                </select>
+                                <span class="dropdown">
+                                    <button class="upperOptionsButtons" type="button" id="dropdownMenuButton3" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        + Add layer
+                                    </button>
+                                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton3">
+                                        <div style="padding: 10px; width: 270px">
+                                            <span>
+                                                <img src="images/basicshapes.png" onclick="addLayerToDatabaseCanvas(this.src)" class="imgThumbForSelection">
+                                            </span>
+                                                <span>
+                                                <img src="images/IMG_20191024_130833.jpg" onclick="addLayerToDatabaseCanvas(this.src)" class="imgThumbForSelection">
+                                            </span>
+                                                <span>
+                                                <img src="images/richandmalty.jpg" onclick="addLayerToDatabaseCanvas(this.src)" class="imgThumbForSelection">
+                                            </span>
+                                                <span>
+                                                <img src="images/richandmalty400px.png" onclick="addLayerToDatabaseCanvas(this.src)" class="imgThumbForSelection">
+                                            </span>
+                                                <span>
+                                                <img src="images/Total_Rickall.webp" onclick="addLayerToDatabaseCanvas(this.src)" class="imgThumbForSelection">
+                                            </span>
+                                                <span>
+                                                <img src="images/googlelogo.webp" onclick="addLayerToDatabaseCanvas(this.src)" class="imgThumbForSelection">
+                                            </span>
+                                                <span>
+                                                <img src="images/font.jpg" onclick="addLayerToDatabaseCanvas(this.src)" class="imgThumbForSelection">
+                                            </span>
+                                            <span>
+                                                <img src="images/forest.jpg" onclick="addLayerToDatabaseCanvas(this.src)" class="imgThumbForSelection">
+                                            </span>
+                                            <span>
+                                                <img src="images/tech.png" onclick="addLayerToDatabaseCanvas(this.src)" class="imgThumbForSelection">
+                                            </span>
+                                            <span>
+                                                <img src="images/mus.png" onclick="addLayerToDatabaseCanvas(this.src)" class="imgThumbForSelection">
+                                            </span>
+                                        </div>
+                                    </div>
+                                </span>
+                            </div>
+                            <div class="canvasWrapper">
+                                <div class="canvasWrapperRight" style="width: 400px; height: 400px;">
+                                    <canvas id="databaseCanvas" class="canvasInline" width="400" height="400"></canvas>
+                                    <canvas id="databaseCanvas_uilower" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
+                                    <canvas id="databaseCanvas_ui" class="canvasInline canvasUILayer" width="400" height="400"></canvas>
+                                    <canvas id="databaseCanvas_uipass" class="canvasInline canvasUILayer avoid-clicks" width="400" height="400"></canvas>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                    <div class="bottomRow" style="display: flex; justify-content: center ">
+                        <div id="clickandseeListLeft" style="width: 70px; height: 200px; overflow: auto;">
+                            <pre></pre>
+                        </div>
+                        <div class="canvasWrapper bottomRowCanvasHeightWidthWrapper" style="" >
+                            <canvas id="lookupCanvasFrag" class="canvasInline bottomRowCanvasHeightWidth" width="256" height="256"></canvas>
+                            <canvas id="lookupCanvasFrag_ui" class="canvasInline canvasUILayer bottomRowCanvasHeightWidth" width="256" height="256"></canvas>
+                        </div>
+                        <div id="hammingDistanceForResult" style="width: 100px; padding: 20px; text-align: center; font-size: 14px"></div>
+                        <div style="">
+                            <div class="canvasWrapper bottomRowCanvasHeightWidthWrapper" style="">
+                                <canvas id="databaseCanvasFrag" class="canvasInline bottomRowCanvasHeightWidth" width="256" height="256"></canvas>
+                                <canvas id="databaseCanvasFrag_ui" class="canvasInline canvasUILayer bottomRowCanvasHeightWidth" width="256" height="256"></canvas>
+                            </div>
+                            <div id="rotationSliderWrapper" style="display: none; padding: 10px 40px">
+                                <div style="text-align: center">Rotation</div>
+                                <input style="width: 100%; padding: 4px" type="range" min="0" max="720" id="clickandseeRotation" oninput="drawshapefromClickandseeRight(g_lastusedClickAndSeeShapeRight, 0)" value="360">
+                            </div>
+                        </div>
+                        <div id="clickandseeListRight" style="width: 70px; height: 200px; overflow: auto; float: left">
+                            <pre></pre>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="rightSidebar">
-                <div>Matches</div>
-                <hr>
-                <div id="shapelist2" style="height: 700px; overflow: scroll">
+                <div style="padding-top: 46px; text-align: center; font-size: 13px; color: rgba(0,0,0,.7)">Matches</div>
+                <div id="shapelist2" style="height: 400px; overflow: auto">
                     <pre>shape list goes here...</pre>
                 </div>
             </div>
         </div>
 
-        <canvas id="lookupCanvas2" class="canvasInline" width="560" height="560" style="width: 1200px; height: 1200px"></canvas>
-<!--        <canvas id="lookupCanvas2" class="canvasInline" width="560" height="560"></canvas>-->
 
     </div>
 
   </body>
+
+  <!--some temporary canvases we use for drawing-->
+  <canvas id="lookupCanvas_output"    style="display: none" class="canvasInline" width="400" height="400"></canvas>
+  <canvas id="databaseCanvas_output"  style="display: none" class="canvasInline" width="400" height="400"></canvas>
+  <canvas id="lookupCanvas2"          style="display: none" class="canvasInline" width="400" height="400"></canvas>
 
   <!-- Optional JavaScript -->
   <!-- jQuery first, then Popper.js, then Bootstrap JS -->
@@ -778,19 +592,6 @@
               if (m && now - Module.setStatus.last.time < 30) return; // if this is a progress update, skip it if too soon
               Module.setStatus.last.time = now;
               Module.setStatus.last.text = text;
-              if (m) {
-                  text = m[1];
-                  progressElement.value = parseInt(m[2])*100;
-                  progressElement.max = parseInt(m[4])*100;
-                  progressElement.hidden = false;
-                  spinnerElement.hidden = false;
-              } else {
-                  progressElement.value = null;
-                  progressElement.max = null;
-                  progressElement.hidden = true;
-                  if (!text) spinnerElement.style.display = 'none';
-              }
-              statusElement.innerHTML = text;
           },
           totalDependencies: 0,
           monitorRunDependencies: function(left) {
@@ -799,14 +600,6 @@
           }
       };
       Module.setStatus('Downloading...');
-      window.onerror = function(event) {
-          // TODO: do not warn on ok events like simulating an infinite loop or exitStatus
-          Module.setStatus('Exception thrown, see JavaScript console');
-          spinnerElement.style.display = 'none';
-          Module.setStatus = function(text) {
-              if (text) Module.printErr('[post-exception status] ' + text);
-          };
-      };
 
   </script>
   <script async type="text/javascript" src="wasmLibs/cppdemo.js"></script>
